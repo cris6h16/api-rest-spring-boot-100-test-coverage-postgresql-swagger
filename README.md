@@ -147,4 +147,5 @@ use PostgresSQL.
 |------------|-------------------------------------------------------------------------------------------------|-------|-------|
 | 2024-04-28 | [USER CREATION](#21-create-a-user)                                                              | 12:24 | 12:47 |
 | 2024-04-28 | [UPDATED A USER](#22-update-a-user)                                                             | 13:15 | 13:30 |
-| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections in [UPDATED A USER](#22-update-a-user) | 14:00 |       |
+| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections in [UPDATED A USER](#22-update-a-user) | 14:00 | 14:30 |
+| 2024-04-28 | conflict                                                                                        | 14:30 | 14:41 |
