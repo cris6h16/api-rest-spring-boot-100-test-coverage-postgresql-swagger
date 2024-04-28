@@ -35,21 +35,46 @@ use PostgresSQL.
 | `/api/notes/{id}` | `DELETE`    | `204 NO CONTENT` | _delete a note_  |
 | `/api/users`      | `GET`       | `200 OK`         | _list all users_ |
 
-
 ## 2. API REST
 
 ### 2.1 CREATE a USER
 
 | URI          | HTTP METHOD | SUCCESS       |
 |--------------|-------------|---------------|
-| `/api/users` | `CREATE`    | `201 CREATED` | 
+| `/api/users` | `POST`      | `201 CREATED` | 
 
 | FAIL                                                                                                | RESPONSE          |
 |-----------------------------------------------------------------------------------------------------|-------------------|
 | - _Username already exists_<br/>- _Email already exists_                                            | `409 Conflict`    |
 | - _Password is too short_<br/>- _Email is invalid_<br/>- _Email, Username and Password is required_ | `400 Bad Request` |
 
+### 2.2 UPDATE a USER
 
+| URI          | HTTP METHOD | SUCCESS          |
+|--------------|-------------|------------------|
+ `/api/users` | `PATCH`     | `204 NO CONTENT` |
+
+| FAIL                                                                                                            | RESPONSE       |
+|-----------------------------------------------------------------------------------------------------------------|----------------|
+| - _Username already exists_<br/>- _Email already exists_<br/>- _Password is too short_<br/>- _Email is invalid_ | `409 Conflict` |
+
+<hr>  
+
+### 2.3 CREATE a NOTE
+
+| URI          | HTTP METHOD | SUCCESS       |
+|--------------|-------------|---------------|
+| `/api/notes` | `POST`      | `201 CREATED` |
+
+| FAIL                              | RESPONSE          |
+|-----------------------------------|-------------------|
+| - _Title and Content is required_ | `400 Bad Request` |
+
+### 2.4 LIST all NOTES
+
+| URI          | HTTP METHOD | SUCCESS  |
+|--------------|-------------|----------|
+| `/api/notes` | `GET`       | `200 OK` |
 
 ## Time taken (UTC-5)
 
@@ -67,7 +92,7 @@ use PostgresSQL.
 
 3. [API REST](#API-REST)
 
-| Date       | Defined                       | Start | End   |
-|------------|-------------------------------|-------|-------|
-| 2024-04-28 | [CREATION](#21-create-a-user) | 12:24 | 12:47 |
-| 2024-04-28 | [FAIL](#fail)                 | 12:57 | 13:00 |
+| Date       | Defined                             | Start | End   |
+|------------|-------------------------------------|-------|-------|
+| 2024-04-28 | [USER CREATION](#21-create-a-user)  | 12:24 | 12:47 |
+| 2024-04-28 | [UPDATED A USER](#22-update-a-user) | 13:15 |       |
