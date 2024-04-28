@@ -24,21 +24,27 @@ use PostgresSQL.
 - ADMIN CAN:
     - list all users
 
-### 1.2 Endpoints
+### 1.2. Some considerations
 
-| URI                                                    | HTTP METHOD | SUCCESS          | DESC             | Authority    |
-|--------------------------------------------------------|-------------|------------------|------------------|--------------|
-| `/api/users`                                           | `POST`      | `201 CREATED`    | _create a user_  |              |
-| `/api/users`                                           | `PATCH`     | `204 NO CONTENT` | _update a user_  | `ROLE_USER`  |         
-| `/api/users`                                           | `DELETE`    | `204 NO CONTENT` | _delete a user_  | `ROLE_USER`  |
-| `/api/notes`                                           | `POST`      | `201 CREATED`    | _create a note_  | `ROLE_USER`  |
-| `/api/notes?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK`         | _list all notes_ | `ROLE_USER`  |
-| `/api/notes/{id}`                                      | `GET`       | `200 OK`         | _see a note_     | `ROLE_USER`  |
-| `/api/notes/{id}`                                      | `PUT`       | `204 NO CONTENT` | _update a note_  | `ROLE_USER`  |
-| `/api/notes/{id}`                                      | `DELETE`    | `204 NO CONTENT` | _delete a note_  | `ROLE_USER`  |
-| `/api/users?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK`         | _list all users_ | `ROLE_ADMIN` |
+- If the user isn't the owner of the note, then for him the note doesn't exist.
+- The user can't hard delete a note or his account, only soft delete.
+- The user can't modify audit fields.
 
-### 1.3 Entities
+### 1.3 Endpoints
+
+| URI                                                           | HTTP METHOD | SUCCESS          | DESC             | Authority    |
+|---------------------------------------------------------------|-------------|------------------|------------------|--------------|
+| `/api/users`                                                  | `POST`      | `201 CREATED`    | _create a user_  |              |
+| `/api/users`                                                  | `PATCH`     | `204 NO CONTENT` | _update a user_  | `ROLE_USER`  |         
+| `/api/users`                                                  | `DELETE`    | `204 NO CONTENT` | _delete a user_  | `ROLE_USER`  |
+| `/api/notes`                                                  | `POST`      | `201 CREATED`    | _create a note_  | `ROLE_USER`  |
+| `/api/notes`<br/>`?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK`         | _list all notes_ | `ROLE_USER`  |
+| `/api/notes/{id}`                                             | `GET`       | `200 OK`         | _see a note_     | `ROLE_USER`  |
+| `/api/notes/{id}`                                             | `PUT`       | `204 NO CONTENT` | _update a note_  | `ROLE_USER`  |
+| `/api/notes/{id}`                                             | `DELETE`    | `204 NO CONTENT` | _delete a note_  | `ROLE_USER`  |
+| `/api/users`<br/>`?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK`         | _list all users_ | `ROLE_ADMIN` |
+
+### 1.4 Entities
 
 - User
     - id
@@ -57,7 +63,7 @@ use PostgresSQL.
     - id
     - title
     - content
-    - created_at
+    - ~~created_at~~ (I won't add it for use `PUT`)
     - updated_at
     - deleted_at
 
@@ -85,10 +91,11 @@ use PostgresSQL.
 |--------------|-------------|------------------|
 | `/api/users` | `PATCH`     | `204 NO CONTENT` |
 
-| FAIL                                                                                                                                               | RESPONSE           |
-|----------------------------------------------------------------------------------------------------------------------------------------------------|--------------------|
-| - _Username already exists_<br/>- _Email already exists_<br/>- _Password is too short_<br/>- _Email is invalid_<br/>- _Username length is invalid_ | `409 Conflict`     |
-| - _You need to be authenticated to perform this action_<br/>- _You cannot updated other users Accounts_                                            | `401 Unauthorized` |
+| FAIL                                                                                                    | RESPONSE           |
+|---------------------------------------------------------------------------------------------------------|--------------------|
+| - _Username already exists_<br/>- _Email already exists_                                                | `409 Conflict`     |
+| - _You need to be authenticated to perform this action_<br/>- _You cannot updated other users Accounts_ | `401 Unauthorized` |
+| - _Password is too short_<br/>- _Email is invalid_<br/>- _Username length is invalid_                   | `400 Bad Request`  |
 
 <hr>  
 
@@ -100,14 +107,14 @@ use PostgresSQL.
 
 | FAIL                                                    | RESPONSE           |
 |---------------------------------------------------------|--------------------|
-| - _Title and Content is required_                       | `400 Bad Request`  |
+| - _Title is required_                                   | `400 Bad Request`  |
 | - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
 
 ### 2.4 LIST all NOTES
 
-| URI                                                    | HTTP METHOD | SUCCESS  |
-|--------------------------------------------------------|-------------|----------|
-| `/api/notes?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK` |
+| URI                                                           | HTTP METHOD | SUCCESS  |
+|---------------------------------------------------------------|-------------|----------|
+| `/api/notes`<br/>`?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK` |
 
 | FAIL                                                    | RESPONSE           |
 |---------------------------------------------------------|--------------------|
@@ -126,7 +133,43 @@ use PostgresSQL.
 
 ### 2.6 UPDATE a NOTE
 
+| URI              | HTTP METHOD | SUCCESS          |
+|------------------|-------------|------------------|
+| `api/notes/{id}` | `PUT`       | `204 NO CONTENT` |
+
+| FAIL                                                    | RESPONSE           |
+|---------------------------------------------------------|--------------------|
+| - _Title is required_                                   | `400 Bad Request`  |`
+| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| - _Note not found_                                      | `404 Not Found`    |
+
+### 2.7 DELETE a NOTE
+
+| URI              | HTTP METHOD | SUCCESS          |
+|------------------|-------------|------------------|
+| `api/notes/{id}` | `DELETE`    | `204 NO CONTENT` |
+
+| FAIL                                                    | RESPONSE           |
+|---------------------------------------------------------|--------------------|
+| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| - _Note not found_                                      | `404 Not Found`    |
+
+<hr>
+
+### 2.8 LIST all USERS
+
+| URI                                                           | HTTP METHOD | SUCCESS  |
+|---------------------------------------------------------------|-------------|----------|
+| `/api/users`<br/>`?page=<1>&size=<2>&sort=<create_at>, <asc>` | `GET`       | `200 OK` |
+
+| FAIL                                                    | RESPONSE           |
+|---------------------------------------------------------|--------------------|
+| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| - _You need to be an admin to perform this action_      | `403 Forbidden`    |
+
 ## Time taken (UTC-5)
+
+### README.md
 
 1. Setup project
 
@@ -139,13 +182,14 @@ use PostgresSQL.
 | Date       | Defined                                                       | Start | End   |
 |------------|---------------------------------------------------------------|-------|-------|
 | 2024-04-28 | [User Case & Endpoints](#11-user-case)                        | 12:47 | 13:12 |
-| 2024-04-28 | [Entities](#13-entities) & Corrections(endpoints, error code) | 13:30 | 14:00 |
+| 2024-04-28 | [Entities](#14-entities) & Corrections(endpoints, error code) | 13:30 | 14:00 |
 
 3. [API REST](#2-API-REST)
 
-| Date       | Defined                                                                                         | Start | End   |
-|------------|-------------------------------------------------------------------------------------------------|-------|-------|
-| 2024-04-28 | [USER CREATION](#21-create-a-user)                                                              | 12:24 | 12:47 |
-| 2024-04-28 | [UPDATED A USER](#22-update-a-user)                                                             | 13:15 | 13:30 |
-| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections in [UPDATED A USER](#22-update-a-user) | 14:00 | 14:30 |
-| 2024-04-28 | conflict                                                                                        | 14:30 | 14:41 |
+| Date       | Defined                                                                        | Start           | End   |
+|------------|--------------------------------------------------------------------------------|-----------------|-------|
+| 2024-04-28 | [USER CREATION](#21-create-a-user)                                             | 12:24           | 12:47 |
+| 2024-04-28 | [UPDATED A USER](#22-update-a-user)                                            | 13:15           | 13:30 |
+| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections & review of responses | 14:00<br/>17:22 | 14:30 |
+| 2024-04-28 | git conflict                                                                   | 14:30           | 14:41 |
+| 2024-04-28 | Review & Corrections in Response Codes                                         | 15:50           | 16:05 |
