@@ -48,7 +48,7 @@ use PostgresSQL.
     - created_at
     - updated_at
     - deleted_at
-    - ERole
+    - Role
     - notes
     - roles
 
