@@ -29,6 +29,7 @@ use PostgresSQL.
 - If the user isn't the owner of the note, then for him the note doesn't exist.
 - The user can't hard delete a note or his account, only soft delete.
 - The user can't modify audit fields.
+- remember that `PUT` update or create.
 
 ### 1.3 Endpoints
 
@@ -131,7 +132,7 @@ use PostgresSQL.
 | - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
 | - _Note not found_                                      | `404 Not Found`    |
 
-### 2.6 UPDATE a NOTE
+### 2.6 UPDATE/CREATE a NOTE (pass the id)
 
 | URI              | HTTP METHOD | SUCCESS          |
 |------------------|-------------|------------------|
@@ -141,7 +142,6 @@ use PostgresSQL.
 |---------------------------------------------------------|--------------------|
 | - _Title is required_                                   | `400 Bad Request`  |`
 | - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
-| - _Note not found_                                      | `404 Not Found`    |
 
 ### 2.7 DELETE a NOTE
 
@@ -186,10 +186,10 @@ use PostgresSQL.
 
 3. [API REST](#2-API-REST)
 
-| Date       | Defined                                                                        | Start           | End   |
-|------------|--------------------------------------------------------------------------------|-----------------|-------|
-| 2024-04-28 | [USER CREATION](#21-create-a-user)                                             | 12:24           | 12:47 |
-| 2024-04-28 | [UPDATED A USER](#22-update-a-user)                                            | 13:15           | 13:30 |
-| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections & review of responses | 14:00<br/>17:22 | 14:30 |
-| 2024-04-28 | git conflict                                                                   | 14:30           | 14:41 |
-| 2024-04-28 | Review & Corrections in Response Codes                                         | 15:50           | 16:05 |
+| Date       | Defined                                                                             | Start           | End             |
+|------------|-------------------------------------------------------------------------------------|-----------------|-----------------|
+| 2024-04-28 | [USER CREATION](#21-create-a-user)                                                  | 12:24           | 12:47           |
+| 2024-04-28 | [UPDATED A USER](#22-update-a-user)                                                 | 13:15           | 13:30           |
+| 2024-04-28 | [OPERATIONS WITH NOTES](#23-create-a-note) & Corrections & last review of responses | 14:00<br/>17:22 | 14:30<br/>17:50 |
+| 2024-04-28 | git conflict                                                                        | 14:30           | 14:41           |
+| 2024-04-28 | Review & Corrections in Response Codes                                              | 15:50           | 16:05           |
