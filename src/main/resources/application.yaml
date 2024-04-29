@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: api-rest-spring-boot
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/api-rest-spring-boot
+    driver-class-name: org.postgresql.Driver
+    username: ${PSQL_USER}
+    password: ${PSQL_PASS}
+    hikari:
+      schema: test
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+
+debug: false
+
+server:
+  port: 8080
+  error:
+    include-message: never
+    include-exception: off
+    include-stacktrace: never
+

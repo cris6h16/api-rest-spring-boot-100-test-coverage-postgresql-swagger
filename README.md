@@ -30,11 +30,13 @@ will use PostgresSQL.
 - The user can't hard delete a note or his account, only soft delete.
 - The user can't modify audit fields.
 - remember that `PUT` update or create.
+- user can only get his profile information
 
 ### 1.3 Endpoints
 
 | URI                                                                            | HTTP METHOD | SUCCESS          | DESC             | Authority    |
 |--------------------------------------------------------------------------------|-------------|------------------|------------------|--------------|
+| `/api/users/{id}`                                                              | `GET`       | `200 OK`         | _see a user_     | `ROLE_USER`  |
 | `/api/users`                                                                   | `POST`      | `201 CREATED`    | _create a user_  |              |
 | `/api/users`                                                                   | `PATCH`     | `204 NO CONTENT` | _update a user_  | `ROLE_USER`  |         
 | `/api/users`                                                                   | `DELETE`    | `204 NO CONTENT` | _delete a user_  | `ROLE_USER`  |
@@ -97,6 +99,17 @@ will use PostgresSQL.
 | - _Username already exists_<br/>- _Email already exists_                                                | `409 Conflict`     |
 | - _You need to be authenticated to perform this action_<br/>- _You cannot updated other users Accounts_ | `401 Unauthorized` |
 | - _Password is too short_<br/>- _Email is invalid_<br/>- _Username length is invalid_                   | `400 Bad Request`  |
+
+### 2.3 GET a USER
+
+| URI               | HTTP METHOD | SUCCESS  |
+|-------------------|-------------|----------|
+| `/api/users/{id}` | `GET`       | `200 OK` |
+
+| FAIL                                                    | RESPONSE           |
+|---------------------------------------------------------|--------------------|
+| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| - _User not found_                                      | `404 Not Found`    |
 
 <hr>  
 
@@ -167,6 +180,8 @@ will use PostgresSQL.
 | - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
 | - _You need to be an admin to perform this action_      | `403 Forbidden`    |
 
+#
+
 ## Time taken (UTC-5)
 
 **PD**: This isn't classified very well, but I'll try to do it better in the future.
@@ -196,7 +211,14 @@ will use PostgresSQL.
 | 2024-04-28 | git conflict                                                                        | 14:30           | 14:41           |
 | 2024-04-28 | Review & Corrections in Response Codes                                              | 15:50           | 16:05           |
 
-4. Additional
+4. Beginning the Implementation
+
+| Date       | Defined                                     | Start | End   |
+|------------|---------------------------------------------|-------|-------|
+| 2024-04-28 | UserController Test --> shouldCreateAUser() | 21:55 | 22:44 |
+| 2024-04-28 | Correct(IMPL) datasource errors             | 22:44 |       |
+
+**∞**. Additional
 
 | Date       | Defined              | Start | End   |
 |------------|----------------------|-------|-------|
