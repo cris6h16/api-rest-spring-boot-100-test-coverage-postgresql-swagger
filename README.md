@@ -57,14 +57,13 @@ will use PostgresSQL.
     - created_at
     - updated_at
     - deleted_at
-    - Roles
-    - notes
     - roles
+    - notes
 
 
 - Note
     - id
-    - title
+    - title (MAx=255)
     - content
     - ~~created_at~~ (I won't add it for use `PUT`)
     - updated_at
@@ -83,10 +82,10 @@ will use PostgresSQL.
 |--------------|-------------|---------------|
 | `/api/users` | `POST`      | `201 CREATED` | 
 
-| FAIL                                                                                                                                   | RESPONSE          |
-|----------------------------------------------------------------------------------------------------------------------------------------|-------------------|
-| - _Username already exists_<br/>- _Email already exists_                                                                               | `409 Conflict`    |
-| - _Password is too short_<br/>- _Email is invalid_<br/>- _Email, Username and Password is required_<br/>- _Username length is invalid_ | `400 Bad Request` |
+| FAIL                                                                                                                                                                      | RESPONSE          |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| - _Username already exists_<br/>- _Email already exists_                                                                                                                  | `409 Conflict`    |
+| - _Password must be at least 8 characters_<br/>- _Email is invalid_<br/>- _Email, Username and Password is required_<br/>- _Username must be between 1 and 20 characters_ | `400 Bad Request` |
 
 ### 2.2 UPDATE a USER
 
@@ -94,11 +93,11 @@ will use PostgresSQL.
 |--------------|-------------|------------------|
 | `/api/users` | `PATCH`     | `204 NO CONTENT` |
 
-| FAIL                                                                                                    | RESPONSE           |
-|---------------------------------------------------------------------------------------------------------|--------------------|
-| - _Username already exists_<br/>- _Email already exists_                                                | `409 Conflict`     |
-| - _You need to be authenticated to perform this action_<br/>- _You cannot updated other users Accounts_ | `401 Unauthorized` |
-| - _Password is too short_<br/>- _Email is invalid_<br/>- _Username length is invalid_                   | `400 Bad Request`  |
+| FAIL                                                                                                                     | RESPONSE           |
+|--------------------------------------------------------------------------------------------------------------------------|--------------------|
+| - _Username already exists_<br/>- _Email already exists_                                                                 | `409 Conflict`     |
+| - _You need to be authenticated to perform this action_<br/>- _You cannot updated other users Accounts_                  | `401 Unauthorized` |
+| - _Password must be at least 8 characters_<br/>- _Email is invalid_<br/>- _Username must be between 1 and 20 characters_ | `400 Bad Request`  |
 
 ### 2.3 GET a USER
 
@@ -119,10 +118,10 @@ will use PostgresSQL.
 |--------------|-------------|---------------|
 | `/api/notes` | `POST`      | `201 CREATED` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _Title is required_                                   | `400 Bad Request`  |
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| FAIL                                                                     | RESPONSE           |
+|--------------------------------------------------------------------------|--------------------|
+| - _Title is required_<br/>- _Title must be between 1 and 255 characters_ | `400 Bad Request`  |
+| - _You need to be authenticated to perform this action_                  | `401 Unauthorized` |
 
 ### 2.4 LIST all NOTES
 
@@ -151,10 +150,10 @@ will use PostgresSQL.
 |------------------|-------------|------------------|
 | `api/notes/{id}` | `PUT`       | `204 NO CONTENT` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _Title is required_                                   | `400 Bad Request`  |`
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| FAIL                                                                     | RESPONSE           |
+|--------------------------------------------------------------------------|--------------------|
+| - _Title is required_<br/>- _Title must be between 1 and 255 characters_ | `400 Bad Request`  |`
+| - _You need to be authenticated to perform this action_                  | `401 Unauthorized` |
 
 ### 2.7 DELETE a NOTE
 
@@ -213,10 +212,11 @@ will use PostgresSQL.
 
 4. Beginning the Implementation
 
-| Date       | Defined                                     | Start | End   |
-|------------|---------------------------------------------|-------|-------|
-| 2024-04-28 | UserController Test --> shouldCreateAUser() | 21:55 | 22:44 |
-| 2024-04-28 | Correct(IMPL) datasource errors             | 22:44 |       |
+| Date       | Defined                                                                                                           | Start | End   |
+|------------|-------------------------------------------------------------------------------------------------------------------|-------|-------|
+| 2024-04-28 | UserController Test --> shouldCreateAUser()                                                                       | 21:55 | 22:44 |
+| 2024-04-28 | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                         | 22:44 | 00:15 |
+| 2024-04-28 | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java)) | 00:15 | 00:30 |
 
 **∞**. Additional
 
