@@ -229,7 +229,7 @@ will use PostgresSQL.
 
 ### Some Questions that you probably have
 
-1. What is the time taken?
+1. How is taken the time ?
 
 > The time is taken since I start to do it & when I finish it. NOT is only the time of coding or something like that.
 
