@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Config.Service;
 
+import org.cris6h16.apirestspringboot.Controllers.Exceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -36,6 +37,7 @@ public class UserService {
     public ResponseEntity<?> createUser(CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.USER));
+        if (dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
 
         UserEntity user = new UserEntity(
                 null,

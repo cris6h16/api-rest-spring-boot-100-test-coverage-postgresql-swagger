@@ -1,7 +1,7 @@
 # api-rest-spring-boot-basic-auth-TDD--notes-app
 
 Implementing a Semantic API REST in Spring Boot, using basic auth applying TDD, this is a little Note Application which
-will use PostgresSQL (password is used encoded for everything).
+will use PostgresSQL (password is used encrypted for everything).
 
 ## 1. DEFINING THE PROJECT
 
@@ -220,13 +220,15 @@ will use PostgresSQL (password is used encoded for everything).
 
 4. Beginning the Implementation
 
-| Date                      | Defined                                                                                                                                                                            | Start           | End             |
-|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|-----------------|
-| 2024-04-28                | 1. UserController Test --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)                                                 | 21:55           | 22:44           |
-| 2024-04-28                | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                                                                                          | 22:44           | 00:15           |
-| 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                  | 00:15           | 00:30           |
-| 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed   | 19:13<br/>14:15 | 20:33<br/>15:09 |
-| 2024-04-30                | 2. UserController Test    --> [shouldNotCreateAUser_usernameAlreadyExists()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed | 15:40           | 16:10           |
+| Date                      | Defined                                                                                                                                                                                                                                                                             | Start           | End             |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|-----------------|
+| 2024-04-28                | 1. UserController Test --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)                                                                                                                                                  | 21:55           | 22:44           |
+| 2024-04-28                | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                                                                                                                                                                                           | 22:44           | 00:15           |
+| 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                                                                                                                   | 00:15           | 00:30           |
+| 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed                                                                                                    | 19:13<br/>14:15 | 20:33<br/>15:09 |
+| 2024-04-30                | 2. UserController Test    --> [shouldNotCreateAUser_usernameAlreadyExists()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                                  | 15:40           | 16:10           |
+| 2024-04-30                | 3. UserController Test    --> [shouldNotCreateAUser_EmailAlreadyExists()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                                     | 16:15           | 16:35           |
+| 2024-04-30                | 4. UserController Test    --> [shouldNotCreateAUser_PasswordTooShort()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed <br/> & Analyzing why always is greater that 8 <br/>(is saved encrypted we need verify length before) | 16:40           | 16:57           |
 
 ### Some Questions that you probably have
 

@@ -50,10 +50,12 @@ public class UserControllerTest {
     @Test
     @DirtiesContext
     void shouldNotCreateAUser_usernameAlreadyExists() {
+
         String url = "/api/users";
         String username = "cris6h16";
         String pass = "12345678";
         String email = "cristianmherrera21@gmail.com";
+        String conflictMssg409 = "Username already exists";
 
         // count users -> before
         long countB = userRepository.count();
@@ -65,13 +67,63 @@ public class UserControllerTest {
 
         // Wheres the verification if was it created? --> We already test it in the previous test (good practice)
 
-        // Create the same user
+        // Create the same username
+        user = new HttpEntity<>(new CreateUserDTO(username, (pass + "hello"), ("word" + email)));
         ResponseEntity<Void> res2 = rt.exchange(url, HttpMethod.POST, user, Void.class);
         assertThat(res2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 
         // count users -> after
         long countA = userRepository.count();
         assertThat(countA).isEqualTo(countB + 1);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAUser_EmailAlreadyExists() {
+        String url = "/api/users";
+        String username = "cris6h16";
+        String pass = "12345678";
+        String email = "cristianmherrera21@gmail.com";
+
+
+        // count users -> before
+        long countB = userRepository.count();
+
+        // Create a user
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+        ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+        // Create the same email
+        user = new HttpEntity<>(new CreateUserDTO((username + "hello"), (pass + "hello"), email));
+        ResponseEntity<Void> res2 = rt.exchange(url, HttpMethod.POST, user, Void.class);
+        assertThat(res2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+
+        // count users -> after
+        long countA = userRepository.count();
+        assertThat(countA).isEqualTo(countB + 1);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAUser_PasswordTooShort() {
+        String url = "/api/users";
+        String username = "cris6h16";
+        String pass = "1234567";
+        String email = "cristianmherrera21@gmail.com";
+
+
+        // count users -> before
+        long countB = userRepository.count();
+
+        // Create a user
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+        ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+        // count users -> after
+        long countA = userRepository.count();
+        assertThat(countA).isEqualTo(countB);
     }
 
 
