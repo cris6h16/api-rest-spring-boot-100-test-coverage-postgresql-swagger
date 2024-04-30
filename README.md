@@ -227,3 +227,12 @@ will use PostgresSQL.
 | 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                | 00:15           | 00:30           |
 | 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed | 19:13<br/>14:15 | 20:33<br/>15:09 |
 
+### Some Questions that you probably have
+
+1. What is the time taken?
+
+> The time is taken since I start to do it & when I finish it. NOT is only the time of coding or something like that.
+
+2. Why are there very short/large cuts(time) between them ?
+> I'm a student, I have to do other things(Homework, study for lessons, etc),  and I'm a son, my parents unexpectedly call me to do something else they get angry.   
+ also I'm a human, I need to eat, sleep, etc...
