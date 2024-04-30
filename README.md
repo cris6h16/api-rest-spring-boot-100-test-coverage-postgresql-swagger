@@ -234,5 +234,5 @@ will use PostgresSQL.
 > The time is taken since I start to do it & when I finish it. NOT is only the time of coding or something like that.
 
 2. Why are there very short/large cuts(time) between them ?
-> I'm a student, I have to do other things(Homework, study for lessons, etc),  and I'm a son, my parents unexpectedly call me to do something else they get angry.   
+> I'm a student, I have to do other things(Homework, study for lessons, etc),  and I'm a son, my parents unexpectedly call me to do something or else they get angry.   
  also I'm a human, I need to eat, sleep, etc...
