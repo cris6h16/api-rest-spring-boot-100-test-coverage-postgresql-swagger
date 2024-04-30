@@ -210,6 +210,14 @@ will use PostgresSQL.
 | 2024-04-28 | git conflict                                                                        | 14:30           | 14:41           |
 | 2024-04-28 | Review & Corrections in Response Codes                                              | 15:50           | 16:05           |
 
+**∞**. Additional
+
+| Date       | Defined              | Start | End   |
+|------------|----------------------|-------|-------|
+| 2024-04-28 | ENHANCED readability | 21:35 | 21:45 |
+
+### IMplementation
+
 4. Beginning the Implementation
 
 | Date                      | Defined                                                                                                                                                                          | Start           | End             |
@@ -219,8 +227,3 @@ will use PostgresSQL.
 | 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                | 00:15           | 00:30           |
 | 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed | 19:13<br/>14:15 | 20:33<br/>15:09 |
 
-**∞**. Additional
-
-| Date       | Defined              | Start | End   |
-|------------|----------------------|-------|-------|
-| 2024-04-28 | ENHANCED readability | 21:35 | 21:45 |
