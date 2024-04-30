@@ -9,6 +9,7 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,8 +48,9 @@ public class UserService {
                 Set.of(roles.get()),
                 null
         );
-        UserEntity userStored = userRepository.save(user);
-        return ResponseEntity.created(URI.create("/users/" + userStored.getId())).build();
+        userRepository.save(user);
+
+        return ResponseEntity.created(URI.create("/users/" + user.getId())).build();
     }
 
     //getByUsername
@@ -78,6 +80,6 @@ public class UserService {
                 roles,
                 notes
         );
-        return ResponseEntity.ok(user.get());
+        return ResponseEntity.ok(userDTO);
     }
 }

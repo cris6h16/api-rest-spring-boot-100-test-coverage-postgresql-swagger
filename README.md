@@ -1,7 +1,7 @@
 # api-rest-spring-boot-basic-auth-TDD--notes-app
 
 Implementing a Semantic API REST in Spring Boot, using basic auth applying TDD, this is a little Note Application which
-will use PostgresSQL.
+will use PostgresSQL (password is used encoded for everything).
 
 ## 1. DEFINING THE PROJECT
 
@@ -220,12 +220,13 @@ will use PostgresSQL.
 
 4. Beginning the Implementation
 
-| Date                      | Defined                                                                                                                                                                          | Start           | End             |
-|---------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|-----------------|
-| 2024-04-28                | UserController Test --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)                                                  | 21:55           | 22:44           |
-| 2024-04-28                | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                                                                                        | 22:44           | 00:15           |
-| 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                | 00:15           | 00:30           |
-| 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed | 19:13<br/>14:15 | 20:33<br/>15:09 |
+| Date                      | Defined                                                                                                                                                                            | Start           | End             |
+|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|-----------------|
+| 2024-04-28                | 1. UserController Test --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)                                                 | 21:55           | 22:44           |
+| 2024-04-28                | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                                                                                          | 22:44           | 00:15           |
+| 2024-04-28                | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))                                                                  | 00:15           | 00:30           |
+| 2024-04-29<br/>2024-04-30 | Implementing(Repository, Entities, Security, etc)    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>Test passed   | 19:13<br/>14:15 | 20:33<br/>15:09 |
+| 2024-04-30                | 2. UserController Test    --> [shouldNotCreateAUser_usernameAlreadyExists()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed | 15:40           | 16:10           |
 
 ### Some Questions that you probably have
 
@@ -234,5 +235,7 @@ will use PostgresSQL.
 > The time is taken since I start to do it & when I finish it. NOT is only the time of coding or something like that.
 
 2. Why are there very short/large cuts(time) between them ?
-> I'm a student, I have to do other things(Homework, study for lessons, etc),  and I'm a son, my parents unexpectedly call me to do something or else they get angry.   
- also I'm a human, I need to eat, sleep, etc...
+
+> I'm a student, I have to do other things(Homework, study for lessons, etc), and I'm a son, my parents unexpectedly
+> call me to do something or else they get angry.   
+> also I'm a human, I need to eat, sleep, etc...

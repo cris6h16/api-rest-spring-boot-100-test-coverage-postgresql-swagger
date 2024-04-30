@@ -27,7 +27,7 @@ public class UserController {
     }
 
     @GetMapping("/{username}")
-    @PreAuthorize("#username == authentication.principal.username")
+    @PreAuthorize("#username == authentication.principal.username") // SpEL
     public ResponseEntity<?> getUser(@PathVariable String username) {
         return userService.getByUsername(username);
     }
