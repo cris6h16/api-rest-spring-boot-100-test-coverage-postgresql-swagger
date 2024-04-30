@@ -42,7 +42,7 @@ public class UserEntity {
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = true)
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
@@ -67,12 +67,12 @@ public class UserEntity {
 
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.
-    @PostPersist
+    @PrePersist
     public void prePersist() {
         createdAt = new Date(System.currentTimeMillis());
     }
 
-    @PostUpdate
+    @PreUpdate
     public void preUpdate() {
         updatedAt = new Date(System.currentTimeMillis());
     }

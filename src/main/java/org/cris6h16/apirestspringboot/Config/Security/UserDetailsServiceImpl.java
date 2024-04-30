@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -17,9 +18,12 @@ import java.util.stream.Collectors;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     UserRepository userRepository;
+    PasswordEncoder passwordEncoder;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
+
+    public UserDetailsServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -38,7 +42,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         return new User( // TODO: see if enable is used correctly
                 user.get().getUsername(),
-                user.get().getPassword(),
+                user.get().getPassword(), // Password is encoded
                 enabled,
                 true,
                 true,

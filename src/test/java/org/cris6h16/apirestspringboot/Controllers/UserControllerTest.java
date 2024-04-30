@@ -20,7 +20,7 @@ public class UserControllerTest {
     void shouldCreateAUser() {
         String url = "/api/users";
         String username = "cris6h16";
-        String pass = "123456";
+        String pass = "12345678";
         String email = "cris6h16@gmail.com";
 
         // Create a user
@@ -31,7 +31,7 @@ public class UserControllerTest {
         // Get the user
         ResponseEntity<PublicUserDTO> res2 = rt
                 .withBasicAuth(username, pass)
-                .getForEntity(url + username, PublicUserDTO.class);
+                .getForEntity(url + "/" + username, PublicUserDTO.class);
         assertThat(res2.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         // Check the user

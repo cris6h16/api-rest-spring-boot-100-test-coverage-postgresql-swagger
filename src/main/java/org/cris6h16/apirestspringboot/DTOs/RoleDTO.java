@@ -1,12 +1,13 @@
 package org.cris6h16.apirestspringboot.DTOs;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Getter
+@Setter
 public class RoleDTO {
-    private String name;
+    private ERole name;
 }
