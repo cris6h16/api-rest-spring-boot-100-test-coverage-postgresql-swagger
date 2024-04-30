@@ -212,11 +212,12 @@ will use PostgresSQL.
 
 4. Beginning the Implementation
 
-| Date       | Defined                                                                                                           | Start | End   |
-|------------|-------------------------------------------------------------------------------------------------------------------|-------|-------|
-| 2024-04-28 | UserController Test --> shouldCreateAUser()                                                                       | 21:55 | 22:44 |
-| 2024-04-28 | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                         | 22:44 | 00:15 |
-| 2024-04-28 | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java)) | 00:15 | 00:30 |
+| Date       | Defined                                                                                                                         | Start | End   |
+|------------|---------------------------------------------------------------------------------------------------------------------------------|-------|-------|
+| 2024-04-28 | UserController Test --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) | 21:55 | 22:44 |
+| 2024-04-28 | Correct(IMPL) datasource, Impl Entities, DTO, .YAML, etc<br/>basically the second startup                                       | 22:44 | 00:15 |
+| 2024-04-28 | Analyzing a error that I was([@JsonFormat](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java))               | 00:15 | 00:30 |
+| 2024-04-29 | Forbidden (  )    --> [shouldCreateAUser()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)   | 19:13 | 19:50 |
 
 **∞**. Additional
 

@@ -1,13 +1,14 @@
 package org.cris6h16.apirestspringboot.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import jakarta.validation.constraints.Email;
+import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@Getter
+@Setter
 /*   RestClientException: No HttpMessageConverter for CreateUserDTO
  * WHEN: rt.exchange(url, HttpMethod.POST, user, Void.class);
  */

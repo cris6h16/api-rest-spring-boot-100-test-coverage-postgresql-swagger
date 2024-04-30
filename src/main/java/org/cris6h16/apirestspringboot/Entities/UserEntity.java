@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.Constraint;
+import jakarta.validation.constraints.Email;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
@@ -10,7 +11,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(name = "username_unique", columnNames = "username")
+        @UniqueConstraint(name = "username_unique", columnNames = "username"),
+        @UniqueConstraint(name = "email_unique", columnNames = "email")
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,6 +33,10 @@ public class UserEntity {
     @Column(name = "password", nullable = false)
     @Length(min = 8, message = "Password must be at least 8 characters")
     private String password;
+
+    @Column(name = "email", nullable = false)
+    @Email(message = "Email is invalid")
+    private String email;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.DATE)
@@ -53,11 +59,11 @@ public class UserEntity {
             foreignKey = @ForeignKey(name = "fk_user_id"),
             inverseForeignKey = @ForeignKey(name = "fk_role_id")
     )
-    Set<RoleEntity> roles;
+    private Set<RoleEntity> roles;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "note_id", foreignKey = @ForeignKey(name = "fk_note_id"))
-    Set<NoteEntity> notes;
+    private Set<NoteEntity> notes;
 
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.

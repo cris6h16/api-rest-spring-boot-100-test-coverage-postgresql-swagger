@@ -20,7 +20,7 @@ public class UserControllerTest {
     void shouldCreateAUser() {
         String url = "/api/users";
         String username = "cris6h16";
-        String pass = "cricri45";
+        String pass = "123456";
         String email = "cris6h16@gmail.com";
 
         // Create a user
