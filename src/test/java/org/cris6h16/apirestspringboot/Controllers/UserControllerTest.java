@@ -163,7 +163,7 @@ public class UserControllerTest {
         String username = "cris6h16";
         String pass = "12345678";
         String email = "cris6h16@gmail.com";
-        String failBodyMssg = "Email, Username, and Password are Required";
+        String failBodyMssg = "Email, Username and Password are Required";
 
         // count users -> before
         long countB = userRepository.count();

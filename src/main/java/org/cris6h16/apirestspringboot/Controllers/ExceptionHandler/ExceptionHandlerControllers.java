@@ -20,76 +20,45 @@ import java.util.Set;
 @Slf4j
 public class ExceptionHandlerControllers {
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleConstraintViolation(ConstraintViolationException ex) {
-        log.warn("ConstraintViolationException: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
+//    @ExceptionHandler(ConstraintViolationException.class)
+//    public ResponseEntity<String> handleConstraintViolation(ConstraintViolationException ex) {
+//        log.warn("ConstraintViolationException: {}", ex.getMessage());
+//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+//    }
 
     //@ExceptionHandler(DuplicateKeyException.class)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleConflict(DataIntegrityViolationException ex) {
 
-        // constants violation
-        String username_unique = "username_unique";
-        String email_unique = "email_unique";
-        String email_not_null = "null value in column \"email\"";
-        String username_not_null = "null value in column \"username\"";
-        String password_not_null = "null value in column \"password\"";
+        if (ex.getMessage().contains("unique constraint")) {
+            String str = ex.getMessage().split("\"")[1]; // extract name of the unique constraint
+            if (str.equals("username_unique")) str = "Username already exists";
+            if (str.equals("email_unique")) str = "Email already exists";
 
-        if (ex.getMessage().contains(username_unique)) {
-//            log.warn("DuplicateKeyException: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
-        }
-        if (ex.getMessage().contains(email_unique)) {
-//            log.warn("DuplicateKeyException: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(str);
         }
 
-        boolean required = ex.getMessage().contains(email_not_null) ||
-                ex.getMessage().contains(username_not_null) ||
-                ex.getMessage().contains(password_not_null);
-        if (required) {
-//            log.warn("DataIntegrityViolationException: {}", ex.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        if (ex.getMessage().contains("null value in column") &&
+                (ex.getMessage().contains("email") ||
+                        ex.getMessage().contains("username") ||
+                        ex.getMessage().contains("password"))) {
+            String str = "Email, Username and Password are Required";
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(str);
         }
 
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("DataIntegrityViolationException");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Data integrity violation");
     }
 
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<String> handleDuplicateKeyException(DuplicateKeyException ex) {
-        // constants violation
-        String username_unique = "username_unique";
-        String email_unique = "email_unique";
-        String email_not_null = "null value in column \"email\"";
-        String username_not_null = "null value in column \"username\"";
-        String password_not_null = "null value in column \"password\"";
 
-        if (ex.getMessage().contains(username_unique)) {
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
+        Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
+        if (!violations.isEmpty()) {
+            String errorMessage = violations.iterator().next().getMessage();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+        }
 
-//    @ExceptionHandler(ConstraintViolationException.class)
-//    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
-//        Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
-//        if (!violations.isEmpty()) {
-//            String errorMessage = violations.iterator().next().getMessage();
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
-//        }
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Validation failed");
-}
-
-//    @ExceptionHandler(TransactionSystemException.class)
-//    public ResponseEntity<String> handleTransactionSystemException(TransactionSystemException ex) {
-//        // constants violation
-//        String email_is_invalid = "Email is invalid";
-//
-//        if (ex.getMessage().contains(email_is_invalid)) {
-//            log.warn("TransactionSystemException: {}", ex.getMessage());
-//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Email is invalid");
-//        }
-//
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-//    }
-
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Constraint violation");
+    }
 }
