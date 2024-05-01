@@ -3,15 +3,15 @@ package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.cris6h16.apirestspringboot.Controllers.Exceptions.AlreadyExistsException;
+import org.cris6h16.apirestspringboot.Controllers.Exceptions.AttributesRequiredAreNullException;
+import org.cris6h16.apirestspringboot.Controllers.Exceptions.UnhundledDataIntegrityViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.TransactionSystemException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Set;
 
@@ -35,7 +35,7 @@ public class ExceptionHandlerControllers {
             if (str.equals("username_unique")) str = "Username already exists";
             if (str.equals("email_unique")) str = "Email already exists";
 
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(str);
+            throw new AlreadyExistsException(str);
         }
 
         if (ex.getMessage().contains("null value in column") &&
@@ -44,10 +44,10 @@ public class ExceptionHandlerControllers {
                         ex.getMessage().contains("password"))) {
             String str = "Email, Username and Password are Required";
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(str);
+            throw new AttributesRequiredAreNullException(str);
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Data integrity violation");
+        throw new UnhundledDataIntegrityViolationException();
     }
 
 
@@ -56,9 +56,16 @@ public class ExceptionHandlerControllers {
         Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
         if (!violations.isEmpty()) {
             String errorMessage = violations.iterator().next().getMessage();
+
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
         }
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Constraint violation");
     }
+
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<String> handleException(Exception ex) {
+//        System.out.println("Exception: " + ex.toString());
+//        return null;
+//    }
 }
