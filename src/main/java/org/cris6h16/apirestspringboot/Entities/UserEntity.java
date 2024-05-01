@@ -31,7 +31,8 @@ public class UserEntity {
     private String username;
 
     @Column(name = "password", nullable = false)
-    @Length(min = 8, message = "Password must be at least 8 characters") // min doesn't work very well, remember that is saved encrypted
+    @Length(min = 8, message = "Password must be at least 8 characters")
+    // min doesn't work very well, remember that is saved encrypted
     private String password;
 
     @Column(name = "email", nullable = false)
