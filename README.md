@@ -233,6 +233,7 @@ will use PostgresSQL (password is used encrypted for everything).
 | 2024-04-30                | **5**. UserController Test    --> [shouldNotCreateAUser_EmailIsInvalid()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                                         | 17:00           | 17:10           |
 | 2024-05-01                | Investigating & analizing why some data constraints aren't  respected<br/> and find a way to handle better the exceptions (response body) <br/>Correct all responses (standardize the errors responses)<br/> [see that](#things-that-cause-me-troublesgit )                             | 16:55           | 20:10           |   
 
+
 ### Some Questions that you probably have
 
 1. How is taken the time ?

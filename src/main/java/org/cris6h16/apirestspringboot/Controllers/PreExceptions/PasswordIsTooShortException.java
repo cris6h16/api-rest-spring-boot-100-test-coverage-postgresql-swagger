@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Controllers.Exceptions;
+package org.cris6h16.apirestspringboot.Controllers.PreExceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;

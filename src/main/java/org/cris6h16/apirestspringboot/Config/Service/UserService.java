@@ -3,7 +3,7 @@ package org.cris6h16.apirestspringboot.Config.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.Controllers.Exceptions.PasswordIsTooShortException;
+import org.cris6h16.apirestspringboot.Controllers.PreExceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;

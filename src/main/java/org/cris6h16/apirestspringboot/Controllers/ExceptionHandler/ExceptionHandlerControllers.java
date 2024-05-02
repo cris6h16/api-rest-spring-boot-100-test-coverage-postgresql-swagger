@@ -59,12 +59,15 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
         Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
         if (!violations.isEmpty()) {
             String errorMessage = violations.iterator().next().getMessage();
+
             map.put("message", errorMessage);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
+
         }
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
     }
+
 
     String getMapInJson() {
         try {
@@ -93,5 +96,4 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
         map.put("message", ex.getReason());
         return ResponseEntity.status(ex.getStatusCode()).body(getMapInJson());
     }
-
 }
