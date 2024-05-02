@@ -1,5 +1,7 @@
 package org.cris6h16.apirestspringboot.Config.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Controllers.Exceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
@@ -11,14 +13,13 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,14 +29,16 @@ public class UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
+    ObjectMapper objectMapper;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.objectMapper = objectMapper;
     }
 
-    public ResponseEntity<?> createUser(@NotNull CreateUserDTO dto) {
+    public ResponseEntity<?> createUser(@NotNull @Valid CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.USER));
         if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
@@ -55,6 +58,7 @@ public class UserService {
 
         return ResponseEntity.created(URI.create("/users/" + user.getId())).build();
     }
+
 
     //getByUsername
     public ResponseEntity<?> getByUsername(String username) {

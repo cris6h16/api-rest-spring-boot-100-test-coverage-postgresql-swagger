@@ -1,8 +1,9 @@
 package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.Constraint;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
@@ -26,28 +27,31 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username", nullable = false, length = 20)
-    @Length(min = 1, max = 20, message = "Username must be between 1 and 20 characters")
+    @Column(name = "username")
+    @NotBlank(message = "Username mustn't be blank") // for sending null/empty
     private String username;
 
-    @Column(name = "password", nullable = false)
+
+    @Column(name = "password")
+    @NotBlank(message = "Password is required")
     @Length(min = 8, message = "Password must be at least 8 characters")
     // min doesn't work very well, remember that is saved encrypted
     private String password;
 
-    @Column(name = "email", nullable = false)
-    @Email(message = "Email is invalid")
+    @Column(name = "email")
+    @Email(message = "Email is invalid")// null is valid
+    @NotBlank(message = "Email is required")
     private String email;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = true, updatable = false)
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 
-    @Column(name = "updated_at", nullable = true)
+    @Column(name = "updated_at")
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
-    @Column(name = "deleted_at", nullable = true)
+    @Column(name = "deleted_at")
     @Temporal(TemporalType.DATE)
     private Date deletedAt;
 

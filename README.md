@@ -231,7 +231,7 @@ will use PostgresSQL (password is used encrypted for everything).
 | 2024-04-30                | **3**. UserController Test    --> [shouldNotCreateAUser_EmailAlreadyExists()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                                     | 16:15           | 16:35           |
 | 2024-04-30                | **4**. UserController Test    --> [shouldNotCreateAUser_PasswordTooShort()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed <br/> & Analyzing why always is greater that 8 <br/>(is saved encrypted we need verify length before) | 16:40           | 16:57           |
 | 2024-04-30                | **5**. UserController Test    --> [shouldNotCreateAUser_EmailIsInvalid()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                                         | 17:00           | 17:10           |
-| 2024-04-30                | **6**. UserController Test    --> [shouldNotCreateAUser_EmailUsernamePasswordIsRequired()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java) <br/> & Test passed                                                                                        | 17:10           |                 |
+| 2024-05-01                | Investigating & analizing why some data constraints aren't  respected<br/> and find a way to handle better the exceptions (response body) <br/>Correct all responses (standardize the errors responses)<br/> [see that](#things-that-cause-me-troubles)                                 | 16:55           | 20:10           |   
 
 ### Some Questions that you probably have
 
@@ -244,3 +244,38 @@ will use PostgresSQL (password is used encrypted for everything).
 > I'm a student, I have to do other things(Homework, study for lessons, etc), and I'm a son, my parents unexpectedly
 > call me to do something or else they get angry.   
 > also I'm a human, I need to eat, sleep, etc...
+
+## THINGS THAT CAUSE ME TROUBLES
+
+1. Validations from different packages
+
+> if you validate with a field like `@Length(min = .., max = .., message = ..)` which come
+> from `org.hibernate.validator.constraints` when you want to **Validate** from a parameter for example (`@Valid`) which
+> come from `<javax>.validation.constraints` you validation will be ignored specially if you passed a null/empty value.
+> if
+> you want to validate the said use
+`@Size` & `@NotBlank` (in `@Size` null elements are valid) from `<javax>.validation.constraints`; or directly
+> use `@NotBlank`.
+
+2. Standardize the responses
+
+> One of the things that take additional time was that literally I had to guess the response body(this problem only if
+> there was an exception)   
+> I had been having 2 format of responses(and probably can easily be added more);
+> 1. when I throw an `ResponseStatusException` or any of its subclasses from `@Service` for example.
+> 2. when I handle exceptions from `@<RestController>Advice` which is different from the above.
+> 3. possible increase the number of formats(if in each Exception handled in Advice I return a different format (very
+     possible)).
+
+> Did you see the problem? my way to solve it was make a common Exception response for
+> all (`DataIntegrityViolationException`, `ConstraintViolationException`, `ResponseStatusException`, any threw in
+> anywhere ) using a `Map` and `ObjectMapper` in `@<RestController>Advice`
+
+// TODO: write about define a format for exceptions/"errors", handle HTTP handled class exceptions, and when throw a
+ResponseStatusException...
+
+
+
+
+<hr>
+//TODO: write about how all can test the API (POSTGRESQL setup)

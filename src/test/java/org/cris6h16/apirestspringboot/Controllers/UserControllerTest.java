@@ -71,7 +71,7 @@ public class UserControllerTest {
         user = new HttpEntity<>(new CreateUserDTO(username, (pass + "hello"), ("word" + email)));
         ResponseEntity<String> res2 = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(res2.getBody()).isEqualToIgnoringCase(failBodyMssg);
+        assertThat(res2.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // count users -> after
         long countA = userRepository.count();
@@ -100,7 +100,7 @@ public class UserControllerTest {
         user = new HttpEntity<>(new CreateUserDTO((username + "hello"), (pass + "hello"), email));
         ResponseEntity<String> res2 = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res2.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(res2.getBody()).isEqualToIgnoringCase(failBodyMssg);
+        assertThat(res2.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // count users -> after
         long countA = userRepository.count();
@@ -124,7 +124,7 @@ public class UserControllerTest {
         HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
         ResponseEntity<String> res = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualToIgnoringCase(failBodyMssg);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // count users -> after
         long countA = userRepository.count();
@@ -148,56 +148,101 @@ public class UserControllerTest {
         HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
         ResponseEntity<String> res = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualTo(failBodyMssg);
+        assertThat(res.getBody().split("\"")[3]).isEqualTo(failBodyMssg);
 
         // count users -> after
         long countA = userRepository.count();
         assertThat(countA).isEqualTo(countB);
     }
 
-
     @Test
     @DirtiesContext
-    void shouldNotCreateAUser_EmailUsernamePasswordIsRequired() {
+    void shouldNotCreateAUser_EmailIsNullOrEmpty() {
         String url = "/api/users";
         String username = "cris6h16";
         String pass = "12345678";
-        String email = "cris6h16@gmail.com";
-        String failBodyMssg = "Email, Username and Password are Required";
+        String email = "";
+        String failBodyMssg = "Email is required";
 
         // count users -> before
         long countB = userRepository.count();
 
-        // email is null
-        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, null));
+        // email is empty
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
         ResponseEntity<String> res = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualToIgnoringCase(failBodyMssg);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+
+        // email is null
+        user = new HttpEntity<>(new CreateUserDTO(username, pass, null));
+        res = rt.exchange(url, HttpMethod.POST, user, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+
+        // count users -> after
+        long countA = userRepository.count();
+        assertThat(countA).isEqualTo(countB);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAUser_UsernameIsNullOrEmpty() {
+        String url = "/api/users";
+        String username = "";
+        String pass = "12345678";
+        String email = "cris6h16@gmailcom";
+        String failBodyMssg = "Username mustn't be blank";
+
+        // count users -> before
+        long countB = userRepository.count();
+
+        // username is empty
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+        ResponseEntity<String> res = rt.exchange(url, HttpMethod.POST, user, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // username is null
         user = new HttpEntity<>(new CreateUserDTO(null, pass, email));
         res = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualToIgnoringCase(failBodyMssg);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+
+        // count users -> after
+        long countA = userRepository.count();
+        assertThat(countA).isEqualTo(countB);
+    }
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAUser_PasswordIsNullOrEmpty() {
+        String url = "/api/users";
+        String username = "cris6h16";
+        String pass = "";
+        String email = "cris6h16@gmail.com";
+        String failBodyMssg = "Password must be at least 8 characters";
+
+        // count users -> before
+        long countB = userRepository.count();
+
+        // password is empty
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+        ResponseEntity<String> res = rt.exchange(url, HttpMethod.POST, user, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        System.out.println(res);
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // password is null
         user = new HttpEntity<>(new CreateUserDTO(username, null, email));
         res = rt.exchange(url, HttpMethod.POST, user, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualToIgnoringCase(failBodyMssg);
-
-        // all are null
-        user = new HttpEntity<>(new CreateUserDTO(null, null, null));
-        res = rt.exchange(url, HttpMethod.POST, user, String.class);
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).isEqualToIgnoringCase(failBodyMssg);
-
-        System.out.println(res.getBody());
+        assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
         // count users -> after
         long countA = userRepository.count();
         assertThat(countA).isEqualTo(countB);
-
     }
+
+
 
 }
