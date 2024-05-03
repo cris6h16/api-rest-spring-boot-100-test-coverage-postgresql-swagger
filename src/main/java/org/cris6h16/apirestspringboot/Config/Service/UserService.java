@@ -37,10 +37,10 @@ public class UserService {
         this.objectMapper = objectMapper;
     }
 
-    public ResponseEntity<?> createUser(@NotNull @Valid CreateUserDTO dto) {
+    public ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.USER));
-        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
+        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException(); //TODO: docs why we handle it here directly (encryption)
 
         UserEntity user = new UserEntity(
                 null,
@@ -60,7 +60,7 @@ public class UserService {
 
 
     //getByUsername
-    public ResponseEntity<?> getByUsername(String username) {
+    public ResponseEntity<PublicUserDTO> getByUsername(String username) {
         Optional<UserEntity> user = userRepository.findByUsername(username);
         if (user.isEmpty()) return ResponseEntity.notFound().build();
         // get notes

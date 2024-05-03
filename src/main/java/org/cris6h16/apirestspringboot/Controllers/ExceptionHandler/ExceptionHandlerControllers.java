@@ -24,13 +24,14 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
 
     public ExceptionHandlerControllers(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.map = new HashMap<>();
-        map.put("message", "Internal Server Error");
+        this.map = new HashMap<>(1);
+        map.put("message", "Internal Server Error -> Unhandled");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleConflict(DataIntegrityViolationException ex) {
 
+        // @UniqueConstraint were violated
         if (ex.getMessage().contains("unique constraint")) {
             String str = ex.getMessage().split("\"")[1]; // extract name of the unique constraint
             if (str.equals("username_unique")) str = "Username already exists";
@@ -40,16 +41,18 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
             return ResponseEntity.status(HttpStatus.CONFLICT).body(getMapInJson());
         }
 
+        // @NotBlank were ( null || doesn't contain at least one non-whitespace character )
         if (ex.getMessage().contains("null value in column") &&
                 (ex.getMessage().contains("email") ||
-                        ex.getMessage().contains("username") ||
-                        ex.getMessage().contains("password"))) {
+                ex.getMessage().contains("username") ||
+                ex.getMessage().contains("password"))) {
             String str = "Email, Username and Password are Required";
             map.put("message", str);
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
         }
 
+        // Generic if wasn't handled
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
     }
 
