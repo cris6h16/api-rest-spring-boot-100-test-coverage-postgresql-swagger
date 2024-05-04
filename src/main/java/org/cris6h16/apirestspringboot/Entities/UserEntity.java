@@ -20,7 +20,7 @@ import java.util.Set;
 @ToString
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = {"notes"}) // is Lazy
+@EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches
 public class UserEntity {
 
     @Id
