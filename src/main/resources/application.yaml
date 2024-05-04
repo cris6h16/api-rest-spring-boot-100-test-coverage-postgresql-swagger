@@ -19,7 +19,7 @@ spring:
         format_sql: true
 
 
-debug: false
+debug: true
 
 server:
   port: 8080

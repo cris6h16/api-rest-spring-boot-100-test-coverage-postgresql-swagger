@@ -1,10 +1,8 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
-import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
@@ -14,18 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.http.HttpClient;
 import java.util.Date;
 import java.util.Optional;
-import java.util.Set;
 
-import static org.apache.tomcat.util.net.SocketEvent.TIMEOUT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -274,7 +271,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
     }
 
     @Nested
-    @DirtiesContext
+            //@DirtiesContext // Really I don't understand why some tests fail, it runs like if @DirtiesContext doesn't work in class level
     class withAUserInDB { // TODO: Centralize "hardcoded" & try to avoid it
 
         String url = "/api/users";
@@ -286,6 +283,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         @BeforeEach
         void setUp() {
             // Create a user (we already tested it)
+            System.out.println(userRepository.findAllEager());
             HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
             ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
             before = userRepository.findByUsernameEagerly(username).get();
@@ -298,6 +296,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldUpdateUsername() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -322,6 +321,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldUpdateEmail() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -346,6 +346,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldUpdatePassword() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -370,6 +371,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldUpdateUsernameEmailPassword() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -402,6 +404,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldBeGreaterUpdatedAt() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -410,16 +413,19 @@ public class UserControllerTest { //TODO: improve HARDCODE
             forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("github.com/cris6h16");
 
+            //first update then `UpdatedAt` pass from `null` -> `Date`
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
 
-            updated = userRepository.findByUsername(username).get();
-            assertThat(updated.getUpdatedAt()).isAfter(before.getUpdatedAt());
+            updated = userRepository.findByIdEagerly(before.getId()).get();
+            assertThat(updated.getUpdatedAt()).isNotNull();
+            assertThat(updated.getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
         }
 
         @Test
+        @DirtiesContext
         void updateShouldNotChange_DeletedAtCreatedAtRolesNotes() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
@@ -435,7 +441,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .withBasicAuth(username, pass)
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
 
-            updated = userRepository.findByUsernameEagerly(username).get();
+            updated = userRepository.findByIdEagerly(before.getId()).get();
             assertThat(updated.getCreatedAt()).isEqualTo(before.getCreatedAt());
             assertThat(updated.getDeletedAt()).isEqualTo(before.getDeletedAt());
             assertThat(updated.getRoles()).isEqualTo(before.getRoles());
@@ -444,12 +450,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateUsernameAlreadyExists() {
             String failBodyMssg = "Username already exists";
 
             UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername(username);
-            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<>(forUPDT);
 
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
@@ -462,6 +469,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateEmailAlreadyExists() {
             String failBodyMssg = "Email already exists";
 
@@ -479,6 +487,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateYouNeedToBeAuthenticated() {
             String failBodyMssg = "You need to be authenticated to perform this action";
 
@@ -494,8 +503,9 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateYouCannotUpdateOtherUserAccount() {
-            String failBodyMssg = "You cannot update other user account";
+            String failBodyMssg = "You aren't the owner of this id";
 
             UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 1);
             forUPDT.setUsername("other-username");
@@ -505,14 +515,15 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .withBasicAuth(username, pass)
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-//            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
             assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateNonexistentIdForbidden() {
-            String failBodyMssg = "User not found";
+            String failBodyMssg = "You aren't the owner of this id";
 
             UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 10);
             forUPDT.setUsername("other-username");
@@ -522,12 +533,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .withBasicAuth(username, pass)
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-//            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
             assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdateEmailIsInvalid() {
             String failBodyMssg = "Email is invalid";
 
@@ -545,6 +557,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext
         void shouldNotUpdatePasswordTooShort() {
             String failBodyMssg = "Password must be at least 8 characters";
 

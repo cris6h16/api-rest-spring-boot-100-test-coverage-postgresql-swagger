@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.cris6h16.apirestspringboot.Config.Service.CustomAuthHandler.MyAuthorizationService;
 
 import java.net.URI;
 import java.util.Date;
@@ -48,7 +49,7 @@ public class UserService {
                 dto.getUsername(),
                 passwordEncoder.encode(dto.getPassword()), // default is bcrypt
                 dto.getEmail(),
-                new Date(System.currentTimeMillis()),
+                null,
                 null,
                 null,
                 Set.of(roles.get()),
@@ -60,7 +61,7 @@ public class UserService {
     }
 
 
-    @PreAuthorize("#username == authentication.principal.username") // SpEL
+    @PreAuthorize("#username == authentication.principal.username") // Try not to use this, always try to reference using Primary Key.. This also works remember that is UNIQUE
     // TODO: doc about what i learnt -> throw custom exceptions when @PreAuthorize("#username == authentication.principal.username") fails( create a method apart & call with try-catch)
     public ResponseEntity<PublicUserDTO> getByUsername(String username) {
         Optional<UserEntity> user = userRepository.findByUsername(username);
@@ -93,7 +94,9 @@ public class UserService {
     }
 
 
-    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
+    //    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
+    @PreAuthorize("@authResponses.checkIfIsAuthenticated() && @authResponses.checkIfIsOwnerOfThisId(#id)") // return exception with a message in response body
+
     public ResponseEntity<Void> updateUser(Long id, UpdateUserDTO dto) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty()) return ResponseEntity.notFound().build();
