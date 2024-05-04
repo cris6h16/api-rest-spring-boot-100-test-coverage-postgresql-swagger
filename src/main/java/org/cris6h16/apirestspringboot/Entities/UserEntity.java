@@ -20,6 +20,7 @@ import java.util.Set;
 @ToString
 @Getter
 @Setter
+@EqualsAndHashCode(exclude = {"notes"}) // is Lazy
 public class UserEntity {
 
     @Id

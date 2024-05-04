@@ -11,6 +11,7 @@ import java.util.Set;
 @Getter
 @Setter
 public class PublicUserDTO {
+    private Long id;
     private String username;
     private String email;
     private Date createdAt;

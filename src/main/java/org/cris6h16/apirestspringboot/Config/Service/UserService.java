@@ -79,6 +79,7 @@ public class UserService {
                 .collect(Collectors.toSet());
 
         PublicUserDTO userDTO = new PublicUserDTO(
+                user.get().getId(),
                 user.get().getUsername(),
                 user.get().getEmail(),
                 user.get().getCreatedAt(),

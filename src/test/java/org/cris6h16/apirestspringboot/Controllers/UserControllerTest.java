@@ -2,7 +2,10 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,10 +13,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.util.Date;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserControllerTest {
+public class UserControllerTest { //TODO: improve HARDCODE
 
     @Autowired
     TestRestTemplate rt;
@@ -43,6 +48,7 @@ public class UserControllerTest {
         // Check the user
         PublicUserDTO PUDTO = res2.getBody();
         assertThat(PUDTO).isNotNull();
+        assertThat(PUDTO.getId()).isNotNull();
         assertThat(PUDTO.getUsername()).isEqualTo(username);
         assertThat(PUDTO.getEmail()).isEqualTo(email);
     }
@@ -243,6 +249,118 @@ public class UserControllerTest {
         assertThat(countA).isEqualTo(countB);
     }
 
+    @Nested
+    @DirtiesContext
+    class withAUserInDB { // TODO: Centralized "hardcoded" & try to avoid it
+
+        String url = "/api/users";
+        String username = "cris6h16";
+        String pass = "12345678";
+        String email = "cristianmherrera21@gmail.com";
+        UserEntity before;
+
+        @BeforeEach
+        void setUp() {
+            // Create a user
+            HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+            ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+            // Wheres the verification if was it created? --> We already tested it
+
+
+            // Check the user
+            PublicUserDTO PUDTO = rt.getForEntity(url, PublicUserDTO.class).getBody();
+            assertThat(PUDTO).isNotNull();
+            assertThat(PUDTO.getId()).isNotNull();
+            assertThat(PUDTO.getUsername()).isEqualTo(username);
+            assertThat(PUDTO.getEmail()).isEqualTo(email);
+
+            before = userRepository.findByUsername(username).get();
+        }
+
+        @Test
+        void shouldUpdateAUser() {
+            UpdatedUserDTO forUPDT;
+            UserEntity updated;
+            Object changed1;
+            Object changed2;
+
+            // --- update `username` --- \\
+            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT.setUsername("github.com/cris6h16");
+
+            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, httpEntity, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            updated = userRepository.findByUsername(username).get();
+            assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
+
+            {   // restore the old values for comparison
+                updated.setUsername((String) before.getUsername());
+                updated.setUpdatedAt((Date) before.getUpdatedAt());
+                assertThat(updated.equals(before)).isTrue();
+            }
+
+
+            // --- update `email` --- \\
+            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT.setEmail("githubcomcris6h16@gmail.com");
+
+            httpEntity = new HttpEntity<UpdatedUserDTO>();
+            res = rt.exchange(url, HttpMethod.POST, httpEntity, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            updated = userRepository.findByUsername(username).get();
+            assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
+
+            {   // restore the old values for comparison
+                updated.setEmail((String) before.getEmail());
+                updated.setUpdatedAt((Date) before.getUpdatedAt());
+                assertThat(updated.equals(before)).isTrue();
+            }
+
+
+            // update `password`
+            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT.setPassword("iwannagotoliveinusa");
+
+            httpEntity = new HttpEntity<UpdatedUserDTO>();
+            res = rt.exchange(url, HttpMethod.POST, httpEntity, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            updated = userRepository.findByUsername(username).get();
+            assertThat(updated.getPassword()).isEqualTo(forUPDT.getPassword());
+
+            {   // restore the old values for comparison
+                updated.setPassword((String) before.getPassword());
+                updated.setUpdatedAt((Date) before.getUpdatedAt());
+                assertThat(updated.equals(before)).isTrue();
+            }
+
+        }
+
+        @Test
+        void shouldBeGreaterUpdatedAt(){
+            UpdatedUserDTO forUPDT;
+            UserEntity updated;
+
+            // updated `username`
+            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT.setUsername("github.com/cris6h16");
+
+            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, httpEntity, Void.class);
+
+            updated = userRepository.findByUsername(username).get();
+            assertThat(updated.getUpdatedAt()).isAfter(before.getUpdatedAt());
+        }
+
+        @Test
+        void shouldNotChangeCreatedAtRolesNotes(){
+        }
+    }
 
 
 }
