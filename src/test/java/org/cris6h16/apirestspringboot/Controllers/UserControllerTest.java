@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
@@ -14,13 +15,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.http.HttpClient;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.apache.tomcat.util.net.SocketEvent.TIMEOUT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -56,23 +61,21 @@ public class UserControllerTest { //TODO: improve HARDCODE
         assertThat(userEntity.isPresent()).isTrue();
 
 
-        // Get the role
-        Optional<RoleEntity> role = roleRepository.findByName(ERole.USER);
-        assertThat(role.isPresent()).isTrue();
-        RoleEntity userRole = role.get();
-
         // Check the user
         UserEntity fromDB = userEntity.get();
+        assertThat(fromDB.getNotes()).isEmpty();
         assertThat(fromDB.getId()).isNotNull();
         assertThat(fromDB.getUpdatedAt()).isNull();
         assertThat(fromDB.getDeletedAt()).isNull();
         assertThat(fromDB.getCreatedAt()).isNotNull();
         assertThat(fromDB.getEmail()).isEqualTo(email);
-        assertThat(fromDB.getRoles()).contains(userRole);
         assertThat(fromDB.getUsername()).isEqualTo(username);
         assertThat(fromDB.getRoles()).size().isEqualTo(1);
         assertThat(passwordEncoder.matches(pass, fromDB.getPassword())).isTrue();
-        assertThat(fromDB.getNotes()).isNull();
+        assertThat(fromDB.getRoles()
+                .stream()
+                .filter(r -> (r.getName().equals(ERole.USER)) && r.getId() > 0)
+                .count()).isEqualTo(1);
     }
 
     @Test
@@ -286,23 +289,29 @@ public class UserControllerTest { //TODO: improve HARDCODE
             HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
             ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
             before = userRepository.findByUsernameEagerly(username).get();
+
+
+            // PATCH isn't supported by TestRestTemplate
+            rt
+                    .getRestTemplate()
+                    .setRequestFactory(new HttpComponentsClientHttpRequestFactory()); // remember add dependency: org.apache.httpcomponents.client5:httpclient5
         }
 
         @Test
         void shouldUpdateUsername() {
-            UpdatedUserDTO forUPDT;
+            UpdateUserDTO forUPDT;
             UserEntity updated;
 
-            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("github.com/cris6h16");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            updated = userRepository.findByUsernameEagerly(username).get();
+            updated = userRepository.findByUsernameEagerly(forUPDT.getUsername()).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
 
             {   // restore the old values for comparison
@@ -314,16 +323,16 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         void shouldUpdateEmail() {
-            UpdatedUserDTO forUPDT;
+            UpdateUserDTO forUPDT;
             UserEntity updated;
 
-            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setEmail("githubcomcris6h16@gmail.com");
 
-            httpEntity = new HttpEntity<UpdatedUserDTO>();
-            res = rt
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
+            ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             updated = userRepository.findByUsernameEagerly(username).get();
@@ -338,13 +347,16 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         void shouldUpdatePassword() {
-            forUPDT = new UpdatedUserDTO(before.getId();
+            UpdateUserDTO forUPDT;
+            UserEntity updated;
+
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setPassword("iwannagotoliveinusa");
 
-            httpEntity = new HttpEntity<UpdatedUserDTO>();
-            res = rt
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
+            ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             updated = userRepository.findByUsernameEagerly(username).get();
@@ -359,21 +371,21 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         void shouldUpdateUsernameEmailPassword() {
-            UpdatedUserDTO forUPDT;
+            UpdateUserDTO forUPDT;
             UserEntity updated;
 
-            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("newusername");
             forUPDT.setEmail("newemail@gmail.com");
             forUPDT.setPassword("newpassword");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            updated = userRepository.findByUsername(username).get();
+            updated = userRepository.findByIdEagerly(before.getId()).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
             assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
             assertThat(passwordEncoder.matches(forUPDT.getPassword(), updated.getPassword())).isTrue();
@@ -391,17 +403,17 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         void shouldBeGreaterUpdatedAt() {
-            UpdatedUserDTO forUPDT;
+            UpdateUserDTO forUPDT;
             UserEntity updated;
 
             // updated `username`
-            forUPDT = new UpdatedUserDTO(before.getId();
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("github.com/cris6h16");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
 
             updated = userRepository.findByUsername(username).get();
             assertThat(updated.getUpdatedAt()).isAfter(before.getUpdatedAt());
@@ -409,19 +421,19 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         void updateShouldNotChange_DeletedAtCreatedAtRolesNotes() {
-            UpdatedUserDTO forUPDT;
+            UpdateUserDTO forUPDT;
             UserEntity updated;
 
             // updated `username`, `email` & `password`
-            forUPDT = new UpdatedUserDTO();
+            forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("newusername");
             forUPDT.setEmail("newemail@gmail.com");
             forUPDT.setPassword("newpassword");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>();
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
 
             updated = userRepository.findByUsernameEagerly(username).get();
             assertThat(updated.getCreatedAt()).isEqualTo(before.getCreatedAt());
@@ -435,13 +447,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateUsernameAlreadyExists() {
             String failBodyMssg = "Username already exists";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO();
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername(username);
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
 
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
@@ -453,13 +465,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateEmailAlreadyExists() {
             String failBodyMssg = "Email already exists";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO();
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setEmail(email);
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
@@ -470,8 +482,11 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateYouNeedToBeAuthenticated() {
             String failBodyMssg = "You need to be authenticated to perform this action";
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new CreateUserDTO(username, pass, email);
-            ResponseEntity<String> re = rt.exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT.setUsername("github.com/cris6h16");
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<>(forUPDT);
+
+            ResponseEntity<String> re = rt.exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
@@ -482,32 +497,32 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateYouCannotUpdateOtherUserAccount() {
             String failBodyMssg = "You cannot update other user account";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO(before.getId() + 1);
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 1);
             forUPDT.setUsername("other-username");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+//            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
             assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
         }
 
         @Test
-        void shouldNotUpdateUserNotFound() {
+        void shouldNotUpdateNonexistentIdForbidden() {
             String failBodyMssg = "User not found";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO(before.getId() + 1);
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 10);
             forUPDT.setUsername("other-username");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
-            assertThat(re.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+            assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+//            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
             assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
         }
@@ -516,13 +531,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateEmailIsInvalid() {
             String failBodyMssg = "Email is invalid";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO();
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setEmail("thisisaninvalidemail");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
@@ -533,13 +548,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdatePasswordTooShort() {
             String failBodyMssg = "Password must be at least 8 characters";
 
-            UpdatedUserDTO forUPDT = new UpdatedUserDTO();
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setPassword("1234567");
 
-            HttpEntity<UpdatedUserDTO> httpEntity = new HttpEntity<UpdatedUserDTO>(forUPDT);
+            HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 

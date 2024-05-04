@@ -9,10 +9,11 @@ import java.util.Optional;
 public interface UserRepository extends CrudRepository<UserEntity, Long> {
     Optional<UserEntity> findByUsername(String username);
 
-    @Query("SELECT u FROM UserEntity u JOIN FETCH u.roles WHERE u.username = ?1")
+    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.username = ?1")
     Optional<UserEntity> findByUsernameEagerly(String username);
 
-    int countByUsername(String username);
+    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.id = ?1")
+    Optional<UserEntity> findByIdEagerly(Long id);
 
-    int countByEmail(String email);
-}
+
+    Optional<UserEntity> findByEmail(String email);}

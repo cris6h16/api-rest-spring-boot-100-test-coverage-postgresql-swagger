@@ -10,6 +10,7 @@ import lombok.*;
 @ToString
 @Getter
 @Setter
+@EqualsAndHashCode
 public class RoleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")

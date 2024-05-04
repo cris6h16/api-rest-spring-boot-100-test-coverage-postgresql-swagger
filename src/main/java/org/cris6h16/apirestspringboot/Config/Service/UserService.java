@@ -3,17 +3,16 @@ package org.cris6h16.apirestspringboot.Config.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.Controllers.PreExceptions.PasswordIsTooShortException;
-import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
+import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.PasswordIsTooShortException;
+import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.AlreadyExistsException;
+import org.cris6h16.apirestspringboot.DTOs.*;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +36,12 @@ public class UserService {
         this.objectMapper = objectMapper;
     }
 
+    @PreAuthorize("permitAll()")
     public ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.USER));
-        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException(); //TODO: docs why we handle it here directly (encryption)
+        if (dto.getPassword() == null || dto.getPassword().length() < 8)
+            throw new PasswordIsTooShortException(); //TODO: docs why we handle it here directly (encryption)
 
         UserEntity user = new UserEntity(
                 null,
@@ -59,7 +60,8 @@ public class UserService {
     }
 
 
-    //getByUsername
+    @PreAuthorize("#username == authentication.principal.username") // SpEL
+    // TODO: doc about what i learnt -> throw custom exceptions when @PreAuthorize("#username == authentication.principal.username") fails( create a method apart & call with try-catch)
     public ResponseEntity<PublicUserDTO> getByUsername(String username) {
         Optional<UserEntity> user = userRepository.findByUsername(username);
         if (user.isEmpty()) return ResponseEntity.notFound().build();
@@ -88,5 +90,36 @@ public class UserService {
                 notes
         );
         return ResponseEntity.ok(userDTO);
+    }
+
+
+    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
+    public ResponseEntity<Void> updateUser(Long id, UpdateUserDTO dto) {
+        Optional<UserEntity> user = userRepository.findById(id);
+        if (user.isEmpty()) return ResponseEntity.notFound().build();
+
+        boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank();
+        boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank();
+        boolean updatePassword = dto.getPassword() != null && !dto.getPassword().isBlank();
+
+
+        if (updateUsername) {
+            if (userRepository.findByUsername(dto.getUsername()).isPresent())
+                throw new AlreadyExistsException("Username");
+            user.get().setUsername(dto.getUsername());
+        }
+
+        if (updateEmail) {
+            if (userRepository.findByEmail(dto.getEmail()).isPresent())
+                throw new AlreadyExistsException("Email");
+            user.get().setEmail(dto.getEmail());
+        }
+        if (updatePassword) {
+            if (dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
+            user.get().setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+        userRepository.save(user.get());
+
+        return ResponseEntity.noContent().build();
     }
 }

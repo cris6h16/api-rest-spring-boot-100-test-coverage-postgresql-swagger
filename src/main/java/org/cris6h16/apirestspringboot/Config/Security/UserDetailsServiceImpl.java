@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Config.Security;
 
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +41,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // Is enabled?
         boolean enabled = user.get().getDeletedAt() == null;
 
-        return new User( // TODO: see if enable is used correctly
+        return new UserWithId( // TODO: see if enable is used correctly
+                user.get().getId(),
                 user.get().getUsername(),
                 user.get().getPassword(), // Password is encoded
                 enabled,

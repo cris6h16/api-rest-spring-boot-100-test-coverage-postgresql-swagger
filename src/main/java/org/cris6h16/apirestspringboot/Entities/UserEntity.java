@@ -21,6 +21,7 @@ import java.util.Set;
 @Getter
 @Setter
 @EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches
+// TODO: doc about @EqualsAndHashCode must be set in all contained entities --> cased me a TROUBLE
 public class UserEntity {
 
     @Id

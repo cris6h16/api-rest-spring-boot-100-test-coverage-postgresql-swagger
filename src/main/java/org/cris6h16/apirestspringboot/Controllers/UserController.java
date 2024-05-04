@@ -1,13 +1,21 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Config.Service.UserService;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 //@RestController
 @Controller
@@ -24,14 +32,19 @@ public class UserController {
     //TODO: doc about how a ResponseEntity which is Void can contain a body when an exception is threw
 
     @PostMapping
-    @PreAuthorize("permitAll()")
     public ResponseEntity<Void> createUser(@RequestBody CreateUserDTO user) {
         return userService.createUser(user);
     }
 
     @GetMapping("/{username}")
-    @PreAuthorize("#username == authentication.principal.username") // SpEL
     public ResponseEntity<PublicUserDTO> getUser(@PathVariable String username) {
         return userService.getByUsername(username);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<Void> updateUser(@PathVariable Long id,
+                                           @RequestBody @NotNull @Valid UpdateUserDTO user) {
+
+        return userService.updateUser(id, user);
     }
 }
