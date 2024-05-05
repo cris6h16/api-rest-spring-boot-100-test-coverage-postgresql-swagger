@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Entities;
 
 public enum ERole {
-    USER,
-    ADMIN
+    ROLE_USER,
+    ROLE_ANONYMOUS,
+    ROLE_ADMIN
 }

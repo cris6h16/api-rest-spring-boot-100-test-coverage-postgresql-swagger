@@ -6,15 +6,20 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.Collection;
+import java.util.stream.Stream;
 
 /**
  * This class is a service that returns custom responses for authorization | authentication failures.<br>
  * remember that this is only a part of the "custom responses" the rest is in the {@link org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers} class
+ *
  * @author github.com/cris6h16
  */
 @Service(value = "AuthCustomResponses")
@@ -36,10 +41,18 @@ public class MyAuthorizationService {
 
     // if isn't a USER role, we won't authorize. you can let more roles or separate => `checkIfIsUser()`
     public boolean checkIfIsAuthenticated() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isUser = auth.getAuthorities().stream().anyMatch(r->r.getAuthority().equalsIgnoreCase(ERole.USER.toString()));
-        if (isUser) return true;
+        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getAuthorities();
 
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when we tried to return a specific response of authentication failure");
+        boolean isUser = authorities.stream().anyMatch(r -> r.getAuthority().equalsIgnoreCase(ERole.ROLE_USER.toString()));
+        boolean isNotAuthenticated = authorities.stream().anyMatch(r -> r.getAuthority().equalsIgnoreCase(ERole.ROLE_ANONYMOUS.toString()));
+        if (isUser) return true;
+        else if (isNotAuthenticated)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be authenticated to perform this action");
+
+
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when we tried to return a specific response of authentication failure, probably you added a new Role");
     }
 }

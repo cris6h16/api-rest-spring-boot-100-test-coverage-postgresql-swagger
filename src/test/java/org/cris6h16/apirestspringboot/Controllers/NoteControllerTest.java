@@ -80,7 +80,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    void shouldNotCreateANoteTitleIsRequired(){
+    void shouldNotCreateANoteTitleIsNull(){
         String url = "/api/notes";
         String content = "Hello I'm its content";
         String failMessage = "Title is required";
@@ -95,4 +95,55 @@ public class NoteControllerTest {
 
 
     }
+
+    @Test
+    void shouldNotCreateANoteTitleIsBlank(){
+        String url = "/api/notes";
+        String title = "  ";
+        String content = "Hello I'm its content";
+        String failMessage = "Title is required";
+
+        // Create a note
+        HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
+        ResponseEntity<String> res = rt // TODO: doc about how a Response Void can contain a body when there was an exception
+                .withBasicAuth(username, pass)
+                .exchange(url, HttpMethod.POST, note, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+
+
+    }
+
+    @Test
+    void shouldNotCreateANoteTitleLengthIsGreaterThan255(){
+        String url = "/api/notes";
+        String title = "a".repeat(256);
+        String content = "Hello I'm its content";
+        String failMessage = "Title must be less than 255 characters";
+
+        // Create a note
+        HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
+        ResponseEntity<String> res = rt // TODO: doc about how a Response Void can contain a body when there was an exception
+                .withBasicAuth(username, pass)
+                .exchange(url, HttpMethod.POST, note, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+    }
+
+    @Test
+    void shouldNotCreateANoteMustBeAuthenticated(){
+        String url = "/api/notes";
+        String title = "Hello I'm a title";
+        String content = "Hello I'm its content";
+        String failMessage = "You must be authenticated to perform this action";
+
+        // Create a note
+        HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
+        ResponseEntity<String> res = rt
+                .exchange(url, HttpMethod.POST, note, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+    }
+
+
 }

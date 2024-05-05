@@ -77,7 +77,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         assertThat(passwordEncoder.matches(pass, fromDB.getPassword())).isTrue();
         assertThat(fromDB.getRoles()
                 .stream()
-                .filter(r -> (r.getName().equals(ERole.USER)) && r.getId() > 0)
+                .filter(r -> (r.getName().equals(ERole.ROLE_USER)) && r.getId() > 0)
                 .count()).isEqualTo(1);
     }
 

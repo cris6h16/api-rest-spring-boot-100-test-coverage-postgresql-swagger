@@ -42,8 +42,8 @@ public class UserService {
 
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto) {
-        Optional<RoleEntity> roles = roleRepository.findByName(ERole.USER);
-        if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.USER));
+        Optional<RoleEntity> roles = roleRepository.findByName(ERole.ROLE_USER);
+        if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.ROLE_USER));
         if (dto.getPassword() == null || dto.getPassword().length() < 8)
             throw new PasswordIsTooShortException(); //TODO: docs why we handle it here directly (encryption)
 
