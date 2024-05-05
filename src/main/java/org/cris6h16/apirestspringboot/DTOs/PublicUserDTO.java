@@ -10,6 +10,7 @@ import java.util.Set;
 @ToString
 @Getter
 @Setter
+@Builder
 public class PublicUserDTO {
     private Long id;
     private String username;

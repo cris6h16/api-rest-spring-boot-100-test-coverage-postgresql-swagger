@@ -36,15 +36,14 @@ public class UserController {
         return userService.createUser(user);
     }
 
-    @GetMapping("/{username}")
-    public ResponseEntity<PublicUserDTO> getUser(@PathVariable String username) {
-        return userService.getByUsername(username);
+    @GetMapping("/{id}")
+    public ResponseEntity<PublicUserDTO> getUserById(@PathVariable Long id) { //TODO: Impl passing of Strings -> Test
+        return userService.getByIdLazy(id);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateUser(@PathVariable Long id,
-                                           @RequestBody @NotNull @Valid UpdateUserDTO user) {
-
+                                           @RequestBody UpdateUserDTO user) {//TODO: Impl passing of NUmbers -> Test
         return userService.updateUser(id, user);
     }
 }

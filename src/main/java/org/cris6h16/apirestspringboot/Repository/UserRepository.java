@@ -8,10 +8,10 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface UserRepository extends CrudRepository<UserEntity, Long> {
-    Optional<UserEntity> findByUsername(String username);
+    Optional<UserEntity> findByUsername(String username); // --> UserDetailServiceImpl |--| check if already exists -> @Service
 
-    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.username = ?1")
-    Optional<UserEntity> findByUsernameEagerly(String username);
+//    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.username = ?1")
+//    Optional<UserEntity> findByUsernameEagerly(String username);
 
     @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.id = ?1")
     Optional<UserEntity> findByIdEagerly(Long id);

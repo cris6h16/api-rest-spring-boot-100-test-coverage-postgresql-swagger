@@ -1,8 +1,10 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
@@ -53,8 +55,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
         ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
+        // get id from Location Header
+        String[] parts = res.getHeaders().getLocation().toString().split("/");
+        Long id = Long.parseLong(parts[parts.length - 1]);
+
         // Get the user
-        Optional<UserEntity> userEntity = userRepository.findByUsernameEagerly(username);
+        Optional<UserEntity> userEntity = userRepository.findByIdEagerly(id);
         assertThat(userEntity.isPresent()).isTrue();
 
 
@@ -286,7 +292,9 @@ public class UserControllerTest { //TODO: improve HARDCODE
             System.out.println(userRepository.findAllEager());
             HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
             ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
-            before = userRepository.findByUsernameEagerly(username).get();
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            Long id = Long.parseLong(res.getHeaders().getLocation().toString().split("/")[4]);
+            before = userRepository.findByIdEagerly(id).get();
 
 
             // PATCH isn't supported by TestRestTemplate
@@ -310,7 +318,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            updated = userRepository.findByUsernameEagerly(forUPDT.getUsername()).get();
+            updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
 
             {   // restore the old values for comparison
@@ -335,7 +343,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            updated = userRepository.findByUsernameEagerly(username).get();
+            updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
             assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
 
             {   // restore the old values for comparison
@@ -360,7 +368,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            updated = userRepository.findByUsernameEagerly(username).get();
+            updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
             assertThat(passwordEncoder.matches(forUPDT.getPassword(), updated.getPassword())).isTrue();
 
             {   // restore the old values for comparison
@@ -464,7 +472,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
 
@@ -483,7 +491,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -499,7 +507,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -517,7 +525,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -535,7 +543,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -553,7 +561,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -571,9 +579,57 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByUsernameEagerly(username).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
+
+
+        @Test
+        @DirtiesContext
+            // Others tests can affect the stored in `before`
+        void shouldGetAUserById() {
+            Long id = before.getId();
+
+            ResponseEntity<PublicUserDTO> res = rt
+                    .withBasicAuth(username, pass)
+                    .getForEntity(url + "/" + id, PublicUserDTO.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+            PublicUserDTO user = res.getBody();
+            assertThat(user.getId()).isEqualTo(id);
+            assertThat(user.getUsername()).isEqualTo(username);
+            assertThat(user.getEmail()).isEqualTo(email);
+            assertThat(user.getRoles().size()).isEqualTo(1);
+            assertThat(user.getNotes()).isEmpty();
+        }
+
+        @Test
+        void shouldNotGetIsNotAuthenticated() {
+            String failBodyMssg = "You need to be authenticated to perform this action";
+
+            Long id = before.getId();
+
+            ResponseEntity<String> res = rt
+                    .getForEntity(url + "/" + id, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+        }
+
+        @Test
+        void shouldNotGetUserYouAreNotTheOwner() {
+            String failBodyMssg = "You aren't the owner of this ID";
+
+            Long id = before.getId() + 1091;
+
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .getForEntity(url + "/" + id, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+        }
+
     }
 
-
 }
+
+
+

@@ -22,6 +22,7 @@ import java.util.Set;
 @Setter
 @EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches
 // TODO: doc about @EqualsAndHashCode must be set in all contained entities --> cased me a TROUBLE
+@Builder
 public class UserEntity {
 
     @Id
@@ -29,7 +30,7 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username")
+    @Column(name = "username", length = 20) //TODO: test passing a greater that 20
     @NotBlank(message = "Username mustn't be blank") // for sending null/empty
     private String username;
 
@@ -83,9 +84,9 @@ public class UserEntity {
         updatedAt = new Date(System.currentTimeMillis());
     }
 
-    @PostRemove
-    public void preRemove() {
-        deletedAt = new Date(System.currentTimeMillis());
-    }
+//    @PostRemove  --> avoid for soft deletes
+//    public void preRemove() {
+//        deletedAt = new Date(System.currentTimeMillis());
+//    }
 
 }
