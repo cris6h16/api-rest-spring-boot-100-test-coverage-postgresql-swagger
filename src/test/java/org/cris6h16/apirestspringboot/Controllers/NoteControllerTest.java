@@ -1,5 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
@@ -27,6 +29,8 @@ public class NoteControllerTest {
     TestRestTemplate rt;
     @Autowired
     NoteRepository noteRepository;
+    @Autowired
+    ObjectMapper objectMapper; // deserialize JSON to Java objects
 
     String username = "cris6h16";
     String pass = "12345678";
@@ -80,7 +84,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    void shouldNotCreateANoteTitleIsNull(){
+    void shouldNotCreateANoteTitleIsNull() {
         String url = "/api/notes";
         String content = "Hello I'm its content";
         String failMessage = "Title is required";
@@ -97,7 +101,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    void shouldNotCreateANoteTitleIsBlank(){
+    void shouldNotCreateANoteTitleIsBlank() {
         String url = "/api/notes";
         String title = "  ";
         String content = "Hello I'm its content";
@@ -115,7 +119,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    void shouldNotCreateANoteTitleLengthIsGreaterThan255(){
+    void shouldNotCreateANoteTitleLengthIsGreaterThan255() {
         String url = "/api/notes";
         String title = "a".repeat(256);
         String content = "Hello I'm its content";
@@ -131,7 +135,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    void shouldNotCreateANoteMustBeAuthenticated(){
+    void shouldNotCreateANoteMustBeAuthenticated() {
         String url = "/api/notes";
         String title = "Hello I'm a title";
         String content = "Hello I'm its content";
@@ -145,5 +149,24 @@ public class NoteControllerTest {
         assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
     }
 
+    @Test
+    void shouldListAllNotes() throws JsonProcessingException {
+        String url = "/api/notes";
+        String title = "Title 1";
+        String content = "Content 1";
 
+        // Check if the user recently created hasn't notes
+        assertThat(noteRepository.findByUserId(dbUserID)).isEmpty();
+
+        // Create a note
+        HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
+        ResponseEntity<Void> res = rt
+                .withBasicAuth(username, pass)
+                .exchange(url, HttpMethod.POST, note, Void.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        String[] parts = res.getHeaders().getLocation().toString().split("/");
+        Long id = Long.parseLong(parts[parts.length - 1]);
+
+        System.out.println(objectMapper.writeValueAsString(noteRepository.findById(id)));
+    }
 }
