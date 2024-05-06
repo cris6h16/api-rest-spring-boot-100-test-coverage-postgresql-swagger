@@ -17,6 +17,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.cris6h16.apirestspringboot.Config.Service.CustomAuthHandler.MyAuthorizationService;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
@@ -41,6 +43,10 @@ public class UserService {
     }
 
     @PreAuthorize("permitAll()")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.ROLE_USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.ROLE_USER));
@@ -66,6 +72,10 @@ public class UserService {
 
 
     @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
+    @Transactional(
+            isolation = Isolation.READ_UNCOMMITTED, //reading data without modifications
+            rollbackFor = Exception.class
+    )
     public ResponseEntity<PublicUserDTO> getByIdLazy(Long id) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty())
@@ -96,7 +106,10 @@ public class UserService {
     //    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
     @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
     // return exception with a message in response body
-
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
     public ResponseEntity<Void> updateUser(Long id, @NotNull @Valid UpdateUserDTO dto) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty())

@@ -1,8 +1,6 @@
 package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -45,6 +43,11 @@ public class NoteEntity {
     @Temporal(TemporalType.DATE)
     private Date deletedAt;
 
+
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_Notes_user_id"))
+    private UserEntity user;
 
     // TODO: improve -> single responsibility principle
     @PrePersist

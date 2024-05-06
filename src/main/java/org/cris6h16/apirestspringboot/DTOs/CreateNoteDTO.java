@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @ToString
 @EqualsAndHashCode
+@Builder
 public class CreateNoteDTO {
     //    private Long id;
     @NotBlank(message = "Title is required") // not  null/only spaces

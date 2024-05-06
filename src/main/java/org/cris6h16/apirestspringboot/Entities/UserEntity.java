@@ -68,8 +68,7 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "note_id", foreignKey = @ForeignKey(name = "fk_note_id"))
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<NoteEntity> notes;
 
 

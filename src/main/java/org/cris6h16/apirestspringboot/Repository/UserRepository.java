@@ -1,10 +1,12 @@
 package org.cris6h16.apirestspringboot.Repository;
 
+import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 public interface UserRepository extends CrudRepository<UserEntity, Long> {
@@ -21,4 +23,8 @@ public interface UserRepository extends CrudRepository<UserEntity, Long> {
 
 
     Optional<UserEntity> findByEmail(String email);
+
+
+//    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
+//    Collection<Object> findNotesByUserId(Long userId);
 }

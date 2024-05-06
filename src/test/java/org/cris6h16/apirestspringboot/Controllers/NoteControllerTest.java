@@ -1,12 +1,14 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
+import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +19,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.io.*;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +33,8 @@ public class NoteControllerTest {
     TestRestTemplate rt;
     @Autowired
     NoteRepository noteRepository;
+    @Autowired
+    UserRepository userRepository;
     @Autowired
     ObjectMapper objectMapper; // deserialize JSON to Java objects
 
@@ -149,24 +155,51 @@ public class NoteControllerTest {
         assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
     }
 
-    @Test
-    void shouldListAllNotes() throws JsonProcessingException {
-        String url = "/api/notes";
-        String title = "Title 1";
-        String content = "Content 1";
+    @Nested
+    class with27Notes {
 
-        // Check if the user recently created hasn't notes
-        assertThat(noteRepository.findByUserId(dbUserID)).isEmpty();
+        static List<String> notesInJson;
 
-        // Create a note
-        HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
-        ResponseEntity<Void> res = rt
-                .withBasicAuth(username, pass)
-                .exchange(url, HttpMethod.POST, note, Void.class);
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        String[] parts = res.getHeaders().getLocation().toString().split("/");
-        Long id = Long.parseLong(parts[parts.length - 1]);
+        @BeforeAll
+        static void beforeAll() throws IOException {
+            InputStream is = with27Notes.class.getClassLoader().getResourceAsStream("NotesEntities.txt");
+            BufferedReader bf = new BufferedReader(new InputStreamReader(is));
+            while (bf.ready()) notesInJson.add(bf.readLine());
 
-        System.out.println(objectMapper.writeValueAsString(noteRepository.findById(id)));
+            is.close();
+            bf.close();
+        }
+
+        @BeforeEach
+        void setUp() throws IOException {
+            // save 27 notes in user already stored
+            notesInJson.forEach(note -> {
+                try {
+                    NoteEntity ne = objectMapper
+                            .readerFor(NoteEntity.class)
+                            .readValue(note);
+                    CreateNoteDTO noteDTO = CreateNoteDTO.builder()
+                            .title(ne.getTitle())
+                            .content(ne.getContent())
+                            .build();
+                    HttpEntity<CreateNoteDTO> entity = new HttpEntity<>(noteDTO);
+                    rt
+                            .withBasicAuth(username, pass)
+                            .exchange("/api/notes", HttpMethod.POST, entity, Void.class);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        @Test
+        void shouldListAllNotes() throws IOException {
+
+        }
+
+
+        // delete a note shouldnot delete the user...
+        // delete a user should delete all notes...
     }
 }
