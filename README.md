@@ -188,7 +188,7 @@ will use PostgresSQL (password is used encrypted for everything).
 ## Time taken (UTC-5)
 
 **PD**: This isn't classified very well, but I'll try to do it better in the future.   
-also take into account that I'm already have an idea of what the api will do. Only was capture my general idea in specific points (for defining & thinking like that).
+also take into account that I'm already have an idea of what the api will do. Only was capture my general idea in specific points (for defining & things like that).
 
 ### README.md
 
