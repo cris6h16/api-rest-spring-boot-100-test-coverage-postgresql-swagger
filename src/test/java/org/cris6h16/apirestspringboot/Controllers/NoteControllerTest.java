@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -26,10 +27,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -97,6 +96,7 @@ public class NoteControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldNotCreateANoteTitleIsNull() {
         String url = "/api/notes";
         String content = "Hello I'm its content";
@@ -114,6 +114,7 @@ public class NoteControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldNotCreateANoteTitleIsBlank() {
         String url = "/api/notes";
         String title = "  ";
@@ -132,6 +133,7 @@ public class NoteControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldNotCreateANoteTitleLengthIsGreaterThan255() {
         String url = "/api/notes";
         String title = "a".repeat(256);
@@ -148,6 +150,7 @@ public class NoteControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void shouldNotCreateANoteMustBeAuthenticated() {
         String url = "/api/notes";
         String title = "Hello I'm a title";
@@ -165,6 +168,9 @@ public class NoteControllerTest {
     @Nested
     @DirtiesContext
     class with27Notes {
+
+        @Autowired
+        Environment env;
 
         static List<String> notesInJson;
         static boolean asu = false;
@@ -218,7 +224,9 @@ public class NoteControllerTest {
             // type reference for the response entity
             ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
             };
-            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt.exchange(url, HttpMethod.GET, null, responseType);
+            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url, HttpMethod.GET, null, responseType);
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
             // check the response
@@ -228,29 +236,94 @@ public class NoteControllerTest {
 
         @Test
         @DirtiesContext
-        void shouldListAllNotesIsPageable() {
+        void shouldListAllNotesIsPageable_ASC_DESC() {
             String url = "/api/notes";
+            String pageParam = env.getProperty("spring.data.web.pageable.page-parameter", String.class);
+            String sizeParam = env.getProperty("spring.data.web.pageable.size-parameter", String.class);
             byte size = 7;
             byte page = 1;
 
+            // DESC
             while (true) {
                 URI uri = UriComponentsBuilder.fromUriString(url)
-                        .queryParam("page", page++)
-                        .queryParam("size", size)
+                        .queryParam(pageParam, page++)
+                        .queryParam(sizeParam, size)
                         .queryParam("sort", "id,desc")
                         .build()
                         .toUri();
-                ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+                ParameterizedTypeReference<List<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
                 };
-                ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+                ResponseEntity<List<PublicNoteDTO>> responseEntity = rt
+                        .withBasicAuth(username, pass)
                         .exchange(uri, HttpMethod.GET, null, responseType);
                 assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-                // check the response
-                Set<PublicNoteDTO> notes = responseEntity.getBody();
-                assertThat(notes.size()).isLessThanOrEqualTo(size);
 
+                List<PublicNoteDTO> notes = responseEntity.getBody();
+                assertThat(notes.size()).isLessThanOrEqualTo(size);
+                Long[] ids = notes.stream().map(PublicNoteDTO::getId).toArray(Long[]::new);
+                assertThat(ids).isSortedAccordingTo(Comparator.reverseOrder());
+                // if less than size, then is the last page
                 if (notes.size() < size) break;
             }
+
+            // ASC
+            while (true) {
+                URI uri = UriComponentsBuilder.fromUriString(url)
+                        .queryParam(pageParam, page++)
+                        .queryParam(sizeParam, size)
+                        .queryParam("sort", "id,asc")
+                        .build()
+                        .toUri();
+                ParameterizedTypeReference<List<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+                };
+                ResponseEntity<List<PublicNoteDTO>> responseEntity = rt
+                        .withBasicAuth(username, pass)
+                        .exchange(uri, HttpMethod.GET, null, responseType);
+                assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+                List<PublicNoteDTO> notes = responseEntity.getBody();
+                assertThat(notes.size()).isLessThanOrEqualTo(size);
+                Long[] ids = notes.stream().map(PublicNoteDTO::getId).toArray(Long[]::new);
+                assertThat(ids).isSortedAccordingTo(Comparator.naturalOrder());
+                // if less than size, then is the last page
+                if (notes.size() < size) break;
+            }
+
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotListAllNotesIsNotAuthenticated() {
+            String url = "/api/notes";
+            String failMessage = "You must be authenticated to perform this action";
+
+            // type reference for the response entity
+            ParameterizedTypeReference<String> responseType = new ParameterizedTypeReference<>() {
+            };
+            ResponseEntity<String> responseEntity = rt
+                    .exchange(url, HttpMethod.GET, null, responseType);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(responseEntity.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void URIWithNoParamsShouldListInDefaultPageableConfiguration() {
+            String url = "/api/notes";
+            Integer size = env.getProperty("spring.data.web.pageable.default-page-size", Integer.class);
+
+            URI uri = UriComponentsBuilder.fromUriString(url)
+                    .build()
+                    .toUri();
+            ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+            };
+            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(uri, HttpMethod.GET, null, responseType);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+            // check the response
+            Set<PublicNoteDTO> notes = responseEntity.getBody();
+            assertThat(notes.size()).isEqualTo(size);
         }
 
 

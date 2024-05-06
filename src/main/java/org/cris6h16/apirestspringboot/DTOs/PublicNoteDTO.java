@@ -11,7 +11,9 @@ import java.util.Date;
 @ToString
 @Getter
 @Setter
+@Builder
 public class PublicNoteDTO {
+    private Long id;
     private String title;
     private String content;
     private Date createdAt;

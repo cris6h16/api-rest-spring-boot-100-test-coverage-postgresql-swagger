@@ -1,21 +1,12 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
-import org.cris6h16.apirestspringboot.Config.Service.UserService;
+import org.cris6h16.apirestspringboot.Config.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 
 //@RestController
 @Controller
@@ -23,9 +14,9 @@ import java.security.Principal;
 @RequestMapping("/api/users")
 public class UserController {
 
-    UserService userService;
+    UserServiceImpl userService;
 
-    public UserController(UserService userService) {
+    public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
 

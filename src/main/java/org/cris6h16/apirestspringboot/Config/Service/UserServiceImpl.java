@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Config.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.cris6h16.apirestspringboot.Config.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.AlreadyExistsException;
 import org.cris6h16.apirestspringboot.DTOs.*;
@@ -16,32 +17,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.cris6h16.apirestspringboot.Config.Service.CustomAuthHandler.MyAuthorizationService;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
     ObjectMapper objectMapper;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
     }
 
+    @Override
     @PreAuthorize("permitAll()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
@@ -71,6 +71,7 @@ public class UserService {
     }
 
 
+    @Override
     @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
     @Transactional(
             isolation = Isolation.READ_UNCOMMITTED, //reading data without modifications
@@ -103,6 +104,7 @@ public class UserService {
     }
 
 
+    @Override
     //    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
     @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
     // return exception with a message in response body
