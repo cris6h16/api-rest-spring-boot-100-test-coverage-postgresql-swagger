@@ -3,6 +3,8 @@ package org.cris6h16.apirestspringboot.Controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
@@ -13,16 +15,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -156,22 +163,29 @@ public class NoteControllerTest {
     }
 
     @Nested
+    @DirtiesContext
     class with27Notes {
 
         static List<String> notesInJson;
+        static boolean asu = false;
 
         @BeforeAll
         static void beforeAll() throws IOException {
+            notesInJson = new java.util.ArrayList<>();
+
             InputStream is = with27Notes.class.getClassLoader().getResourceAsStream("NotesEntities.txt");
             BufferedReader bf = new BufferedReader(new InputStreamReader(is));
             while (bf.ready()) notesInJson.add(bf.readLine());
 
             is.close();
             bf.close();
+
         }
 
         @BeforeEach
-        void setUp() throws IOException {
+        void saveInDb() throws IOException {
+            if (asu) return;
+
             // save 27 notes in user already stored
             notesInJson.forEach(note -> {
                 try {
@@ -191,11 +205,52 @@ public class NoteControllerTest {
                     e.printStackTrace();
                 }
             });
+
+            asu = true;
         }
 
         @Test
-        void shouldListAllNotes() throws IOException {
+        @DirtiesContext
+        void shouldNotListAllNotesIsPageable() throws IOException, URISyntaxException {
+            String url = "/api/notes";
 
+            Integer elements = notesInJson.size();
+            // type reference for the response entity
+            ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+            };
+            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt.exchange(url, HttpMethod.GET, null, responseType);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+            // check the response
+            Set<PublicNoteDTO> notes = responseEntity.getBody();
+            assertThat(notes.size()).isLessThan(elements - 1);// -1 for be sure that the elements are less than the total
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldListAllNotesIsPageable() {
+            String url = "/api/notes";
+            byte size = 7;
+            byte page = 1;
+
+            while (true) {
+                URI uri = UriComponentsBuilder.fromUriString(url)
+                        .queryParam("page", page++)
+                        .queryParam("size", size)
+                        .queryParam("sort", "id,desc")
+                        .build()
+                        .toUri();
+                ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+                };
+                ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+                        .exchange(uri, HttpMethod.GET, null, responseType);
+                assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+                // check the response
+                Set<PublicNoteDTO> notes = responseEntity.getBody();
+                assertThat(notes.size()).isLessThanOrEqualTo(size);
+
+                if (notes.size() < size) break;
+            }
         }
 
 
