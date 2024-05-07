@@ -20,6 +20,7 @@ import java.util.Set;
  * WHEN: rt.exchange(url, HttpMethod.POST, user, Void.class);
  */
 @JsonFormat // how your DTO is serialized and deserialized.
+@Builder
 public class CreateUserDTO {
     @NotBlank(message = "Username mustn't be blank") // for sending null/empty
     private String username;

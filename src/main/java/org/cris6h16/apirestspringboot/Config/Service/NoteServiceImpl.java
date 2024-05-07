@@ -26,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -92,5 +93,27 @@ public class NoteServiceImpl implements NoteService {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(pnDTOs);
+    }
+
+    @Override
+    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public ResponseEntity<PublicNoteDTO> getNoteById(Long noteId) {
+        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+
+        NoteEntity note = noteRepository
+                .findByIdAndUserId(noteId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+
+        return ResponseEntity.ok(PublicNoteDTO.builder()
+                .id(note.getId())
+                .title(note.getTitle())
+                .content(note.getContent())
+                .createdAt(note.getCreatedAt())
+                .updatedAt(note.getUpdatedAt())
+                .build());
     }
 }

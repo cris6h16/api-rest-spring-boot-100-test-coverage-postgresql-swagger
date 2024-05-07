@@ -171,13 +171,13 @@ public class NoteControllerTest {
 
         @Autowired
         Environment env;
+        static List<Long> notesIDs = new java.util.ArrayList<>();
+        static List<String> notesInJson = new java.util.ArrayList<>();
+        static boolean asu;
 
-        static List<String> notesInJson;
-        static boolean asu = false;
 
         @BeforeAll
         static void beforeAll() throws IOException {
-            notesInJson = new java.util.ArrayList<>();
 
             InputStream is = with27Notes.class.getClassLoader().getResourceAsStream("NotesEntities.txt");
             BufferedReader bf = new BufferedReader(new InputStreamReader(is));
@@ -190,6 +190,7 @@ public class NoteControllerTest {
 
         @BeforeEach
         void saveInDb() throws IOException {
+            asu = noteRepository.count() > 0;
             if (asu) return;
 
             // save 27 notes in user already stored
@@ -203,10 +204,12 @@ public class NoteControllerTest {
                             .content(ne.getContent())
                             .build();
                     HttpEntity<CreateNoteDTO> entity = new HttpEntity<>(noteDTO);
-                    rt
+                    ResponseEntity<Void> res = rt
                             .withBasicAuth(username, pass)
                             .exchange("/api/notes", HttpMethod.POST, entity, Void.class);
-
+                    assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+                    String[] parts = res.getHeaders().getLocation().toString().split("/");
+                    notesIDs.add(Long.parseLong(parts[parts.length - 1]));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -222,15 +225,15 @@ public class NoteControllerTest {
 
             Integer elements = notesInJson.size();
             // type reference for the response entity
-            ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+            ParameterizedTypeReference<List<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
             };
-            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+            ResponseEntity<List<PublicNoteDTO>> responseEntity = rt
                     .withBasicAuth(username, pass)
                     .exchange(url, HttpMethod.GET, null, responseType);
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
             // check the response
-            Set<PublicNoteDTO> notes = responseEntity.getBody();
+            List<PublicNoteDTO> notes = responseEntity.getBody();
             assertThat(notes.size()).isLessThan(elements - 1);// -1 for be sure that the elements are less than the total
         }
 
@@ -315,19 +318,99 @@ public class NoteControllerTest {
             URI uri = UriComponentsBuilder.fromUriString(url)
                     .build()
                     .toUri();
-            ParameterizedTypeReference<Set<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
+            ParameterizedTypeReference<List<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
             };
-            ResponseEntity<Set<PublicNoteDTO>> responseEntity = rt
+            ResponseEntity<List<PublicNoteDTO>> responseEntity = rt
                     .withBasicAuth(username, pass)
                     .exchange(uri, HttpMethod.GET, null, responseType);
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
             // check the response
-            Set<PublicNoteDTO> notes = responseEntity.getBody();
+            List<PublicNoteDTO> notes = responseEntity.getBody();
             assertThat(notes.size()).isEqualTo(size);
         }
 
 
-        // delete a note shouldnot delete the user...
-        // delete a user should delete all notes...
+        // TODO: docs about how useful is turn to debug mode
+        @Test
+        @DirtiesContext
+        void shouldGetANote() {
+            String url = "/api/notes";
+            // Get the note
+            ResponseEntity<PublicNoteDTO> responseEntity = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + notesIDs.getFirst(), HttpMethod.GET, null, PublicNoteDTO.class);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+            // get from db
+            Optional<NoteEntity> noteEntity = noteRepository.findById(notesIDs.getFirst());
+            assertThat(noteEntity.isPresent()).isTrue();
+            NoteEntity fromDB = noteEntity.get();
+
+            // Check the note
+            PublicNoteDTO noteDTO = responseEntity.getBody();
+            assertThat(noteDTO.getId()).isEqualTo(fromDB.getId());
+            assertThat(noteDTO.getTitle()).isEqualTo(fromDB.getTitle());
+            assertThat(noteDTO.getContent()).isEqualTo(fromDB.getContent());
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotGetANoteIsNotAuthenticated() {
+            String url = "/api/notes";
+            String failMessage = "You must be authenticated to perform this action";
+
+            // Get the note
+            ResponseEntity<String> responseEntity = rt
+                    .exchange(url + "/" + notesIDs.getFirst(), HttpMethod.GET, null, String.class);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(responseEntity.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotGetANoteIsNotFound() {
+            String url = "/api/notes";
+            String failMessage = "Note not found";
+
+            // Get the note
+            ResponseEntity<String> responseEntity = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + 999999, HttpMethod.GET, null, String.class);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(responseEntity.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotGetNoteIsNotFoundBecauseIsNotTheOwner() {
+            String urlUsers = "/api/users";
+            String url = "/api/notes";
+            String newUserUsername = "github.com/cris6h16";
+            String newUserPass = "12345678";
+            String newUserEmail = "cristianmherrera21@gmail.com";
+            String failMessage = "Note not found";
+
+            //create otehr user
+            CreateUserDTO u = CreateUserDTO.builder()
+                    .username(newUserUsername)
+                    .password(newUserPass)
+                    .email(newUserEmail)
+                    .build();
+            HttpEntity<CreateUserDTO> entity = new HttpEntity<>(u);
+            ResponseEntity<Void> res = rt
+                    .exchange(urlUsers, HttpMethod.POST, entity, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+            // Get the note
+            ResponseEntity<PublicNoteDTO> responseEntity = rt
+                    .withBasicAuth(newUserUsername, newUserPass)
+                    .exchange(url + "/" + notesIDs.getFirst(), HttpMethod.GET, null, PublicNoteDTO.class);
+            assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        }
+
     }
+
+
+    // delete a note shouldnot delete the user...
+    // delete a user should delete all notes...
 }

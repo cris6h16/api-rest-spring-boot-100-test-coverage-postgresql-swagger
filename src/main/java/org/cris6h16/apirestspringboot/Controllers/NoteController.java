@@ -31,4 +31,8 @@ public class NoteController {
     public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable) {
         return noteService.getPage(pageable);
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<PublicNoteDTO> getNoteById(@PathVariable Long id) {
+        return noteService.getNoteById(id);
+    }
 }

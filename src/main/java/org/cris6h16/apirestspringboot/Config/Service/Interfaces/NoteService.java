@@ -14,4 +14,5 @@ import java.util.Set;
 public interface NoteService {
     ResponseEntity<Void> createNote(@Valid @NotNull CreateNoteDTO note);
     ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable);
+    ResponseEntity<PublicNoteDTO> getNoteById(Long id);
 }
