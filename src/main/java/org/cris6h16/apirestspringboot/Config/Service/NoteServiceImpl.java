@@ -120,17 +120,35 @@ public class NoteServiceImpl implements NoteService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> updateNoteById(@NotNull @Valid UpdateNoteDTO note) { //@valid because is a PUT --> all fields are required
+    public ResponseEntity<Void> updateNoteById(Long id, @NotNull @Valid CreateNoteDTO note) { //@valid because is a PUT --> all fields are required
         Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
 
         NoteEntity noteEntity = noteRepository
-                .findByIdAndUserId(note.getId(), userId)
+                .findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
 
         noteEntity.setTitle(note.getTitle());
         noteEntity.setContent(note.getContent());
 
         noteRepository.save(noteEntity);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public ResponseEntity<Void> deleteNoteById(Long id) {
+        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+
+        NoteEntity note = noteRepository
+                .findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+
+        noteRepository.delete(note);
 
         return ResponseEntity.noContent().build();
     }

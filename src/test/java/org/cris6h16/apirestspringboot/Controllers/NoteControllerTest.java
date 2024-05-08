@@ -425,7 +425,7 @@ public class NoteControllerTest {
             }
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, note, Void.class);
@@ -456,7 +456,7 @@ public class NoteControllerTest {
             }
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id,null, content));
+            HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(null, content));
             ResponseEntity<String> res = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
@@ -480,7 +480,7 @@ public class NoteControllerTest {
             }
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> res = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
@@ -504,7 +504,7 @@ public class NoteControllerTest {
             }
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> res = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
@@ -528,7 +528,7 @@ public class NoteControllerTest {
             }
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> res = rt
                     .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
@@ -550,7 +550,7 @@ public class NoteControllerTest {
             content = "PUT PUT PUT content new";
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> putNoteEn = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<Void> putRes = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, Void.class);
@@ -578,7 +578,7 @@ public class NoteControllerTest {
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, null, content));
+            HttpEntity<CreateNoteDTO> putNoteEn = new HttpEntity<>(new CreateNoteDTO(null, content));
             ResponseEntity<String> putRes = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
@@ -598,7 +598,7 @@ public class NoteControllerTest {
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> putNoteEn = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> putRes = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
@@ -618,7 +618,7 @@ public class NoteControllerTest {
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> putNoteEn = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> putRes = rt
                     .withBasicAuth(username, pass)
                     .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
@@ -638,7 +638,7 @@ public class NoteControllerTest {
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
 
             // PUT a note
-            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            HttpEntity<CreateNoteDTO> putNoteEn = new HttpEntity<>(new CreateNoteDTO(title, content));
             ResponseEntity<String> putRes = rt
                     .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
             assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
@@ -669,7 +669,7 @@ public class NoteControllerTest {
 
         @Test
         @DirtiesContext
-        void shouldDeleteANoteShouldNotDeleteTheUser() {
+        void deleteANoteShouldNotDeleteTheUser() {
             String url = "/api/notes";
             long id = notesIDs.getFirst();
             //
@@ -709,6 +709,8 @@ public class NoteControllerTest {
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
         }
 
+
+
         @Test
         @DirtiesContext
         void shouldNotDeleteANoteIsNotFound() {
@@ -726,17 +728,34 @@ public class NoteControllerTest {
             assertThat(delRes.getBody().split("\"")[3]).isEqualTo(failMessage);
         }
 
+        //TODO: doc about the importance of first formating responses, custom responses, etc. because i implemente PUT and DELETE test of NoteTest and I almost pass all the tests in the first try (only one fails)
+
         @Test
         @DirtiesContext
         void shouldNotDeleteANoteIsNotTheOwnerNotFound() {
             String url = "/api/notes/" + notesIDs.getFirst();
             String failMessage = "Note not found";
 
-            ResponseEntity<String> res = rt
-                    .withBasicAuth(username, pass)
+            // create another user
+            String newUserUsername = "github.com/cris6h16";
+            String newUserPass = "12345678";
+            String newUserEmail = "cristianmherrera21@gmail.com";
+            CreateUserDTO u = CreateUserDTO.builder()
+                    .username(newUserUsername)
+                    .password(newUserPass)
+                    .email(newUserEmail)
+                    .build();
+            HttpEntity<CreateUserDTO> entity = new HttpEntity<>(u);
+            ResponseEntity<Void> res = rt
+                    .exchange("/api/users", HttpMethod.POST, entity, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+            // try to delete the note which isn't from the new user
+            ResponseEntity<String> resDelete = rt
+                    .withBasicAuth(newUserUsername, newUserPass)
                     .exchange(url, HttpMethod.DELETE, null, String.class);
-            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+            assertThat(resDelete.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(resDelete.getBody().split("\"")[3]).isEqualTo(failMessage);
         }
     }
 }

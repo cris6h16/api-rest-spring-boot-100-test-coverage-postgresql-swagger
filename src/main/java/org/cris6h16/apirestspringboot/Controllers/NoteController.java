@@ -37,8 +37,13 @@ public class NoteController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateNote(@RequestParam(name = "id") Long id,
-                                           @RequestBody UpdateNoteDTO note) {
-        return noteService.updateNoteById(note);
+    public ResponseEntity<Void> updateNote(@PathVariable Long id,
+                                           @RequestBody CreateNoteDTO note) {
+        return noteService.updateNoteById(id, note);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteNoteById(@PathVariable Long id) {
+        return noteService.deleteNoteById(id);
     }
 }

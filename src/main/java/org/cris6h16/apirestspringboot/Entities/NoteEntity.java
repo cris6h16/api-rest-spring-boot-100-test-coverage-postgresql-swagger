@@ -45,7 +45,7 @@ public class NoteEntity {
 
 
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH) // remember @TEST that delete the Many shouldn't delete the One
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_Notes_user_id"))
     private UserEntity user;
 

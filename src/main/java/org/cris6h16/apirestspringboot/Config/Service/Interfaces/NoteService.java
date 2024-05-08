@@ -13,5 +13,6 @@ public interface NoteService {
     ResponseEntity<Void> createNote(@Valid @NotNull CreateNoteDTO note);
     ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable);
     ResponseEntity<PublicNoteDTO> getNoteById(Long id);
-    ResponseEntity<Void> updateNoteById(UpdateNoteDTO note);
+    ResponseEntity<Void> updateNoteById(Long id, @Valid @NotNull CreateNoteDTO note); // @valid because is PUT not PATCH, then all fields are required
+    ResponseEntity<Void> deleteNoteById(Long id);
 }
