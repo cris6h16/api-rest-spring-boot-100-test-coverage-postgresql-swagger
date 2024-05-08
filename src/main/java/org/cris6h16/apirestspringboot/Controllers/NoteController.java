@@ -9,7 +9,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 //@RestController
 @Controller
@@ -31,8 +30,15 @@ public class NoteController {
     public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable) {
         return noteService.getPage(pageable);
     }
+
     @GetMapping("/{id}")
     public ResponseEntity<PublicNoteDTO> getNoteById(@PathVariable Long id) {
         return noteService.getNoteById(id);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> updateNote(@RequestParam(name = "id") Long id,
+                                           @RequestBody UpdateNoteDTO note) {
+        return noteService.updateNoteById(note);
     }
 }

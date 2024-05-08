@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +28,6 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -408,9 +407,336 @@ public class NoteControllerTest {
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
 
+
+        // PUT --> CREATE OR REPLACE
+
+        @Test
+        @DirtiesContext
+        void shouldCreateANotePUT() {
+            String url = "/api/notes";
+            String title = "Put note";
+            String content = "PUT PUT PUT content";
+            long id = 0;
+
+            // get an ID which isn't used
+            for (long i = 0; i < Long.MAX_VALUE; i++) {
+                id = i;
+                if (noteRepository.findById(i).isPresent()) break;
+            }
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<Void> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, note, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            // Get the note
+            Optional<NoteEntity> noteEntity = noteRepository.findById(id);
+            assertThat(noteEntity.isPresent()).isTrue();
+            assertThat(noteEntity.get().getId()).isEqualTo(id);
+            assertThat(noteEntity.get().getTitle()).isEqualTo(title);
+            assertThat(noteEntity.get().getContent()).isEqualTo(content);
+            assertThat(noteEntity.get().getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
+            assertThat(noteEntity.get().getDeletedAt()).isNull();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotCreateANotePUTTitleIsNull() {
+            String url = "/api/notes";
+            String content = "Hello I'm its content";
+            String failMessage = "Title is required";
+            long id = 0;
+
+            // get an ID which isn't used
+            for (long i = 0; i < Long.MAX_VALUE; i++) {
+                id = i;
+                if (noteRepository.findById(i).isPresent()) break;
+            }
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id,null, content));
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotCreateANotePUTTitleIsBlank() {
+            String url = "/api/notes";
+            String title = "  ";
+            String content = "Hello I'm its content";
+            String failMessage = "Title is required";
+            long id = 0;
+
+            // get an ID which isn't used
+            for (long i = 0; i < Long.MAX_VALUE; i++) {
+                id = i;
+                if (noteRepository.findById(i).isPresent()) break;
+            }
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotCreateANotePUTTitleLengthIsGreaterThan255() {
+            String url = "/api/notes";
+            String title = "a".repeat(256);
+            String content = "Hello I'm its content";
+            String failMessage = "Title must be less than 255 characters";
+            long id = 0;
+
+            // get an ID which isn't used
+            for (long i = 0; i < Long.MAX_VALUE; i++) {
+                id = i;
+                if (noteRepository.findById(i).isPresent()) break;
+            }
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotCreateANotePUTMustBeAuthenticated() {
+            String url = "/api/notes";
+            String title = "Hello I'm a title";
+            String content = "Hello I'm its content";
+            String failMessage = "You must be authenticated to perform this action";
+            long id = 0;
+
+            // get an ID which isn't used
+            for (long i = 0; i < Long.MAX_VALUE; i++) {
+                id = i;
+                if (noteRepository.findById(i).isPresent()) break;
+            }
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> note = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> res = rt
+                    .exchange(url + "/" + id, HttpMethod.PUT, note, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldReplaceANotePUT() {
+            String url = "/api/notes";
+            String title = "Put note";
+            String content = "PUT PUT PUT content";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // NEW CONTENT & TITLE
+            title = "Put note new";
+            content = "PUT PUT PUT content new";
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<Void> putRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, Void.class);
+            assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            // Get the note
+            Optional<NoteEntity> noteEntity = noteRepository.findById(id);
+            assertThat(noteEntity.isPresent()).isTrue();
+            assertThat(noteEntity.get().getId()).isEqualTo(id);
+            assertThat(noteEntity.get().getTitle()).isEqualTo(title);
+            assertThat(noteEntity.get().getContent()).isEqualTo(content);
+            assertThat(noteEntity.get().getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
+            assertThat(noteEntity.get().getDeletedAt()).isNull();
+        }
+
+
+        @Test
+        @DirtiesContext
+        void shouldNotReplaceANotePUTTitleIsNull() {
+            String url = "/api/notes";
+            String content = "Hello I'm its content";
+            String failMessage = "Title is required";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, null, content));
+            ResponseEntity<String> putRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
+            assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(putRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotReplaceANotePUTTitleIsBlank() {
+            String url = "/api/notes";
+            String title = "  ";
+            String content = "Hello I'm its content";
+            String failMessage = "Title is required";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> putRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
+            assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(putRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotReplaceANotePUTTitleLengthIsGreaterThan255() {
+            String url = "/api/notes";
+            String title = "a".repeat(256);
+            String content = "Hello I'm its content";
+            String failMessage = "Title must be less than 255 characters";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> putRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
+            assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(putRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotReplaceANotePUTMustBeAuthenticated() {
+            String url = "/api/notes";
+            String title = "Hello I'm a title";
+            String content = "Hello I'm its content";
+            String failMessage = "You must be authenticated to perform this action";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // PUT a note
+            HttpEntity<UpdateNoteDTO> putNoteEn = new HttpEntity<>(new UpdateNoteDTO(id, title, content));
+            ResponseEntity<String> putRes = rt
+                    .exchange(url + "/" + id, HttpMethod.PUT, putNoteEn, String.class);
+            assertThat(putRes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(putRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+
+        // DELETE --> http request
+
+        @Test
+        @DirtiesContext
+        void shouldDeleteANote() {
+            String url = "/api/notes";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // DELETE a note
+            ResponseEntity<Void> delRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+            assertThat(delRes.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            // Get the note
+            Optional<NoteEntity> noteEntity = noteRepository.findById(id);
+            assertThat(noteEntity.isPresent()).isFalse();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldDeleteANoteShouldNotDeleteTheUser() {
+            String url = "/api/notes";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // DELETE a note
+            ResponseEntity<Void> delRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+            assertThat(delRes.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            // Get the note
+            Optional<NoteEntity> noteEntity = noteRepository.findById(id);
+            assertThat(noteEntity.isPresent()).isFalse();
+
+            // Get the user
+            Optional<UserEntity> userEntity = userRepository.findByUsername(username); // is UNIQUE
+            assertThat(userEntity.isPresent()).isTrue();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotDeleteANoteIsNotAuthenticated() {
+            String url = "/api/notes";
+            String failMessage = "You must be authenticated to perform this action";
+            long id = notesIDs.getFirst();
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+
+            // DELETE a note
+            ResponseEntity<String> delRes = rt
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+            assertThat(delRes.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(delRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+
+            // it wasn't deleted
+            assertThat(noteRepository.findById(id).isPresent()).isTrue();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotDeleteANoteIsNotFound() {
+            String url = "/api/notes";
+            String failMessage = "Note not found";
+            long id = 9397131949L;
+            //
+            assertThat(noteRepository.findById(id).isPresent()).isFalse();
+
+            // DELETE a note
+            ResponseEntity<String> delRes = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+            assertThat(delRes.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(delRes.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotDeleteANoteIsNotTheOwnerNotFound() {
+            String url = "/api/notes/" + notesIDs.getFirst();
+            String failMessage = "Note not found";
+
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url, HttpMethod.DELETE, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(res.getBody().split("\"")[3]).isEqualTo(failMessage);
+        }
     }
-
-
-    // delete a note shouldnot delete the user...
-    // delete a user should delete all notes...
 }

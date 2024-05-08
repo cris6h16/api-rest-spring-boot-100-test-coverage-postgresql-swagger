@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Config.Service;
 
-import jakarta.persistence.SecondaryTable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
@@ -26,8 +25,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,5 +112,26 @@ public class NoteServiceImpl implements NoteService {
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
                 .build());
+    }
+
+    @Override
+    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public ResponseEntity<Void> updateNoteById(@NotNull @Valid UpdateNoteDTO note) { //@valid because is a PUT --> all fields are required
+        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+
+        NoteEntity noteEntity = noteRepository
+                .findByIdAndUserId(note.getId(), userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+
+        noteEntity.setTitle(note.getTitle());
+        noteEntity.setContent(note.getContent());
+
+        noteRepository.save(noteEntity);
+
+        return ResponseEntity.noContent().build();
     }
 }

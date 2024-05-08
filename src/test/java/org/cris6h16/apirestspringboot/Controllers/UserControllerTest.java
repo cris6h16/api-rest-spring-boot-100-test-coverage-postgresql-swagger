@@ -629,6 +629,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
     }
 
+    // delete a user should delete all notes...
 }
 
 
