@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
@@ -11,12 +12,15 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -24,12 +28,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,7 +62,6 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
     @Autowired
     PasswordEncoder passwordEncoder; // for comparing passwords
-
 
 
     @Test
@@ -618,7 +625,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
-        @DirtiesContext // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        @DirtiesContext
+            // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetIsNotAuthenticated() {
             String failBodyMssg = "You must be authenticated to perform this action";
 
@@ -631,7 +639,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
-        @DirtiesContext // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        @DirtiesContext
+            // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetUserYouAreNotTheOwner() {
             String failBodyMssg = "You aren't the owner of this ID";
 
@@ -677,7 +686,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         @DirtiesContext
-        void shouldNotDeleteAUserYouAreNotTheOwner() {
+        void shouldNotDeleteAUserYouAreNotTheOwner() throws JsonProcessingException {
             String failBodyMssg = "You aren't the owner of this ID";
             Long id = before.getId() + 1;
 
@@ -689,7 +698,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
             assertThat(userRepository.findById(id)).isEmpty();
         }
-        // If we let multiple sessions & generally it isn't with basic auth...
+    }
+    // If we let multiple sessions & generally it isn't with basic auth...
 //        @Test
 //        @DirtiesContext
 //        void userNotFound() {
@@ -703,56 +713,149 @@ public class UserControllerTest { //TODO: improve HARDCODE
 //            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 //        }
 
-        @Test
-        @DirtiesContext
-        void shouldDeleteAllNotesWhenDeleteAUser() {
-            Long id = before.getId();
-            String urlNotes = "/api/notes";
+    @Test
+    @DirtiesContext
+    void shouldDeleteAllNotesWhenDeleteAUser() {
+        Long id = before.getId();
+        String urlNotes = "/api/notes";
 
-            // create notes --> test/resources/NotesEntities.txt => json
+        // create notes --> test/resources/NotesEntities.txt => json
+        try (
+                InputStream in = getClass().getClassLoader().getResourceAsStream("NotesEntities.txt");
+                BufferedReader bf = new BufferedReader(new InputStreamReader(in));
+        ) {
+            String line;
+            while ((line = bf.readLine()) != null) {
+                NoteEntity ne = objectMapper
+                        .readerFor(NoteEntity.class)
+                        .readValue(line);
+                CreateNoteDTO cnd = CreateNoteDTO.builder()
+                        .title(ne.getTitle())
+                        .content(ne.getContent())
+                        .build();
+                HttpEntity<CreateNoteDTO> httpEntity = new HttpEntity<>(cnd);
+                ResponseEntity<Void> res = rt
+                        .withBasicAuth(username, pass)
+                        .exchange(urlNotes, HttpMethod.POST, httpEntity, Void.class);
+                assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // check if notes were created
+        assertThat(noteRepository.findByUserId(id)).hasSizeGreaterThan(10);
+
+        // delete user
+        ResponseEntity<Void> res = rt
+                .withBasicAuth(username, pass)
+                .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        // check if user was deleted
+        assertThat(userRepository.findById(id)).isEmpty();
+
+        // check if notes were deleted
+        assertThat(noteRepository.findByUserId(id)).isEmpty();
+    }
+
+    @Nested
+    @DirtiesContext
+    class with27UsersInDB {
+        static List<Long> ids;
+        static String url = "api/users";
+        @Autowired
+        Environment env;
+
+        @BeforeAll
+        static void beforeAll() {
+            ids = new ArrayList<>();
+
+            // create users
             try (
-                    InputStream in = getClass().getClassLoader().getResourceAsStream("NotesEntities.txt");
+                    InputStream in = with27UsersInDB.class.getClassLoader().getResourceAsStream("CreateUserDTOs.txt");
                     BufferedReader bf = new BufferedReader(new InputStreamReader(in));
             ) {
                 String line;
                 while ((line = bf.readLine()) != null) {
-                    NoteEntity ne = objectMapper
-                            .readerFor(NoteEntity.class)
+                    CreateUserDTO user = objectMapper
+                            .readerFor(CreateUserDTO.class)
                             .readValue(line);
-                    CreateNoteDTO cnd = CreateNoteDTO.builder()
-                            .title(ne.getTitle())
-                            .content(ne.getContent())
-                            .build();
-                    HttpEntity<CreateNoteDTO> httpEntity = new HttpEntity<>(cnd);
+                    HttpEntity<CreateUserDTO> en = new HttpEntity<>(user);
                     ResponseEntity<Void> res = rt
-                            .withBasicAuth(username, pass)
-                            .exchange(urlNotes, HttpMethod.POST, httpEntity, Void.class);
+                            .exchange(url, HttpMethod.POST, en, Void.class);
                     assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+                    String[] parts = res.getHeaders().getLocation().toString().split("/");
+                    ids.add(Long.parseLong(parts[parts.length - 1]));
                 }
-
-            } catch (IOException e) {
+            } catch (
+                    IOException e) {
                 throw new RuntimeException(e);
             }
 
-            // check if notes were created
-            assertThat(noteRepository.findByUserId(id)).hasSizeGreaterThan(10);
-
-            // delete user
-            ResponseEntity<Void> res = rt
-                    .withBasicAuth(username, pass)
-                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
-            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-
-            // check if user was deleted
-            assertThat(userRepository.findById(id)).isEmpty();
-
-            // check if notes were deleted
-            assertThat(noteRepository.findByUserId(id)).isEmpty();
+            assertThat(noteRepository.findAll()).hasSizeGreaterThan(20);
         }
+
+        @Test
+        @DirtiesContext
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        void shouldListAllUsersInPagesIsPageable() {
+            String url = "api/users";
+            String adminUsername = "cris6h16InGithub";
+            String adminPass = "cris6h16";
+            String pageParam = env.getProperty("spring.data.web.pageable.page-parameter");
+            String sizeParam = env.getProperty("spring.data.web.pageable.default-page-size");
+            short page = 0;
+            short size = 3;
+            short users = (short) userRepository.count();
+
+            //CREATE ADMIN --> directly in DB
+
+            //DESC
+            while (true) {
+                ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
+                };
+                URI uri = UriComponentsBuilder.fromUriString(url)
+                        .queryParam(pageParam, page++)
+                        .queryParam(sizeParam, size)
+                        .queryParam("sort", "id,desc")
+                        .build()
+                        .toUri();
+                rt
+                        .withBasicAuth(adminUsername, adminPass)
+                        .exchange(uri, HttpMethod.GET, null, ptr);
+
+
+            }
+        }
+
+        @Test
+        @DirtiesContext
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        void shouldNotListAllUserIsPageable() {
+        }
+
+        @Test
+        @DirtiesContext
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        void shouldListAllUsersDefaultConfigNotUrlParams() {
+        }
+
+        @Test
+        @DirtiesContext
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        void shouldNotListAllUserIsNotAdmin() {
+        }
+
+
+        //not list not admin
 
     }
 
 }
+
+
 
 
 

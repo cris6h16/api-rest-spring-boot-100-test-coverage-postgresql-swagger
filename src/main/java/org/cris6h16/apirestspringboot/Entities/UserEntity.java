@@ -71,6 +71,8 @@ public class UserEntity {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<NoteEntity> notes;
 
+    //TODOl correct because we need impl soft deletes
+
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.
     @PrePersist

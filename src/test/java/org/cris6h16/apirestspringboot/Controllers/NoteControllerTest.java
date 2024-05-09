@@ -710,7 +710,6 @@ public class NoteControllerTest {
         }
 
 
-
         @Test
         @DirtiesContext
         void shouldNotDeleteANoteIsNotFound() {

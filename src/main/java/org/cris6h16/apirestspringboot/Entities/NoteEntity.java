@@ -12,7 +12,7 @@ import java.util.Date;
 @Table(name = "notes")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"user"})
 @Getter
 @Setter
 @Builder
