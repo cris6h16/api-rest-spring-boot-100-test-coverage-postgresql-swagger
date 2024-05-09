@@ -141,4 +141,15 @@ public class UserServiceImpl implements UserService {
 
         return ResponseEntity.noContent().build();
     }
+
+    @Override
+    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public ResponseEntity<Void> deleteUser(Long id) {
+        userRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }

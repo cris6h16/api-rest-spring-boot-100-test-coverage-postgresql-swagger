@@ -11,5 +11,5 @@ public interface UserService {
     ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto);
     ResponseEntity<PublicUserDTO> getByIdLazy(Long id);
     ResponseEntity<Void> updateUser(Long id, @NotNull @Valid UpdateUserDTO dto);
-
+    ResponseEntity<Void> deleteUser(Long id);
 }

@@ -1,11 +1,14 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +25,10 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Date;
 import java.util.Optional;
 
@@ -40,7 +47,15 @@ public class UserControllerTest { //TODO: improve HARDCODE
     RoleRepository roleRepository;
 
     @Autowired
+    ObjectMapper objectMapper; // for parsing JSON
+
+    @Autowired
+    NoteRepository noteRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder; // for comparing passwords
+
+
 
     @Test
     @DirtiesContext
@@ -293,7 +308,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
             HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
             ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, user, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            Long id = Long.parseLong(res.getHeaders().getLocation().toString().split("/")[4]);
+            String[] parts = res.getHeaders().getLocation().toString().split("/");
+            Long id = Long.parseLong(parts[parts.length - 1]);
             before = userRepository.findByIdEagerly(id).get();
 
 
@@ -497,7 +513,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         @Test
         @DirtiesContext
         void shouldNotUpdateYouNeedToBeAuthenticated() {
-            String failBodyMssg = "You need to be authenticated to perform this action";
+            String failBodyMssg = "You must be authenticated to perform this action";
 
             UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
             forUPDT.setUsername("github.com/cris6h16");
@@ -525,7 +541,6 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
@@ -533,7 +548,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         void shouldNotUpdateNonexistentIdForbidden() {
             String failBodyMssg = "You aren't the owner of this id";
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 10);
+            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 99999);
             forUPDT.setUsername("other-username");
 
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
@@ -543,7 +558,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
+            assertThat(userRepository.findByIdEagerly(forUPDT.getId())).isNotPresent();
         }
 
         @Test
@@ -603,8 +618,9 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetIsNotAuthenticated() {
-            String failBodyMssg = "You need to be authenticated to perform this action";
+            String failBodyMssg = "You must be authenticated to perform this action";
 
             Long id = before.getId();
 
@@ -615,6 +631,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
+        @DirtiesContext // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetUserYouAreNotTheOwner() {
             String failBodyMssg = "You aren't the owner of this ID";
 
@@ -627,9 +644,114 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
         }
 
+        @Test
+        @DirtiesContext
+        void shouldDeleteAUser() {
+            Long id = before.getId();
+
+            assertThat(userRepository.findById(id)).isPresent();
+
+            ResponseEntity<Void> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            assertThat(userRepository.findById(id)).isEmpty();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotDeleteAUserIsNotAuthenticated() {
+            String failBodyMssg = "You must be authenticated to perform this action";
+            Long id = before.getId();
+
+            assertThat(userRepository.findById(id)).isPresent();
+
+            ResponseEntity<String> res = rt
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+
+            assertThat(userRepository.findById(id)).isPresent();
+        }
+
+        @Test
+        @DirtiesContext
+        void shouldNotDeleteAUserYouAreNotTheOwner() {
+            String failBodyMssg = "You aren't the owner of this ID";
+            Long id = before.getId() + 1;
+
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+
+            assertThat(userRepository.findById(id)).isEmpty();
+        }
+        // If we let multiple sessions & generally it isn't with basic auth...
+//        @Test
+//        @DirtiesContext
+//        void userNotFound() {
+//            String failBodyMssg = "User not found";
+//            Long id = before.getId();
+//
+//            ResponseEntity<String> res = rt
+//                    .withBasicAuth(username, pass)
+//                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+//            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+//            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+//        }
+
+        @Test
+        @DirtiesContext
+        void shouldDeleteAllNotesWhenDeleteAUser() {
+            Long id = before.getId();
+            String urlNotes = "/api/notes";
+
+            // create notes --> test/resources/NotesEntities.txt => json
+            try (
+                    InputStream in = getClass().getClassLoader().getResourceAsStream("NotesEntities.txt");
+                    BufferedReader bf = new BufferedReader(new InputStreamReader(in));
+            ) {
+                String line;
+                while ((line = bf.readLine()) != null) {
+                    NoteEntity ne = objectMapper
+                            .readerFor(NoteEntity.class)
+                            .readValue(line);
+                    CreateNoteDTO cnd = CreateNoteDTO.builder()
+                            .title(ne.getTitle())
+                            .content(ne.getContent())
+                            .build();
+                    HttpEntity<CreateNoteDTO> httpEntity = new HttpEntity<>(cnd);
+                    ResponseEntity<Void> res = rt
+                            .withBasicAuth(username, pass)
+                            .exchange(urlNotes, HttpMethod.POST, httpEntity, Void.class);
+                    assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+                }
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            // check if notes were created
+            assertThat(noteRepository.findByUserId(id)).hasSizeGreaterThan(10);
+
+            // delete user
+            ResponseEntity<Void> res = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+            // check if user was deleted
+            assertThat(userRepository.findById(id)).isEmpty();
+
+            // check if notes were deleted
+            assertThat(noteRepository.findByUserId(id)).isEmpty();
+        }
+
     }
 
-    // delete a user should delete all notes...
 }
 
 

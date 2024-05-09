@@ -37,4 +37,9 @@ public class UserController {
                                            @RequestBody UpdateUserDTO user) {//TODO: Impl passing of NUmbers -> Test
         return userService.updateUser(id, user);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(id);
+    }
 }
