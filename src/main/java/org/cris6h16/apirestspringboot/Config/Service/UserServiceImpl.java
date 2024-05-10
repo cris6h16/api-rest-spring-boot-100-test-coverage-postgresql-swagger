@@ -12,6 +12,9 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +38,10 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     ObjectMapper objectMapper;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, ObjectMapper objectMapper) {
+    public UserServiceImpl(UserRepository userRepository,
+                           RoleRepository roleRepository,
+                           PasswordEncoder passwordEncoder,
+                           ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -152,4 +159,36 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    @Override
+    @PreAuthorize("@AuthCustomResponses.checkIfIsAdmin()")
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable) {
+
+        Pageable pag = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSortOr(Sort.by(Sort.Direction.ASC, "id"))
+        );
+
+        List<PublicUserDTO> users = userRepository.findAll(pag).stream()
+                .map(user -> PublicUserDTO.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .createdAt(user.getCreatedAt())
+                        .updatedAt(user.getUpdatedAt())
+                        .roles(user.getRoles().stream()
+                                .map(role -> new RoleDTO(role.getName()))
+                                .collect(Collectors.toSet()))
+                        .notes(null) // is LAZY
+                        .build())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(users);
+    }
+
 }

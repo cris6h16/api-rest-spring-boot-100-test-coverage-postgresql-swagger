@@ -17,7 +17,7 @@ import java.util.Set;
 })
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
+@ToString(exclude = {"notes"})
 @Getter
 @Setter
 @EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches

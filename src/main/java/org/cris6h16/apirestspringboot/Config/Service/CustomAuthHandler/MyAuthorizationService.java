@@ -33,7 +33,7 @@ public class MyAuthorizationService {
         if (((UsernamePasswordAuthenticationToken) principal).getPrincipal() instanceof UserWithId) {
             UserWithId user = (UserWithId) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
             if (user.getId().equals(id)) return true;
-            else throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You aren't the owner of this id");
+            else throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You aren't the owner of this id");
         }
 
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when we tried to return a specific response of authentication failure");
@@ -54,5 +54,16 @@ public class MyAuthorizationService {
 
 
         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong when we tried to return a specific response of authentication failure, probably you added a new Role");
+    }
+
+    public boolean checkIfIsAdmin() {
+        Collection<? extends GrantedAuthority> authorities = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getAuthorities();
+
+        boolean isAdmin = authorities.stream().anyMatch(r -> r.getAuthority().equalsIgnoreCase(ERole.ROLE_ADMIN.toString()));
+        if (isAdmin) return true;
+        else throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be an admin to perform this action");
     }
 }
