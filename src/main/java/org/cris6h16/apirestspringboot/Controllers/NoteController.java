@@ -1,6 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import org.cris6h16.apirestspringboot.Config.Service.NoteServiceImpl;
+import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.springframework.data.domain.Pageable;

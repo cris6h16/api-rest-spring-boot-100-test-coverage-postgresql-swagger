@@ -5,16 +5,25 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
 import java.util.Set;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(name = "username_unique", columnNames = "username"),
-        @UniqueConstraint(name = "email_unique", columnNames = "email")
-})
+@Table(name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "username_unique", columnNames = "username"),
+                @UniqueConstraint(name = "email_unique", columnNames = "email")}
+
+        // `UNIQUE CONSTRAINT` elements, the indexes are created automatically
+/*
+indexes = {
+            @Index(name = "users_username_idx", columnList = "username", unique = true),
+            @Index(name = "users_email_idx", columnList = "email", unique = true)}
+*/
+)
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"notes"})

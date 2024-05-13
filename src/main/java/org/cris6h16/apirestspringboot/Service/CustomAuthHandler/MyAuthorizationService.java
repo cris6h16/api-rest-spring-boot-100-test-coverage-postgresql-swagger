@@ -1,5 +1,5 @@
 
-package org.cris6h16.apirestspringboot.Config.Service.CustomAuthHandler;
+package org.cris6h16.apirestspringboot.Service.CustomAuthHandler;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Entities.ERole;

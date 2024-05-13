@@ -1,8 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import org.cris6h16.apirestspringboot.Config.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.springframework.data.domain.Pageable;

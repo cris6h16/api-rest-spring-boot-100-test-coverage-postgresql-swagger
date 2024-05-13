@@ -1,9 +1,9 @@
-package org.cris6h16.apirestspringboot.Config.Service;
+package org.cris6h16.apirestspringboot.Service;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
-import org.cris6h16.apirestspringboot.Config.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;

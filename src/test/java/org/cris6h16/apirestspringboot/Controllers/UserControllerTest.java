@@ -2,7 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cris6h16.apirestspringboot.Config.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;

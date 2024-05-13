@@ -1,11 +1,11 @@
-package org.cris6h16.apirestspringboot.Config.Service;
+package org.cris6h16.apirestspringboot.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.Config.Service.Interfaces.UserService;
-import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.PasswordIsTooShortException;
-import org.cris6h16.apirestspringboot.Config.Service.PreExceptions.AlreadyExistsException;
+import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.PreExceptions.PasswordIsTooShortException;
+import org.cris6h16.apirestspringboot.Service.PreExceptions.AlreadyExistsException;
 import org.cris6h16.apirestspringboot.DTOs.*;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;

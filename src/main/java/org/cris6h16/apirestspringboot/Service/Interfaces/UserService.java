@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Config.Service.Interfaces;
+package org.cris6h16.apirestspringboot.Service.Interfaces;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
