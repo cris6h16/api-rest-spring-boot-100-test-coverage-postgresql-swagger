@@ -28,6 +28,7 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
         this.objectMapper = objectMapper;
         this.map = new HashMap<>(1);
         map.put("message", "Internal Server Error -> Unhandled");
+
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -45,14 +46,6 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
             return ResponseEntity.status(HttpStatus.CONFLICT).body(getMapInJson());
         }
 
-        // @NotBlank were ( null || doesn't contain at least one non-whitespace character )
-        if (thisContains(msgL, "null value in column", "email", "username", "password")) {
-            forClient = "Email, Username and Password are Required";
-            map.put("message", forClient);
-            log.debug("DataIntegrityViolationException {}", forClient);
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
-        }
 
         // Generic if wasn't handled
         log.error("DataIntegrityViolationException -> UNHANDLED: {}", msgL);
@@ -78,13 +71,6 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         msgL = ex.getMessage().toLowerCase();
-
-        if (thisContains(msgL, "cannot be null", "email", "username", "password")) {
-            forClient = "Email, Username and Password are Required";
-            map.put("message", forClient);
-            log.debug("IllegalArgumentException: {}", forClient);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
-        }
 
         log.error("IllegalArgumentException -> UNHANDLED: {}", msgL);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());

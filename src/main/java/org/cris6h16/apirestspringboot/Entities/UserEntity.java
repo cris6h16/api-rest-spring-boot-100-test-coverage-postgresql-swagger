@@ -3,19 +3,22 @@ package org.cris6h16.apirestspringboot.Entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
-import lombok.extern.slf4j.Slf4j;
+import org.cris6h16.apirestspringboot.Constants.UserCons;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
 import java.util.Set;
 
+// import static VALUES of VALIDATIONS and CONSTRAINTS
+import static org.cris6h16.apirestspringboot.Constants.UserCons.Constrains.*;
+import static org.cris6h16.apirestspringboot.Constants.UserCons.Validations.*;
+
 @Entity
 @Table(name = "users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "username_unique", columnNames = "username"),
-                @UniqueConstraint(name = "email_unique", columnNames = "email")}
+                @UniqueConstraint(name = USERNAME_UNIQUE_NAME, columnNames = "username"),
+                @UniqueConstraint(name = EMAIL_UNIQUE_NAME, columnNames = "email")}
 
         // `UNIQUE CONSTRAINT` elements, the indexes are created automatically
 /*
@@ -39,18 +42,19 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username", length = 20) //TODO: test passing a greater that 20
-    @NotBlank(message = "Username mustn't be blank") // for sending null/empty
+    @Column(name = "username", length = MAX_USERNAME_LENGTH) //TODO: test passing a greater that 20
+    @Length(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
+    @NotBlank(message = USERNAME_IS_BLANK_MSG) // for sending null/empty
     private String username;
 
 
     @Column(name = "password")
-    @NotBlank(message = "Password is required")
+    @NotBlank(message = PASS_IS_BLANK_MSG)
     private String password;
 
     @Column(name = "email")
-    @Email(message = "Email is invalid")// null is valid
-    @NotBlank(message = "Email is required")
+    @Email(message = EMAIL_INVALID_MSG)// --> null is valid
+    @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 
     @Column(name = "created_at", nullable = true, updatable = false)
@@ -79,7 +83,7 @@ public class UserEntity {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<NoteEntity> notes;
 
-    //TODOl correct because we need impl soft deletes
+    //TODO: correct because we need impl soft deletes
 
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.
