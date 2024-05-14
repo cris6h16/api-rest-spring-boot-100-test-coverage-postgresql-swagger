@@ -46,7 +46,6 @@ public class UserEntity {
 
     @Column(name = "password")
     @NotBlank(message = "Password is required")
-//    @Length(min = 8, message = "Password must be at least 8 characters") --> we handled it directly in @Service
     private String password;
 
     @Column(name = "email")
