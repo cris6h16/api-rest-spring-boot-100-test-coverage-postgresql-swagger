@@ -39,6 +39,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.cris6h16.apirestspringboot.Controllers.Utils.ResponseUtils.getFailBodyMsg;
+import static org.cris6h16.apirestspringboot.Controllers.Utils.ResponseUtils.getIdFromLocationHeader;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class UserControllerTest { //TODO: improve HARDCODE
@@ -62,11 +64,10 @@ public class UserControllerTest { //TODO: improve HARDCODE
     @Autowired
     PasswordEncoder passwordEncoder; // for comparing passwords
 
-    public final String path;
+    public static final String path = "/api/users";
     public final CreateUserDTO forCreation;
 
     public UserControllerTest() {
-        this.path = "/api/users";
         this.forCreation = CreateUserDTO.builder()
                 .username("cris6h16")
                 .password("12345678")
@@ -1071,20 +1072,6 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
 
     }
-
-
-    /*
-
-     */
-    private String getFailBodyMsg(ResponseEntity<String> res) {
-        return res.getBody().split("\"")[3];
-    }
-
-    private Long getIdFromLocationHeader(ResponseEntity<Void> res) {
-        String[] parts = res.getHeaders().getLocation().toString().split("/");
-        return Long.parseLong(parts[parts.length - 1]);
-    }
-
 }
 
 

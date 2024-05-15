@@ -21,6 +21,25 @@ public class Cons {
                 public static final String PASS_IS_TOO_SHORT_MSG = "Password must be at least 8 characters";
             }
         }
+
+        public static class Fails {
+            public static class MultiSession {
+                public static final String NOT_FOUND = "User not found";
+            }
+        }
+    }
+
+    public class Note {
+        public class Validations {
+            public static final String TITLE_MAX_LENGTH_MSG = "Title must be less than 255 characters";
+            public static final String TITLE_IS_BLANK_MSG = "Title is required";
+            public static final short MAX_TITLE_LENGTH = 255;
+        }
+
+        public class Fails {
+            public static final String NOT_FOUND = "Note not found";
+        }
+
     }
 
     public class Auth {

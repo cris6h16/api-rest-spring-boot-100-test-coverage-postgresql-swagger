@@ -23,6 +23,9 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+// IMPORT constants of User
+import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Fails.*;
+
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,7 +52,7 @@ public class NoteServiceImpl implements NoteService {
 
         UserEntity user = userRepository
                 .findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")); // if was deleted while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND)); // if was deleted while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
 
         NoteEntity noteEntity = NoteEntity.builder()
                 .title(note.getTitle())
@@ -103,7 +106,7 @@ public class NoteServiceImpl implements NoteService {
 
         NoteEntity note = noteRepository
                 .findByIdAndUserId(noteId, userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
 
         return ResponseEntity.ok(PublicNoteDTO.builder()
                 .id(note.getId())
@@ -122,10 +125,19 @@ public class NoteServiceImpl implements NoteService {
     )
     public ResponseEntity<Void> updateNoteById(Long id, @NotNull /*@Valid*/ CreateNoteDTO note) { //@valid because is a PUT --> all fields are required
         Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+        UserEntity user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
 
         NoteEntity noteEntity = noteRepository
                 .findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+                .orElse(NoteEntity.builder()
+                        .id(id)
+                        .user(user)
+                        .title(note.getTitle())
+                        .content(note.getContent())
+                        .build()
+                );
 
         noteEntity.setTitle(note.getTitle());
         noteEntity.setContent(note.getContent());
@@ -146,7 +158,7 @@ public class NoteServiceImpl implements NoteService {
 
         NoteEntity note = noteRepository
                 .findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
 
         noteRepository.delete(note);
 

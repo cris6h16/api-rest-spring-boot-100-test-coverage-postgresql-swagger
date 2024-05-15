@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.PreExceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.Service.PreExceptions.AlreadyExistsException;
@@ -87,7 +88,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<PublicUserDTO> getByIdLazy(Long id) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"); // if was deleted from DB while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.MultiSession.NOT_FOUND); // if was deleted from DB while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
 
         // notes --> is LAZY
         Set<PublicNoteDTO> notes = new HashSet<>(0);
@@ -122,7 +123,7 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<Void> updateUser(Long id, @NotNull /*@Valid*/ UpdateUserDTO dto) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"); // if was deleted from DB while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.MultiSession.NOT_FOUND); // if was deleted from DB while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
 
         boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank();
         boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank();
@@ -131,13 +132,13 @@ public class UserServiceImpl implements UserService {
 
         if (updateUsername) {
             if (userRepository.findByUsername(dto.getUsername()).isPresent())
-                throw new AlreadyExistsException("Username");
+                throw new AlreadyExistsException.Username();
             user.get().setUsername(dto.getUsername());
         }
 
         if (updateEmail) {
             if (userRepository.findByEmail(dto.getEmail()).isPresent())
-                throw new AlreadyExistsException("Email");
+                throw new AlreadyExistsException.Email();
             user.get().setEmail(dto.getEmail());
         }
         if (updatePassword) {
