@@ -16,6 +16,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+// import constants.Cons.User.*
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
+
+
 // Handles an exception in any annotated: @RestController, @Controller, or @RequestMapping
 @RestControllerAdvice // global exception handler for RESTful controllers
 @Slf4j
@@ -37,8 +41,8 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
 
         // @UniqueConstraint were violated
         if (thisContains(msgL, "unique constraint")) {
-            if (thisContains(msgL, "username_unique")) forClient = "Username already exists";
-            else if (thisContains(msgL, "email_unique")) forClient = "Email already exists";
+            if (thisContains(msgL, USERNAME_UNIQUE_NAME)) forClient = USERNAME_UNIQUE_MSG;
+            else if (thisContains(msgL, EMAIL_UNIQUE_NAME)) forClient = EMAIL_UNIQUE_MSG;
 
             map.put("message", forClient);
             log.debug("DataIntegrityViolationException: {}", forClient);

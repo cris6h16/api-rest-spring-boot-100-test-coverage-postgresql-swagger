@@ -9,7 +9,7 @@ import java.util.Date;
 @Getter
 @Setter
 @AllArgsConstructor
-public class UpdateUserDTO { //TODO: find if is possible simplify the constraints annotations
+public class UpdateUserDTO {
 
 
     public UpdateUserDTO(Long id) {

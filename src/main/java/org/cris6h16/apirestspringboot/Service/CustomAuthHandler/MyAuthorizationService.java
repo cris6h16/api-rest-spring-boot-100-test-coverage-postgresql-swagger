@@ -66,4 +66,6 @@ public class MyAuthorizationService {
         if (isAdmin) return true;
         else throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must be an admin to perform this action");
     }
+
+
 }

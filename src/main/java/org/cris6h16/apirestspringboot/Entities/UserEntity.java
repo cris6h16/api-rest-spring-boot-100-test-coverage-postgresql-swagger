@@ -4,15 +4,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.cris6h16.apirestspringboot.Constants.UserCons;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
 import java.util.Set;
 
 // import static VALUES of VALIDATIONS and CONSTRAINTS
-import static org.cris6h16.apirestspringboot.Constants.UserCons.Constrains.*;
-import static org.cris6h16.apirestspringboot.Constants.UserCons.Validations.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
 @Entity
 @Table(name = "users",
@@ -50,6 +49,7 @@ public class UserEntity {
 
     @Column(name = "password")
     @NotBlank(message = PASS_IS_BLANK_MSG)
+    // @Length(min = 8, message = "Password must be at least 8 characters") --> we handled it directly in @Service, min doesn't work very well, remember that is saved encrypted
     private String password;
 
     @Column(name = "email")

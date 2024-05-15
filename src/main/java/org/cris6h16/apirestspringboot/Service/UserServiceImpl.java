@@ -54,7 +54,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto) {
+    public ResponseEntity<Void> createUser(@NotNull /*@Valid*/ CreateUserDTO dto) {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.ROLE_USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.ROLE_USER));
         if (dto.getPassword() == null || dto.getPassword().length() < 8)
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> updateUser(Long id, @NotNull @Valid UpdateUserDTO dto) {
+    public ResponseEntity<Void> updateUser(Long id, @NotNull /*@Valid*/ UpdateUserDTO dto) {
         Optional<UserEntity> user = userRepository.findById(id);
         if (user.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"); // if was deleted from DB while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`

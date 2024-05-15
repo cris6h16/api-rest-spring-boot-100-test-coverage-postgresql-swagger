@@ -48,6 +48,9 @@ public class NoteControllerTest {
     Long dbUserID;
 
 
+    public static final String path = "/api/notes";
+
+
     @BeforeEach
     void setUp() {
         String url = "/api/users";

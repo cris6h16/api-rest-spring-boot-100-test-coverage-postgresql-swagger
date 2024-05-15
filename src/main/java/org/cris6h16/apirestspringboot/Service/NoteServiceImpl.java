@@ -44,7 +44,7 @@ public class NoteServiceImpl implements NoteService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> createNote(@Valid @NotNull CreateNoteDTO note) {
+    public ResponseEntity<Void> createNote(/*@Valid*/ @NotNull CreateNoteDTO note) {
         Long id = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
 
         UserEntity user = userRepository
@@ -120,7 +120,7 @@ public class NoteServiceImpl implements NoteService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> updateNoteById(Long id, @NotNull @Valid CreateNoteDTO note) { //@valid because is a PUT --> all fields are required
+    public ResponseEntity<Void> updateNoteById(Long id, @NotNull /*@Valid*/ CreateNoteDTO note) { //@valid because is a PUT --> all fields are required
         Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
 
         NoteEntity noteEntity = noteRepository

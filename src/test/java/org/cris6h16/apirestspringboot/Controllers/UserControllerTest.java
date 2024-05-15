@@ -2,7 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cris6h16.apirestspringboot.Constants.UserCons;
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -38,7 +38,6 @@ import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -118,7 +117,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         String username = forCreation.getUsername();
         String pass = forCreation.getPassword();
         String email = forCreation.getEmail();
-        String failBodyMssg = UserCons.Constrains.USERNAME_UNIQUE_MSG; // now: "Username already exists";
+        String failBodyMssg = Cons.User.Constrains.USERNAME_UNIQUE_MSG; // now: "Username already exists";
 
         // count users -> before
         long countB = userRepository.count();
@@ -147,7 +146,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         String username = forCreation.getUsername();
         String pass = forCreation.getPassword();
         String email = forCreation.getEmail();
-        String failBodyMssg = UserCons.Constrains.EMAIL_ALREADY__MSG; //"Email already exists";
+        String failBodyMssg = Cons.User.Constrains.EMAIL_UNIQUE_MSG; //"Email already exists";
 
 
         // count users -> before
@@ -173,9 +172,9 @@ public class UserControllerTest { //TODO: improve HARDCODE
     @DirtiesContext
     void shouldNotCreateAUser_PasswordTooShort() {
         String username = forCreation.getUsername();
-        String pass = forCreation.getPassword();
+        String pass = "1234567";
         String email = forCreation.getEmail();
-        String failBodyMssg = UserCons.Validations.InService.PASS_IS_TOO_SHORT_MSG;
+        String failBodyMssg = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
 
         // count users -> before
         long countB = userRepository.count();
@@ -198,7 +197,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
         String username = forCreation.getUsername();
         String pass = forCreation.getPassword();
         String email = "thisisaninvalidemail";
-        String failBodyMssg = UserCons.Validations.EMAIL_INVALID_MSG; //"Email is invalid"
+        String failBodyMssg = Cons.User.Validations.EMAIL_INVALID_MSG; //"Email is invalid"
 
         // count users -> before
         long countB = userRepository.count();
@@ -219,7 +218,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
     void shouldNotCreateAUser_EmailIsNullOrEmpty() {
         String username = forCreation.getUsername();
         String pass = forCreation.getPassword();
-        String failBodyMssg = UserCons.Validations.EMAIL_IS_BLANK_MSG; // "Email is required"
+        String failBodyMssg = Cons.User.Validations.EMAIL_IS_BLANK_MSG; // "Email is required"
 
         // count users -> before
         long countB = userRepository.count();
@@ -246,7 +245,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
     void shouldNotCreateAUser_UsernameIsNullOrEmpty() {
         String pass = forCreation.getPassword();
         String email = forCreation.getEmail();
-        String failBodyMssg = UserCons.Validations.USERNAME_IS_BLANK_MSG; // "Username mustn't be blank"
+        String failBodyMssg = Cons.User.Validations.USERNAME_IS_BLANK_MSG; // "Username mustn't be blank"
 
         // count users -> before
         long countB = userRepository.count();
@@ -273,7 +272,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
     void shouldNotCreateAUser_PasswordIsNullOrEmpty() {
         String username = forCreation.getUsername();
         String email = forCreation.getEmail();
-        String failBodyMssg = UserCons.Validations.InService.PASS_IS_TOO_SHORT_MSG; // "Password must be at least 8 characters"
+        String failBodyMssg = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG; // "Password must be at least 8 characters"
 
         // count users -> before
         long countB = userRepository.count();
@@ -299,7 +298,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
             //@DirtiesContext // Really I don't understand why some tests fail, it runs like if @DirtiesContext doesn't work in class level
     class withAUserInDB { // TODO: Centralize "hardcoded" & try to avoid it
 
-        UserEntity before;
+        UserEntity before;// pass is encrypted
+        Long id;
 
         @BeforeEach
         void setUp() {
@@ -312,6 +312,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
             rt // PATCH isn't supported by TestRestTemplate
                     .getRestTemplate()
                     .setRequestFactory(new HttpComponentsClientHttpRequestFactory()); // TODO: remember add dependency: org.apache.httpcomponents.client5:httpclient5
+
+            this.id = id;
         }
 
         @Test
@@ -321,12 +323,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
             //
 
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("github.com/cris6h16");
 
             // update `username`
@@ -354,12 +356,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // DTO for update `email`
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setEmail("githubcomcris6h16@gmail.com");
 
             // update `email`
@@ -387,12 +389,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // DTO for update `password`
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setPassword("this-new-pass-has-more-than-8-characters");
 
             // update `password`
@@ -420,12 +422,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // DTO for update `username`, `email` & `password`
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("newusername");
             forUPDT.setEmail("newemail@gmail.com");
             forUPDT.setPassword("newpassword");
@@ -438,7 +440,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `username`, `email` & `password` were updated
-            updated = userRepository.findByIdEagerly(before.getId()).get();
+            updated = userRepository.findByIdEagerly(id).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
             assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
             assertThat(passwordEncoder.matches(forUPDT.getPassword(), updated.getPassword())).isTrue();
@@ -459,13 +461,13 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
 
             // DTO for updated `username`
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("github.com/cris6h16");
 
             // check if `updatedAt` is null
@@ -478,7 +480,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
 
             // get from DB & check if `updatedAt` was updated
-            updated = userRepository.findByIdEagerly(before.getId()).get();
+            updated = userRepository.findByIdEagerly(id).get();
             assertThat(updated.getUpdatedAt()).isNotNull();
             assertThat(updated.getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
         }
@@ -490,12 +492,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
             UserEntity updated;
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // DTO for updated `username`, `email` & `password`
-            forUPDT = new UpdateUserDTO(before.getId());
+            forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("github.com/cris6h16");
             forUPDT.setEmail("githubcomcris6h16@gmail.com");
             forUPDT.setPassword("githubcomcris6h16");
@@ -508,7 +510,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `createdAt`, `deletedAt`, `roles` & `notes` are the same
-            updated = userRepository.findByIdEagerly(before.getId()).get();
+            updated = userRepository.findByIdEagerly(id).get();
             assertThat(updated.getCreatedAt()).isEqualTo(before.getCreatedAt());
             assertThat(updated.getDeletedAt()).isEqualTo(before.getDeletedAt());
             assertThat(updated.getRoles()).isEqualTo(before.getRoles());
@@ -519,15 +521,15 @@ public class UserControllerTest { //TODO: improve HARDCODE
         @Test
         @DirtiesContext
         void shouldNotUpdateUsernameAlreadyExists() {
-            String failBodyMssg = UserCons.Constrains.USERNAME_UNIQUE_MSG; //"Username already exists"
+            String failBodyMssg = Cons.User.Constrains.USERNAME_UNIQUE_MSG; //"Username already exists"
 
             // from user in DB
-            String url = path + "/" + before.getId();
-            String username = before.getUsername();
-            String pass = before.getPassword();
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // DTO for updated `username`
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername(username);
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<>(forUPDT);
 
@@ -539,128 +541,183 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
             // get from DB & check if all values are the same
-            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
+            UserEntity updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
+            assertThat(updated).isEqualTo(before);
         }
 
 
         @Test
         @DirtiesContext
         void shouldNotUpdateEmailAlreadyExists() {
-            String failBodyMssg = "Email already exists";
+            String failBodyMssg = Cons.User.Constrains.EMAIL_UNIQUE_MSG; // "Email already exists"
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
-            forUPDT.setEmail(email);
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
+            // DTO for updated `email`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
+            forUPDT.setEmail(before.getEmail());
+
+            // update: `email`
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
 
-            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
+            // get from DB & check if all values are the same
+            UserEntity updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
+            assertThat(updated).isEqualTo(before);
         }
 
         @Test
         @DirtiesContext
         void shouldNotUpdateYouNeedToBeAuthenticated() {
-            String failBodyMssg = "You must be authenticated to perform this action";
+            String failBodyMssg = Cons.Auth.Fails.UNAUTHENTICATED_MSG;
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
+            // path/{id}
+            String url = path + "/" + id;
+
+            // DTO for updated `username`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("github.com/cris6h16");
+
+            // try to update
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<>(forUPDT);
-
-            ResponseEntity<String> re = rt.exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+            ResponseEntity<String> re = rt.exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
+            // get from DB & check if all values are the same
+            UserEntity updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
+            assertThat(updated).isEqualTo(before);
         }
 
+        //TODO: test for login with bad credentials
         @Test
         @DirtiesContext
         void shouldNotUpdateYouCannotUpdateOtherUserAccount() {
-            String failBodyMssg = "You aren't the owner of this id";
+            String failBodyMssg = Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG; //"You aren't the owner of this id"
+            Long id = this.id + 1;
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 1);
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // DTO for updated `username`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
             forUPDT.setUsername("other-username");
 
+            // try to update
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
         }
 
         @Test
         @DirtiesContext
-//        void shouldNotUpdateNonexistentIdForbidden() {
         void shouldNotUpdateNonexistentIdUnauthorized() {
-            String failBodyMssg = "You aren't the owner of this id";
+            String failBodyMssg = Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG; //"You aren't the owner of this id"
+            Long id = this.id + 99999;
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId() + 99999);
-            forUPDT.setUsername("other-username");
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
+            // DTO for updated `username`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
+            forUPDT.setUsername("githubcom//cris6h16");
+
+            // try to update
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
+            // check if really doesn't exist a user with that id
             assertThat(userRepository.findByIdEagerly(forUPDT.getId())).isNotPresent();
         }
 
         @Test
         @DirtiesContext
         void shouldNotUpdateEmailIsInvalid() {
-            String failBodyMssg = "Email is invalid";
+            String failBodyMssg = Cons.User.Validations.EMAIL_INVALID_MSG; //"Email is invalid"
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // DTO for updated `email`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
             forUPDT.setEmail("thisisaninvalidemail");
 
+            // try to update
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
+            // check if fromDB == before_to_try_update
             assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
         @Test
         @DirtiesContext
         void shouldNotUpdatePasswordTooShort() {
-            String failBodyMssg = "Password must be at least 8 characters";
+            String failBodyMssg = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG; //"Password must be at least 8 characters"
 
-            UpdateUserDTO forUPDT = new UpdateUserDTO(before.getId());
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // DTO for updated `password`
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
             forUPDT.setPassword("1234567");
 
+            // try to update
             HttpEntity<UpdateUserDTO> httpEntity = new HttpEntity<UpdateUserDTO>(forUPDT);
             ResponseEntity<String> re = rt
                     .withBasicAuth(username, pass)
-                    .exchange((url + "/" + forUPDT.getId()), HttpMethod.PATCH, httpEntity, String.class);
+                    .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-            assertThat(re.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
+            // check if fromDB == before_to_try_update
             assertThat(userRepository.findByIdEagerly(forUPDT.getId()).get()).isEqualTo(before);
         }
 
 
         @Test
         @DirtiesContext
-            // Others tests can affect the stored in `before`
         void shouldGetAUserById() {
-            Long id = before.getId();
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+            String email = before.getEmail();
 
+            // get user
             ResponseEntity<PublicUserDTO> res = rt
                     .withBasicAuth(username, pass)
-                    .getForEntity(url + "/" + id, PublicUserDTO.class);
+                    .getForEntity(url, PublicUserDTO.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
 
+            // check if retrieved user has credentials with which it was retrieved
             PublicUserDTO user = res.getBody();
             assertThat(user.getId()).isEqualTo(id);
             assertThat(user.getUsername()).isEqualTo(username);
@@ -671,84 +728,109 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         @DirtiesContext
-            // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetIsNotAuthenticated() {
-            String failBodyMssg = "You must be authenticated to perform this action";
+            String failBodyMssg = Cons.Auth.Fails.UNAUTHENTICATED_MSG;
 
-            Long id = before.getId();
+            String url = path + "/" + id;
 
             ResponseEntity<String> res = rt
-                    .getForEntity(url + "/" + id, String.class);
+                    .getForEntity(url, String.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
         }
 
         @Test
         @DirtiesContext
             // necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotGetUserYouAreNotTheOwner() {
-            String failBodyMssg = "You aren't the owner of this ID";
+            String failBodyMssg = Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG; //"You aren't the owner of this ID";
 
-            Long id = before.getId() + 1091;
+            // from user in DB
+            String url = path + "/" + (id + 1);
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
+            // try to get
             ResponseEntity<String> res = rt
                     .withBasicAuth(username, pass)
-                    .getForEntity(url + "/" + id, String.class);
+                    .getForEntity(url, String.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
         }
 
         @Test
         @DirtiesContext
         void shouldDeleteAUser() {
-            Long id = before.getId();
-
+            // we're sure that the user exists
             assertThat(userRepository.findById(id)).isPresent();
 
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // delete user
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+                    .exchange(url, HttpMethod.DELETE, null, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
+            // check if user was deleted
             assertThat(userRepository.findById(id)).isEmpty();
         }
 
         @Test
         @DirtiesContext
         void shouldNotDeleteAUserIsNotAuthenticated() {
-            String failBodyMssg = "You must be authenticated to perform this action";
-            Long id = before.getId();
+            String failBodyMssg = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
 
+            // we're sure that the user exists
             assertThat(userRepository.findById(id)).isPresent();
 
-            ResponseEntity<String> res = rt
-                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
-            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            // from user in DB
+            String url = path + "/" + id;
 
+            // try to delete
+            ResponseEntity<String> res = rt
+                    .exchange(url, HttpMethod.DELETE, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
+
+            // check if user wasn't deleted
             assertThat(userRepository.findById(id)).isPresent();
         }
 
         @Test
         @DirtiesContext
         void shouldNotDeleteAUserYouAreNotTheOwner() throws JsonProcessingException {
-            String failBodyMssg = "You aren't the owner of this ID";
-            Long id = before.getId() + 1;
+            String failBodyMssg = Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG; //"You aren't the owner of this ID";
+            Long id = this.id + 1;
 
+            // count users -> before
+            long countB = userRepository.count();
+
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // try to delete
             ResponseEntity<String> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url + "/" + id, HttpMethod.DELETE, null, String.class);
+                    .exchange(url, HttpMethod.DELETE, null, String.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
 
-            assertThat(userRepository.findById(id)).isEmpty();
+            // no user should have been deleted
+            assertThat(userRepository.count()).isEqualTo(countB);
         }
         // If we let multiple sessions & generally it isn't with basic auth...
 //        @Test
 //        @DirtiesContext
 //        void userNotFound() {
 //            String failBodyMssg = "User not found";
-//            Long id = before.getId();
+//            Long id = id;
 //
 //            ResponseEntity<String> res = rt
 //                    .withBasicAuth(username, pass)
@@ -760,8 +842,12 @@ public class UserControllerTest { //TODO: improve HARDCODE
         @Test
         @DirtiesContext
         void shouldDeleteAllNotesWhenDeleteAUser() {
-            Long id = before.getId();
-            String urlNotes = "/api/notes";
+            String urlNotes = NoteControllerTest.path;
+
+            // from user in DB
+            String url = path + "/" + id;
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
 
             // create notes --> test/resources/NotesEntities.txt => json
             try (
@@ -794,7 +880,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             // delete user
             ResponseEntity<Void> res = rt
                     .withBasicAuth(username, pass)
-                    .exchange(url + "/" + id, HttpMethod.DELETE, null, Void.class);
+                    .exchange(url, HttpMethod.DELETE, null, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // check if user was deleted
@@ -811,20 +897,19 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         String adminUsername = "cris6h16InGithub";
         String adminPass = "cris6h16";
-        static List<Long> ids;
-        static String url = "/api/users";
-        static List<CreateUserDTO> users;
+        static List<Long> userIds;
+        static List<CreateUserDTO> usersToCreate;
         @Autowired
         Environment env;
 
 
         @BeforeAll
         static void beforeAll() {
-            ids = new ArrayList<>();
-            users = new ArrayList<>();
+            userIds = new ArrayList<>();
+            usersToCreate = new ArrayList<>();
             ObjectMapper objectMapper = new ObjectMapper();
 
-            // save users in static List
+            // save CreateUserDTO in static List from .txt
             try (
                     InputStream in = with27Users1AdminInDB.class.getClassLoader().getResourceAsStream("CreateUserDTOs.txt");
                     BufferedReader bf = new BufferedReader(new InputStreamReader(in));
@@ -834,18 +919,18 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     CreateUserDTO user = objectMapper
                             .readerFor(CreateUserDTO.class)
                             .readValue(line);
-                    users.add(user);
+                    usersToCreate.add(user);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            assertThat(users).hasSize(27);
+            assertThat(usersToCreate).hasSize(27);
         }
 
         @BeforeEach
         void setUp() {
-            //create an admin
+            //create an admin --> directly in DB
             userRepository.executeInTransaction(() -> {
                 RoleEntity role = roleRepository.findByName(ERole.ROLE_ADMIN).orElse(null);
                 if (role == null) role = RoleEntity.builder().name(ERole.ROLE_ADMIN).build();
@@ -861,20 +946,22 @@ public class UserControllerTest { //TODO: improve HARDCODE
             });
 
             // create users
-            for (CreateUserDTO user : users) {
+            for (CreateUserDTO user : usersToCreate) {
                 HttpEntity<CreateUserDTO> en = new HttpEntity<>(user);
-                ResponseEntity<Void> res = rt
-                        .exchange(url, HttpMethod.POST, en, Void.class);
+                ResponseEntity<Void> res = rt.exchange(path, HttpMethod.POST, en, Void.class);
                 assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-                String[] parts = res.getHeaders().getLocation().toString().split("/");
-                ids.add(Long.parseLong(parts[parts.length - 1]));
+                userIds.add(getIdFromLocationHeader(res));
             }
-            assertThat(userRepository.count()).isEqualTo(28);
 
-            Assertions.assertTrue(userRepository.findByUsername(adminUsername).isPresent(), "Admin not found, first insert an Admin in DB");
+            // check if all (users + admin) were created
+            assertThat(userRepository.count()).isEqualTo(28);// 27 + 1
+
+            // check if admin has ROLE_ADMIN
+            Assertions.assertTrue(userRepository.findByUsername(adminUsername).isPresent(),
+                    "Admin not found, first insert an Admin in DB");
             Assertions.assertTrue(userRepository.findByUsername(adminUsername).get().getRoles().stream()
-                            .anyMatch(roleEntity -> roleEntity.getName().equals(ERole.ROLE_ADMIN)),
-                    "used Admin credentials doesn't have ROLE_ADMIN");
+                            .anyMatch(r -> r.getName().equals(ERole.ROLE_ADMIN)),
+                    "Admin credentials used doesn't have " + ERole.ROLE_ADMIN);
         }
 
 
@@ -892,7 +979,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             while (true) {
                 ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
                 };
-                URI uri = UriComponentsBuilder.fromUriString(url)
+                URI uri = UriComponentsBuilder.fromUriString(path)
                         .queryParam(pageParam, page++)
                         .queryParam(sizeParam, size)
                         .queryParam("sort", "id,desc")
@@ -916,7 +1003,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
             while (true) {
                 ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
                 };
-                URI uri = UriComponentsBuilder.fromUriString(url)
+                URI uri = UriComponentsBuilder.fromUriString(path)
                         .queryParam(pageParam, page++)
                         .queryParam(sizeParam, size)
                         .queryParam("sort", "id,asc")
@@ -935,49 +1022,51 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
-        @DirtiesContext
-// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        @DirtiesContext// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotListAllUserIsPageable() {
+            // total users
             Integer users = (int) userRepository.count();
 
-            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
-            };
+            // list all users
+            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<>() {};
             ResponseEntity<List<PublicUserDTO>> res = rt
                     .withBasicAuth(adminUsername, adminPass)
-                    .exchange(url, HttpMethod.GET, null, ptr);
+                    .exchange(path, HttpMethod.GET, null, ptr);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
 
+            // check if retrieved has less size than the total users(automatic pagination)
             assertThat(res.getBody()).hasSizeLessThan(users);
         }
 
         @Test
         @DirtiesContext
         void shouldListAllUsersDefaultConfigNotUrlParams() {
+            // total users
             Integer users = (int) userRepository.count();
-            Short size = env.getProperty("spring.data.web.pageable.default-page-size", Short.class);
+            Short defSize = env.getProperty("spring.data.web.pageable.default-page-size", Short.class);
 
-
-            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
-            };
+            // list all users
+            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {};
             ResponseEntity<List<PublicUserDTO>> res = rt
                     .withBasicAuth(adminUsername, adminPass)
-                    .exchange(url, HttpMethod.GET, null, ptr);
+                    .exchange(path, HttpMethod.GET, null, ptr);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
 
-            assertThat(res.getBody()).hasSize(size);
+            // check if retrieved has the default size
+            assertThat(res.getBody()).hasSize(defSize);
         }
 
         @Test
         @DirtiesContext
         void shouldNotListAllUserIsNotAdmin() {
-            String failBodyMssg = "You must be an admin to perform this action";
+            String failBodyMssg = Cons.Auth.Fails.Authority.IS_NOT_ADMIN;
 //            UserEntity ue = userRepository.findById(ids.getFirst()).get();
 //            later: rt.withBasicAuth(ue.getUsername(), ue.getPassword()) -> X password is encrypted --> this stolen to me a lot of time until I realize it
             ResponseEntity<String> res = rt
-                    .withBasicAuth(users.getFirst().getUsername(), users.getFirst().getPassword())
-                    .exchange(url, HttpMethod.GET, null, String.class);
+                    .withBasicAuth(usersToCreate.getFirst().getUsername(), usersToCreate.getFirst().getPassword())
+                    .exchange(path, HttpMethod.GET, null, String.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(res.getBody().split("\"")[3]).isEqualToIgnoringCase(failBodyMssg);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
         }
 
 
