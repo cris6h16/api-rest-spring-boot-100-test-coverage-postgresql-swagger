@@ -432,10 +432,3 @@ specific points (for defining & things like that).
 > cannot throw exceptions with its status code and message, because here you are handling the exceptions, if you throw
 > an custom exception with response & message or any other here,
 > your response can be a `500 Internal Server Error`.
-
-
-
-
-
-<hr>
-//TODO: write about how all can test the API (POSTGRESQL setup)
