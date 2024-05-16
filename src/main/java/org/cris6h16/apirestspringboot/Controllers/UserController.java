@@ -23,7 +23,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    //TODO: doc about how a ResponseEntity which is Void can contain a body when an exception is threw
 
     @PostMapping
     public ResponseEntity<Void> createUser(@RequestBody CreateUserDTO user) {
@@ -31,13 +30,13 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PublicUserDTO> getUserById(@PathVariable Long id) { //TODO: Impl passing of Strings -> Test
+    public ResponseEntity<PublicUserDTO> getUserById(@PathVariable Long id) {
         return userService.getByIdLazy(id);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateUser(@PathVariable Long id,
-                                           @RequestBody UpdateUserDTO user) {//TODO: Impl passing of NUmbers -> Test
+                                           @RequestBody UpdateUserDTO user) {//TODO: Impl passing NUmbers -> Test
         return userService.updateUser(id, user);
     }
 

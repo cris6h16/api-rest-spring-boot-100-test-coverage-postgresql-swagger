@@ -32,7 +32,6 @@ indexes = {
 @Getter
 @Setter
 @EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches
-// TODO: doc about @EqualsAndHashCode must be set in all contained entities --> cased me a TROUBLE
 @Builder
 public class UserEntity {
 
@@ -41,7 +40,7 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username", length = MAX_USERNAME_LENGTH) //TODO: test passing a greater that 20
+    @Column(name = "username", length = MAX_USERNAME_LENGTH)
     @Length(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
     @NotBlank(message = USERNAME_IS_BLANK_MSG) // for sending null/empty
     private String username;
@@ -65,9 +64,10 @@ public class UserEntity {
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.DATE)
-    private Date deletedAt;
+//  // won't delete softly
+//    @Column(name = "deleted_at")
+//    @Temporal(TemporalType.DATE)
+//    private Date deletedAt;
 
     @ManyToMany(fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
@@ -83,8 +83,6 @@ public class UserEntity {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<NoteEntity> notes;
 
-    //TODO: correct because we need impl soft deletes
-
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.
     @PrePersist
@@ -97,7 +95,7 @@ public class UserEntity {
         updatedAt = new Date(System.currentTimeMillis());
     }
 
-//    @PostRemove  --> avoid for soft deletes
+//    @PostRemove --> I decided not implement soft delete
 //    public void preRemove() {
 //        deletedAt = new Date(System.currentTimeMillis());
 //    }

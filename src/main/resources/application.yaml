@@ -36,37 +36,3 @@ server:
     include-message: always
     include-exception: off
     include-stacktrace: never
-
-
-
-#entities:
-#  user:
-#
-#    constraints:
-#      unique:
-#        username:
-#          name: "username_unique"
-#          message: "Username already exists"
-#        email:
-#          name: "email_unique"
-#          message: "Email already exists"
-#
-#    validations:
-#      username:
-#        length:
-#          max: 20
-#          message: "Username must be less than 20 characters" #TODO: test this
-#        not-blank:
-#          message: "Username mustn't be blank"
-#
-#      password: # Length not because is encrypted
-#        not-blank:
-#          message: "Password mustn't be blank"
-#
-#      email:
-#        not-blank:
-#          message: "Email is required"
-#        email-invalid:
-#          message: "Email is invalid"
-#test:
-#    hello: "hola"

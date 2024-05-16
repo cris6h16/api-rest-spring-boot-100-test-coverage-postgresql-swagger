@@ -42,15 +42,20 @@ public class NoteEntity {
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
-    @Column(name = "deleted_at")
-    @Temporal(TemporalType.DATE)
-    private Date deletedAt;
+    // won't delete softly
+//    @Column(name = "deleted_at")
+//    @Temporal(TemporalType.DATE)
+//    private Date deletedAt;
 
 
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH) // remember @TEST that delete the Many shouldn't delete the One
     @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_Notes_user_id"))
     private UserEntity user;
+
+
+
+
 
     // TODO: improve -> single responsibility principle
     @PrePersist
@@ -61,7 +66,7 @@ public class NoteEntity {
     public void preUpdate() {
         this.updatedAt = new Date(System.currentTimeMillis());
     }
-//    @PreRemove --> avoid for soft delete
+//    @PreRemove --> I decided don't delete softly
 //    public void preRemove() {
 //        this.deletedAt = new Date(System.currentTimeMillis());
 //    }

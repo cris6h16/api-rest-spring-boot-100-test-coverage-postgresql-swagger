@@ -39,7 +39,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .collect(Collectors.toList());
 
         // Is enabled?
-        boolean enabled = user.get().getDeletedAt() == null;
+//        boolean enabled = user.get().getDeletedAt() == null;
+        boolean enabled = true;
 
         return new UserWithId( // TODO: see if enable is used correctly
                 user.get().getId(),

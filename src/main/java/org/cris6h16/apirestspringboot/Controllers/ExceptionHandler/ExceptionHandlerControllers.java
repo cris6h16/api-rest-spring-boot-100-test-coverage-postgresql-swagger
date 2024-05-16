@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +24,10 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 // Handles an exception in any annotated: @RestController, @Controller, or @RequestMapping
 @RestControllerAdvice // global exception handler for RESTful controllers
 @Slf4j
-public class ExceptionHandlerControllers { // TODO: correct HARD CODED
-    ObjectMapper objectMapper;
+public class ExceptionHandlerControllers {
     Map<String, String> map; // for client -> toJson(map)
     String msgL, forClient; // exception message lowercased, message for client
+    ObjectMapper objectMapper;
 
     public ExceptionHandlerControllers(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -75,6 +76,11 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
         msgL = ex.getMessage().toLowerCase();
+        if (thisContains(msgL, "for input string")) {
+            map.put("message", Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
+            log.debug("IllegalArgumentException: {}", Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
+        }
 
         log.error("IllegalArgumentException -> UNHANDLED: {}", msgL);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
@@ -98,6 +104,6 @@ public class ExceptionHandlerControllers { // TODO: correct HARD CODED
     }
 
     public boolean thisContains(String msg, String... strings) {
-        return Stream.of(strings).anyMatch(msg::contains);
+        return Stream.of(strings).anyMatch(msg.toLowerCase()::contains);
     }
 }

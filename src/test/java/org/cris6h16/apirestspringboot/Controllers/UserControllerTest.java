@@ -43,7 +43,7 @@ import static org.cris6h16.apirestspringboot.Controllers.Utils.ResponseUtils.get
 import static org.cris6h16.apirestspringboot.Controllers.Utils.ResponseUtils.getIdFromLocationHeader;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class UserControllerTest { //TODO: improve HARDCODE
+public class UserControllerTest {
 
     @Autowired
     TestRestTemplate rt;
@@ -100,7 +100,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 //        assertThat(fromDB.getNotes()).isEmpty();   --> LAZY
         assertThat(fromDB.getId()).isNotNull();
         assertThat(fromDB.getUpdatedAt()).isNull();
-        assertThat(fromDB.getDeletedAt()).isNull();
+//        assertThat(fromDB.getDeletedAt()).isNull();
         assertThat(fromDB.getCreatedAt()).isNotNull();
         assertThat(fromDB.getEmail()).isEqualTo(email);
         assertThat(fromDB.getUsername()).isEqualTo(username);
@@ -110,6 +110,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                 .filter(r -> (r.getName().equals(ERole.ROLE_USER)) && r.getId() > 0)
                 .count()).isEqualTo(1);
     }
+
 
     @Test
     @DirtiesContext
@@ -176,6 +177,29 @@ public class UserControllerTest { //TODO: improve HARDCODE
         String pass = "1234567";
         String email = forCreation.getEmail();
         String failBodyMssg = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
+
+        // count users -> before
+        long countB = userRepository.count();
+
+        // Create a user
+        HttpEntity<CreateUserDTO> user = new HttpEntity<>(new CreateUserDTO(username, pass, email));
+        ResponseEntity<String> res = rt.exchange(path, HttpMethod.POST, user, String.class);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
+
+        // count users -> after
+        long countA = userRepository.count();
+        assertThat(countA).isEqualTo(countB);
+    }
+
+
+    @Test
+    @DirtiesContext
+    void shouldNotCreateAUser_UsernameIsTooLong() {
+        String username = "a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1);
+        String pass = "12345678";
+        String email = forCreation.getEmail();
+        String failBodyMssg = Cons.User.Validations.USERNAME_MAX_LENGTH_MSG;
 
         // count users -> before
         long countB = userRepository.count();
@@ -297,7 +321,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
     @Nested
             //@DirtiesContext // Really I don't understand why some tests fail, it runs like if @DirtiesContext doesn't work in class level
-    class withAUserInDB { // TODO: Centralize "hardcoded" & try to avoid it
+    class withAUserInDB {
 
         UserEntity before;// pass is encrypted
         Long id;
@@ -312,7 +336,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
             rt // PATCH isn't supported by TestRestTemplate
                     .getRestTemplate()
-                    .setRequestFactory(new HttpComponentsClientHttpRequestFactory()); // TODO: remember add dependency: org.apache.httpcomponents.client5:httpclient5
+                    .setRequestFactory(new HttpComponentsClientHttpRequestFactory()); //remember add dependency: org.apache.httpcomponents.client5:httpclient5
 
             this.id = id;
         }
@@ -488,7 +512,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
 
         @Test
         @DirtiesContext
-        void updateShouldNotChange_DeletedAtCreatedAtRolesNotes() {
+        void updateShouldNotChange_CreatedAtRolesNotes() {
             UpdateUserDTO forUPDT;
             UserEntity updated;
 
@@ -510,10 +534,9 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .exchange(url, HttpMethod.PATCH, httpEntity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
-            // get from DB & check if `createdAt`, `deletedAt`, `roles` & `notes` are the same
+            // get from DB & check if `createdAt`, `roles` & `notes` are the same
             updated = userRepository.findByIdEagerly(id).get();
             assertThat(updated.getCreatedAt()).isEqualTo(before.getCreatedAt());
-            assertThat(updated.getDeletedAt()).isEqualTo(before.getDeletedAt());
             assertThat(updated.getRoles()).isEqualTo(before.getRoles());
 //            assertThat(updated.getNotes()).isEqualTo(before.getNotes());  --> LAZY
 
@@ -539,7 +562,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .withBasicAuth(username, pass)
                     .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
             // get from DB & check if all values are the same
             UserEntity updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
@@ -567,7 +590,7 @@ public class UserControllerTest { //TODO: improve HARDCODE
                     .withBasicAuth(username, pass)
                     .exchange(url, HttpMethod.PATCH, httpEntity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg); //TODO: remember doc about the importance of format responses
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
             // get from DB & check if all values are the same
             UserEntity updated = userRepository.findByIdEagerly(forUPDT.getId()).get();
@@ -597,7 +620,6 @@ public class UserControllerTest { //TODO: improve HARDCODE
             assertThat(updated).isEqualTo(before);
         }
 
-        //TODO: test for login with bad credentials
         @Test
         @DirtiesContext
         void shouldNotUpdateYouCannotUpdateOtherUserAccount() {
@@ -890,6 +912,60 @@ public class UserControllerTest { //TODO: improve HARDCODE
             // check if notes were deleted
             assertThat(noteRepository.findByUserId(id)).isEmpty();
         }
+
+        @Test
+        @DirtiesContext
+        void loginBadCredentials() {
+//            String failBodyMssg = Cons.Auth.Fails.BAD_CREDENTIALS_MSG; --> a message is not necessary
+
+            // from user in DB
+            String url = path + "/1";
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+
+            // username wrong
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username + "bad", pass)
+                    .exchange(url, HttpMethod.GET, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+            // password wrong
+            res = rt
+                    .withBasicAuth(username, pass + "bad")
+                    .exchange(url, HttpMethod.POST, null, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        }
+
+
+
+        @Test
+        @DirtiesContext
+        void passingAStrInsteadOfANumberShouldReturnBadRequest() {
+            String username = forCreation.getUsername();
+            String pass = forCreation.getPassword();
+            String failBodyMssg = Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG;
+
+            // PATCH
+            String url = path + "/string";
+            UpdateUserDTO forUPDT = new UpdateUserDTO(id);
+            HttpEntity<UpdateUserDTO> entity = new HttpEntity<>(forUPDT);
+            ResponseEntity<String> re = rt
+                    .withBasicAuth(username, pass)
+                    .exchange(url, HttpMethod.PATCH, entity, String.class);
+            assertThat(re.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
+
+            // GET /{id}
+            url = path + "/string";
+            ResponseEntity<String> res = rt
+                    .withBasicAuth(username, pass)
+                    .getForEntity(url, String.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(getFailBodyMsg(res)).isEqualToIgnoringCase(failBodyMssg);
+
+            //
+        }
+
     }
 
     @Nested
@@ -1023,13 +1099,15 @@ public class UserControllerTest { //TODO: improve HARDCODE
         }
 
         @Test
-        @DirtiesContext// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
+        @DirtiesContext
+// necessary because `@BeforeEach` can lead in CONFLICT (creating the same user)
         void shouldNotListAllUserIsPageable() {
             // total users
             Integer users = (int) userRepository.count();
 
             // list all users
-            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<>() {};
+            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<>() {
+            };
             ResponseEntity<List<PublicUserDTO>> res = rt
                     .withBasicAuth(adminUsername, adminPass)
                     .exchange(path, HttpMethod.GET, null, ptr);
@@ -1047,7 +1125,8 @@ public class UserControllerTest { //TODO: improve HARDCODE
             Short defSize = env.getProperty("spring.data.web.pageable.default-page-size", Short.class);
 
             // list all users
-            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {};
+            ParameterizedTypeReference<List<PublicUserDTO>> ptr = new ParameterizedTypeReference<List<PublicUserDTO>>() {
+            };
             ResponseEntity<List<PublicUserDTO>> res = rt
                     .withBasicAuth(adminUsername, adminPass)
                     .exchange(path, HttpMethod.GET, null, ptr);

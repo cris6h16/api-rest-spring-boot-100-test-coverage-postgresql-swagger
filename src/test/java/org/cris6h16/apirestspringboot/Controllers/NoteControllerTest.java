@@ -97,7 +97,6 @@ public class NoteControllerTest {
         assertThat(fromDB.getId()).isGreaterThan(0);
         assertThat(fromDB.getCreatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
         assertThat(fromDB.getUpdatedAt()).isNull();
-        assertThat(fromDB.getDeletedAt()).isNull();
         assertThat(fromDB.getTitle()).isEqualTo(title);
         assertThat(fromDB.getContent()).isEqualTo(content);
     }
@@ -110,7 +109,7 @@ public class NoteControllerTest {
 
         // Create a note
         HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(null, content));
-        ResponseEntity<String> res = rt // TODO: doc about how a Response Void can contain a body when there was an exception
+        ResponseEntity<String> res = rt
                 .withBasicAuth(username, pass)
                 .exchange(path, HttpMethod.POST, note, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -126,7 +125,7 @@ public class NoteControllerTest {
 
         // Create a note
         HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
-        ResponseEntity<String> res = rt // TODO: doc about how a Response Void can contain a body when there was an exception
+        ResponseEntity<String> res = rt
                 .withBasicAuth(username, pass)
                 .exchange(path, HttpMethod.POST, note, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -142,7 +141,7 @@ public class NoteControllerTest {
 
         // Create a note
         HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
-        ResponseEntity<String> res = rt // TODO: doc about how a Response Void can contain a body when there was an exception
+        ResponseEntity<String> res = rt
                 .withBasicAuth(username, pass)
                 .exchange(path, HttpMethod.POST, note, String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -330,7 +329,7 @@ public class NoteControllerTest {
         }
 
 
-        // TODO: docs about how useful is turn to debug mode
+
         @Test
         @DirtiesContext
         void shouldGetANote() {
@@ -440,7 +439,6 @@ public class NoteControllerTest {
             assertThat(noteEntity.get().getTitle()).isEqualTo(title);
             assertThat(noteEntity.get().getContent()).isEqualTo(content);
             assertThat(noteEntity.get().getUpdatedAt()).isNull();
-            assertThat(noteEntity.get().getDeletedAt()).isNull();
         }
 
         @Test
@@ -576,7 +574,6 @@ public class NoteControllerTest {
             assertThat(noteEntity.get().getTitle()).isEqualTo(title);
             assertThat(noteEntity.get().getContent()).isEqualTo(content);
             assertThat(noteEntity.get().getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
-            assertThat(noteEntity.get().getDeletedAt()).isNull();
         }
 
 
@@ -795,8 +792,6 @@ public class NoteControllerTest {
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
             assertThat(getFailBodyMsg(re)).isEqualTo(failMessage);
         }
-
-        //TODO: doc about the importance of first formating responses, custom responses, etc. because i implemente PUT and DELETE test of NoteTest and I almost pass all the tests in the first try (only one fails)
 
         @Test
         @DirtiesContext

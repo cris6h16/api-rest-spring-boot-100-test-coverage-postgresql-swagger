@@ -52,4 +52,13 @@ public class Cons {
             }
         }
     }
+
+    public class Controller {
+        public class Fails {
+            public class Argument {
+
+                public static final String DATATYPE_PASSED_WRONG = "The datatype passed by you is wrong";
+            }
+        }
+    }
 }

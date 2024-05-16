@@ -57,7 +57,7 @@ will use PostgresSQL (password is used encrypted for everything).
     - password (min=8)
     - created_at
     - updated_at
-    - deleted_at
+    - ~~deleted_at~~ (User won't delete softly )
     - roles
     - notes
 
@@ -68,7 +68,7 @@ will use PostgresSQL (password is used encrypted for everything).
     - content
     - ~~created_at~~ (I won't add it for use `PUT`)
     - updated_at
-    - deleted_at
+    - ~~deleted_at~~ (Note won't delete softly )
 
 
 - Role
@@ -301,6 +301,7 @@ specific points (for defining & things like that).
 | 2024-05-08<br/>2024-05-09                | List all users(`ADMIN`) tests, impl:<br/>[with27Users1AdminInDB](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java):<br/>[shouldListAllUsersInPagesIsPageable()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>[shouldNotListAllUserIsPageable()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>[shouldListAllUsersDefaultConfigNotUrlParams()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>[shouldNotListAllUserIsNotAdmin()](src/test/java/org/cris6h16/apirestspringboot/Controllers/UserControllerTest.java)<br/>&& Tests passed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | 22:26<br>14:40                                                      | 23:22<br>17:15                   |
 | 2024-05-13/14                            | Refactor<br/>Hardcode related to User & Auth was centralized                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | around 5 hours                                                      |                                  |
 | 2024-05-14                               | Refactor<br/>Hardcode related to Note was centralized                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | around 2 hours                                                      |                                  |
+| 2024-05-15                               | doing the TODOs(<br>[shouldNotCreateAUser_UsernameIsTooLong(), loginBadCredentials(), passingAStrInsteadOfANumberShouldReturnBadRequest()]()<br>)<br>_I won't take the time, the majority of the time, Im writing the README_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |                                                                     |                                  |
 
 - User tests:
 
@@ -323,7 +324,7 @@ specific points (for defining & things like that).
 > call me to do something or else they get angry.   
 > also I'm a human, I need to eat, sleep, etc...
 
-## THINGS THAT CAUSED ME TROUBLES
+## THINGS THAT PROBABLY CAN CAUSE TROUBLES TO YOU
 
 1. Validations from different packages
 
@@ -349,6 +350,45 @@ specific points (for defining & things like that).
 > Did you see the problem? my way to solve it was make a common Exception response for
 > all (`DataIntegrityViolationException`, `ConstraintViolationException`, `ResponseStatusException`, any threw in
 > anywhere ) using a `Map` and `ObjectMapper` in `@<RestController>Advice`
+
+2. `@EqualsAndHashCode`
+
+> if you put `@EqualsAndHashCode` in your `@Entity` or any class, for a correct work you need to put this annotation
+> in all contained into this class(classes which are User-defined).
+> Example: if you have a class `User` which contains a class `Role` & `Note` you need to put `@EqualsAndHashCode` in all
+> of them.
+
+3. Verify the length of the password
+
+> I was trying to reach the length fail(min) of the password, but I was always getting a length greater than 8.
+> The problem was that I wasn't taking into account that the password is saved encrypted.
+> Then i cannot use `@Length(min = 8, message = "Password ....")` because the password is encrypted & always will be
+> greater.
+> Due that I did the verification in the `@Service` directly from the DTO.
+> Now is the first verification of all, if you pass all attributes null/empty, then the password length fail will be the
+> response message.
+
+4. `TestRestTemplate` uses `SimpleClientHttpRequestFactory`, which does not support `PATCH` requests.
+
+> This can lead to test failures if your tests involve PATCH operations.
+> To fix this, you can configure the `TestRestTemplate` to use `HttpComponentsClientHttpRequestFactory`:   
+> from `org.apache.httpcomponents.client5:httpclient5:x.x.x` then:   
+> `@Autowired`    
+> `TestRestTemplate rt`   
+> `rt.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());`
+
+5. How a `@ResController` which returns a `ResponseEntity<Void>` can have a body if it fails ?
+
+> The `ResponseEntity<Void>` is a response entity which doesn't have a body, but if something goes
+> wrong(Exceptions like ConstraintViolationException, DataIntegrityViolationException, etc)
+> then it can have a body with `Map<String, Object>` which contains the error message(s).
+> Simply because any exception thrown will return its own `ResponseEntity<String>` or any that you want.
+
+6. Something goes wrong internally, but you don't know the specific reason why it fails
+
+> Simply turn on the debug mode in the properties file, and you'll probably can see the specific reason why it fails in
+> the logs.
+
 
 // TODO: write about the definition of formats for exceptions/"errors", handling in HTTP handled classes exceptions, and
 when throw a

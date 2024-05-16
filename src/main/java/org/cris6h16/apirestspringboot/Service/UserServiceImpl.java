@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
         Optional<RoleEntity> roles = roleRepository.findByName(ERole.ROLE_USER);
         if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.ROLE_USER));
         if (dto.getPassword() == null || dto.getPassword().length() < 8)
-            throw new PasswordIsTooShortException(); //TODO: docs why we handle it here directly (encryption)
+            throw new PasswordIsTooShortException();
 
         UserEntity user = UserEntity.builder()
                 .id(null)
@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
                 .email(dto.getEmail())
                 .createdAt(null)
                 .updatedAt(null)
-                .deletedAt(null)
+//                .deletedAt(null)
                 .roles(Set.of(roles.get()))
                 .notes(null)
                 .build();
@@ -113,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    //    @PreAuthorize("#id == authentication.principal.id") // TODO: doc about the custom impl with id or any
+    //    @PreAuthorize("#id == authentication.principal.id")
     @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated() && @AuthCustomResponses.checkIfIsOwnerOfThisId(#id)")
     // return exception with a message in response body
     @Transactional(
