@@ -36,7 +36,7 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public ResponseEntity<Void> updateUser(@PathVariable Long id,
-                                           @RequestBody UpdateUserDTO user) {//TODO: Impl passing NUmbers -> Test
+                                           @RequestBody UpdateUserDTO user) {//TODO: Impl boudary cases for all @CONTROLLERS
         return userService.updateUser(id, user);
     }
 

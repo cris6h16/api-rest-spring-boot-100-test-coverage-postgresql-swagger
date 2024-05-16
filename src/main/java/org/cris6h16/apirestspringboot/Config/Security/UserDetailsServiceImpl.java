@@ -42,7 +42,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 //        boolean enabled = user.get().getDeletedAt() == null;
         boolean enabled = true;
 
-        return new UserWithId( // TODO: see if enable is used correctly
+        return new UserWithId(
                 user.get().getId(),
                 user.get().getUsername(),
                 user.get().getPassword(), // Password is encoded
