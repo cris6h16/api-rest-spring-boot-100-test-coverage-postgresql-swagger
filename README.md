@@ -6,20 +6,22 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 # TEST THIS API
 
 1. Create a local DB in PostgresSQL:
-   - `port`: `5432`
-   - `database`: `api-rest-spring-boot`
-   - `schema`: `test`
+    - `port`: `5432`
+    - `database`: `api-rest-spring-boot`
+    - `schema`: `test`
 
 2. Environment variables:
-   - `PSQL_PASS`: password of the user which has the grants for the created database
-   - `PSQL_USER`: username of the user which has the grants for the created database
+    - `PSQL_PASS`: password of the user which has the grants for the created database
+    - `PSQL_USER`: username of the user which has the grants for the created database
 
 3. Verify the above:
-   - `echo $PSQL_USER && echo $PSQL_PASS`: if you see the credentials, then you can continue
-   - `psql -h localhost -p 5432 -U $PSQL_USER -d api-rest-spring-boot -c "SELECT schema_name FROM information_schema.schemata;"`: if you can see the schema `test`, then you can continue.
-    
-4. JDK:   
+    - `echo $PSQL_USER && echo $PSQL_PASS`: if you see the credentials, then you can continue
+    - `psql -h localhost -p 5432 -U $PSQL_USER -d api-rest-spring-boot -c "SELECT schema_name FROM information_schema.schemata;"`:
+      if you can see the schema `test`, then you can continue.
+
+4. JDK:
     - `21`
+
 ## 1. DEFINING THE PROJECT
 
 ### 1.1. User Case
@@ -46,7 +48,7 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 - If the user isn't the owner of the note, then for him the note doesn't exist.
 - The user can't modify audit fields.
 - user can only get his profile information
-- we'll return body in something goes wrong for those which isn't necessary return a response body if was successful    
+- we'll return body in something goes wrong for those which isn't necessary return a response body if was successful
 
 
 - You can see the used dependencies in the `pom.xml` file
@@ -112,13 +114,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `PATCH`     | `204 NO CONTENT` |
 
-| FAIL                                                                          | RESPONSE            |
-|-------------------------------------------------------------------------------|---------------------|
-| - _Username already exists_<br/>- _Email already exists_                      | `409 Conflict`      |
-| - _You need to be authenticated to perform this action_                       | `401 Unauthorized`  |
-| - _You aren't the owner of this id_ ( whether this Id exists/doesn't exist  ) | `403 Forbidden`     |
-| - _Password must be at least 8 characters_<br/>- _Email is invalid_           | `400 Bad Request`   |
-| ~~- _User not found_~~ -> _"replace" by -_ _You aren't the owner of this id_  | ~~`404 Not Found`~~ |
+| FAIL                                                                                                                                     | RESPONSE            |
+|------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
+| - _Username already exists_<br/>- _Email already exists_                                                                                 | `409 Conflict`      |
+| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this id_ ( whether this Id exists/doesn't exist  ) | `401 Unauthorized`  |
+| - _Password must be at least 8 characters_<br/>- _Email is invalid_                                                                      | `400 Bad Request`   |
+| ~~- _User not found_~~ -> _"replace" by -_ _You aren't the owner of this id_                                                             | ~~`404 Not Found`~~ |
 
 ### 2.3 GET a USER
 
@@ -126,11 +127,10 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |-------------------|-------------|----------|
 | `/api/users/{id}` | `GET`       | `200 OK` |
 
-| FAIL                                                                            | RESPONSE            |
-|---------------------------------------------------------------------------------|---------------------|
-| - _You need to be authenticated to perform this action_                         | `401 Unauthorized`  |
-| - _You aren't the owner of this ID_   ( whether this Id exists/doesn't exist  ) | `403 Forbidden`     |
-| ~~- _User not found_~~                                                          | ~~`404 Not Found`~~ |
+| FAIL                                                                                                                                       | RESPONSE            |
+|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
+| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this ID_   ( whether this Id exists/doesn't exist  ) | `401 Unauthorized`  |
+| ~~- _User not found_~~                                                                                                                     | ~~`404 Not Found`~~ |
 
 <hr>  
 
@@ -196,10 +196,9 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------------------------------------------------------------------------|-------------|----------|
 | `/api/users`<br/>- `page=<1>`<br/>- `size=<2>`<br/>- `sort=<create_at>, <asc>` | `GET`       | `200 OK` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
-| - _You need to be an admin to perform this action_      | `403 Forbidden`    |
+| FAIL                                                                                                          | RESPONSE           |
+|---------------------------------------------------------------------------------------------------------------|--------------------|
+| - _You need to be authenticated to perform this action_<br>- _You need to be an admin to perform this action_ | `401 Unauthorized` |
 
 ### 2.9 DELETE a USER
 
@@ -207,11 +206,10 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `DELETE`    | `204 NO CONTENT` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
-| - _You aren't the owner of this ID_                     | `403 Forbidden`    |
-| - _User not found_ *** _if you let multi sessions_ ***  | `404 Not Found`    |
+| FAIL                                                                                           | RESPONSE           |
+|------------------------------------------------------------------------------------------------|--------------------|
+| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this ID_ | `401 Unauthorized` |
+| - _User not found_ *** _if you let multi sessions_ ***                                         | `404 Not Found`    |
 
 #
 
@@ -422,12 +420,17 @@ specific points (for defining & things like that).
 > the logs.
 
 7. Throwing exceptions in `@Service` && `@RestControllerAdvice`
-> If you throw an exception with a status code in a `@Service` class, and you want to handle it in a `@RestControllerAdvice` class.
+
+> If you throw an exception with a status code in a `@Service` class, and you want to handle it in
+> a `@RestControllerAdvice` class.
 > you can build our own response format for all exceptions, here you can include instant, status, message, etc.
 > In the `@RestControllerAdvice` you shouldn't throw exceptions with its status code and message, this type of
-> exceptions should be thrown in the `@Service`, not exactly inside the service, can be in any method which is called/used by the service...
-> In the `@RestControllerAdvice` you can handle the exceptions and return a custom `ResponseEntity<String>` with any that you want, in this you
-> cannot throw exceptions with its status code and message, because here you are handling the exceptions, if you throw an custom exception with response & message or any other here, 
+> exceptions should be thrown in the `@Service`, not exactly inside the service, can be in any method which is
+> called/used by the service...
+> In the `@RestControllerAdvice` you can handle the exceptions and return a custom `ResponseEntity<String>` with any
+> that you want, in this you
+> cannot throw exceptions with its status code and message, because here you are handling the exceptions, if you throw
+> an custom exception with response & message or any other here,
 > your response can be a `500 Internal Server Error`.
 
 
