@@ -103,21 +103,22 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|---------------|
 | `/api/users` | `POST`      | `201 CREATED` | 
 
-| Passing a [CreatedUserDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java) with a: | RESPONSE                                                   | STATUS CODE                 |
-|----------------------------------------------------------------------------------------------------------|------------------------------------------------------------|-----------------------------|
-| - `username` that already exists<br/>- `email` that already exists                                       | - `Username already exists`<br/>- `Email` already `exists` | `409 Conflict`              |  
-|                                                                                                          |                                                            |                             |
-| - `password` length less than 8                                                                          | - `Password must be at least 8 characters`                 | `400 Bad Request`           |    
-| - `username` length greater than `20`                                                                    | - `Username must be less than 20 characters`               |                             | 
-| - `email` that isn't valid                                                                               | - `Email is invalid`                                       |                             | 
-| - `email` that is null                                                                                   | - `Email is required`                                      |                             | 
-| - `email` that has just white spaces                                                                     | - `Email is required`                                      |                             | 
-| - `username` that is null                                                                                | - `Username mustn't be blank`                              |                             | 
-| - `username` that has just white spaces                                                                  | - `Username mustn't be blank`                              |                             | 
-| - `password` that is null                                                                                | - `Password mustn't be blank`                              |                             | 
-| - `String` in `PathVariable`, this is not the datatype required                                          | - `The datatype passed by you is wrong`                    |                             | 
-|                                                                                                          |                                                            |                             |
-| - ANY other exception(unhandled)                                                                         | - `Internal Server Error -> Unhandled`                     | `500 Internal Server Error` |      
+| Action / Passing a [CreatedUserDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateUserDTO.java) with a: | RESPONSE                                     | STATUS CODE                 |
+|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------|-----------------------------|
+| - `username` that already exists                                                                                  | - `Username already exists`                  | `409 Conflict`              |  
+| - `email` that already exists                                                                                     | - `Email already exists`                     |                             |
+|                                                                                                                   |                                              |                             |
+| - `password` length less than 8                                                                                   | - `Password must be at least 8 characters`   | `400 Bad Request`           |    
+| - `username` length greater than `20`                                                                             | - `Username must be less than 20 characters` |                             | 
+| - `email` that isn't valid                                                                                        | - `Email is invalid`                         |                             | 
+| - `email` that is null                                                                                            | - `Email is required`                        |                             | 
+| - `email` that has just white spaces                                                                              | - `Email is required`                        |                             | 
+| - `username` that is null                                                                                         | - `Username mustn't be blank`                |                             | 
+| - `username` that has just white spaces                                                                           | - `Username mustn't be blank`                |                             | 
+| - `password` that is null                                                                                         | - `Password mustn't be blank`                |                             | 
+| - `String` in `PathVariable`, this is not the datatype required                                                   | - `The datatype passed by you is wrong`      |                             | 
+|                                                                                                                   |                                              |                             |
+| - ANY other exception(unhandled)                                                                                  | - `Internal Server Error -> Unhandled`       | `500 Internal Server Error` |      
 
 [center of response messages](src/main/java/org/cris6h16/apirestspringboot/Constants/Cons.java)
 
@@ -127,12 +128,14 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `PATCH`     | `204 NO CONTENT` |
 
-| FAIL                                                                                                                                     | RESPONSE            |
-|------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
-| - _Username already exists_<br/>- _Email already exists_                                                                                 | `409 Conflict`      |
-| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this id_ ( whether this Id exists/doesn't exist  ) | `401 Unauthorized`  |
-| - _Password must be at least 8 characters_<br/>- _Email is invalid_                                                                      | `400 Bad Request`   |
-| ~~- _User not found_~~ -> _"replace" by -_ _You aren't the owner of this id_                                                             | ~~`404 Not Found`~~ |
+| Action / PASSING a [UpdateUserDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/UpdateUserDTO.java) with a: | RESPONSE                                             | STATUS CODE        |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|--------------------|
+| - `username` that already exists                                                                                 | - `Username already exists`                          | `409 Conflict`     |
+| - `email` that already exists                                                                                    | - `Email already exists`                             |                    |
+| - `email` is invalid                                                                                             | - `Email is invalid`                                 | `400 Bad Request`  |
+| - `password` length less than 8                                                                                  | - `Password must be at least 8 characters`           |                    |
+| - Try to update but isn't authenticated                                                                          | - `You must be authenticated to perform this action` | `401 Unauthorized` |
+| - Try to update other user account(doesnt matter if that user acc. exists or not)                                | - `You aren't the owner of this id`                  |                    | 
 
 ### 2.3 GET a USER
 
