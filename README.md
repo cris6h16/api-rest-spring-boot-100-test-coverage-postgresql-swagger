@@ -108,14 +108,14 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 | - `username` that already exists<br/>- `email` that already exists                                       | - `Username already exists`<br/>- `Email` already `exists` | `409 Conflict`              |  
 |                                                                                                          |                                                            |                             |
 | - `password` length less than 8                                                                          | - `Password must be at least 8 characters`                 | `400 Bad Request`           |    
-| - `username` length greater than `20`                                                                    | - `Username must be less than 20 characters`               | `400 Bad Request`           | 
-| - `email` that isn't valid                                                                               | - `Email is invalid`                                       | `400 Bad Request`           | 
-| - `email` that is null                                                                                   | - `Email is required`                                      | `400 Bad Request`           | 
-| - `email` that has just white spaces                                                                     | - `Email is required`                                      | `400 Bad Request`           | 
-| - `username` that is null                                                                                | - `Username mustn't be blank`                              | `400 Bad Request`           | 
-| - `username` that has just white spaces                                                                  | - `Username mustn't be blank`                              | `400 Bad Request`           | 
-| - `password` that is null                                                                                | - `Password mustn't be blank`                              | `400 Bad Request`           | 
-| - `String` in `PathVariable`, this is not the datatype required                                          | - `The datatype passed by you is wrong`                    | `400 Bad Request`           | 
+| - `username` length greater than `20`                                                                    | - `Username must be less than 20 characters`               |                             | 
+| - `email` that isn't valid                                                                               | - `Email is invalid`                                       |                             | 
+| - `email` that is null                                                                                   | - `Email is required`                                      |                             | 
+| - `email` that has just white spaces                                                                     | - `Email is required`                                      |                             | 
+| - `username` that is null                                                                                | - `Username mustn't be blank`                              |                             | 
+| - `username` that has just white spaces                                                                  | - `Username mustn't be blank`                              |                             | 
+| - `password` that is null                                                                                | - `Password mustn't be blank`                              |                             | 
+| - `String` in `PathVariable`, this is not the datatype required                                          | - `The datatype passed by you is wrong`                    |                             | 
 |                                                                                                          |                                                            |                             |
 | - ANY other exception(unhandled)                                                                         | - `Internal Server Error -> Unhandled`                     | `500 Internal Server Error` |      
 
