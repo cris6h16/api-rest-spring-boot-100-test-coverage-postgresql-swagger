@@ -371,7 +371,7 @@ specific points (for defining & things like that).
 
 - User tests:
 
-![img.png](img.png)    
+![img.png](img.png)       
 ![img_1.png](img_1.png)
 
 - Note tests:
@@ -381,8 +381,8 @@ specific points (for defining & things like that).
 ### Total time taken
 
 | Minutes | Hours |
-|---------|-------|
-| 2755    | 46    |   
+|---------|----|
+| 2755    | 46 |   
 
 ### Some Questions that you probably have
 
