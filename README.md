@@ -21,7 +21,10 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 
 4. JDK:
     - `21`
+  
 
+- You can see the used dependencies in the `pom.xml` file
+  
 ## 1. DEFINING THE PROJECT
 
 ### 1.1. User Case
@@ -52,9 +55,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 - The user can't modify audit fields.
 - user can only get his profile information
 - we'll return a body if something goes wrong.
-
-
-- You can see the used dependencies in the `pom.xml` file
 
 ### 1.3 Endpoints
 
