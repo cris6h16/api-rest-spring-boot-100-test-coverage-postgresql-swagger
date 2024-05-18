@@ -45,10 +45,13 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 
 ### 1.2. Some considerations
 
+- should Delete all notes when a user is deleted
+- delete a note should not delete the user
+- Let multi-sessions, then before each service check if `principal.id` exist or else _User not found_
 - If the user isn't the owner of the note, then for him the note doesn't exist.
 - The user can't modify audit fields.
 - user can only get his profile information
-- we'll return body in something goes wrong for those which isn't necessary return a response body if was successful
+- we'll return a body if something goes wrong.
 
 
 - You can see the used dependencies in the `pom.xml` file
@@ -116,7 +119,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 | - `username` that is null                                                                                         | - `Username mustn't be blank`                |                             | 
 | - `username` that has just white spaces                                                                           | - `Username mustn't be blank`                |                             | 
 | - `password` that is null                                                                                         | - `Password mustn't be blank`                |                             | 
-| - `String` in `PathVariable`, this is not the datatype required                                                   | - `The datatype passed by you is wrong`      |                             | 
 |                                                                                                                   |                                              |                             |
 | - ANY other exception(unhandled)                                                                                  | - `Internal Server Error -> Unhandled`       | `500 Internal Server Error` |      
 
@@ -128,14 +130,16 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `PATCH`     | `204 NO CONTENT` |
 
-| Action / PASSING a [UpdateUserDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/UpdateUserDTO.java) with a: | RESPONSE                                             | STATUS CODE        |
-|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|--------------------|
-| - `username` that already exists                                                                                 | - `Username already exists`                          | `409 Conflict`     |
-| - `email` that already exists                                                                                    | - `Email already exists`                             |                    |
-| - `email` is invalid                                                                                             | - `Email is invalid`                                 | `400 Bad Request`  |
-| - `password` length less than 8                                                                                  | - `Password must be at least 8 characters`           |                    |
-| - Try to update but isn't authenticated                                                                          | - `You must be authenticated to perform this action` | `401 Unauthorized` |
-| - Try to update other user account(doesnt matter if that user acc. exists or not)                                | - `You aren't the owner of this id`                  |                    | 
+| Action / PASSING a [UpdateUserDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/UpdateUserDTO.java) with a: | RESPONSE                                             | STATUS CODE                 |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|-----------------------------|
+| - `username` that already exists                                                                                 | - `Username already exists`                          | `409 Conflict`              |
+| - `email` that already exists                                                                                    | - `Email already exists`                             |                             |
+| - `email` is invalid                                                                                             | - `Email is invalid`                                 | `400 Bad Request`           |
+| - `password` length less than 8                                                                                  | - `Password must be at least 8 characters`           |                             |
+| - Isn't authenticated                                                                                            | - `You must be authenticated to perform this action` | `401 Unauthorized`          |
+| - Try to update other user account(doesnt matter if that user acc. exists or not)                                | - `You aren't the owner of this id`                  |                             | 
+|                                                                                                                  |                                                      |                             |
+| - ANY other exception(unhandled)                                                                                 | - `Internal Server Error -> Unhandled`               | `500 Internal Server Error` |      
 
 ### 2.3 GET a USER
 
@@ -143,10 +147,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |-------------------|-------------|----------|
 | `/api/users/{id}` | `GET`       | `200 OK` |
 
-| FAIL                                                                                                                                       | RESPONSE            |
-|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------|
-| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this ID_   ( whether this Id exists/doesn't exist  ) | `401 Unauthorized`  |
-| ~~- _User not found_~~                                                                                                                     | ~~`404 Not Found`~~ |
+| Action                                           | RESPONSE                                           | STATUS CODE                 |
+|--------------------------------------------------|----------------------------------------------------|-----------------------------|
+| - Isn't authenticated                            | `You must be authenticated to perform this action` | `401 Unauthorized`          |
+| - Try to get other user's account ( `!= /{id}` ) | `You aren't the owner of this id`                  |                             |
+|                                                  |                                                    |                             |
+| - ANY other exception(unhandled)                 | - `Internal Server Error -> Unhandled`             | `500 Internal Server Error` |      
 
 <hr>  
 
@@ -156,10 +162,14 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|---------------|
 | `/api/notes` | `POST`      | `201 CREATED` |
 
-| FAIL                                                                                                    | RESPONSE           |
-|---------------------------------------------------------------------------------------------------------|--------------------|
-| - _Title is required \*\*\*if only spaces or null\*\*\*_<br/>- _Title must be less than 255 characters_ | `400 Bad Request`  |
-| - _You need to be authenticated to perform this action_                                                 | `401 Unauthorized` |
+| ACTION / PASSING a [CreateNoteDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateNoteDTO.java) with a: | RESPONSE                                             | STATUS CODE                 |
+|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|-----------------------------|
+| - `title` that is null                                                                                           | - `Title is required`                                | `400 Bad Request`           |
+| - `title` that has just white spaces                                                                             | - `Title is required`                                |                             |
+| - `title` that is greater than 255 characters                                                                    | - `Title must be less than 255 characters`           |                             |
+| - Is not authenticated                                                                                           | - `You must be authenticated to perform this action` | `401 Unauthorized`          |
+|                                                                                                                  |                                                      |                             |
+| - ANY other exception(unhandled)                                                                                 | - `Internal Server Error -> Unhandled`               | `500 Internal Server Error` |      
 
 ### 2.4 LIST all NOTES
 
@@ -167,9 +177,11 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------------------------------------------------------------------------|-------------|----------|
 | `/api/notes`<br/>- `page=<1>`<br/>- `size=<2>`<br/>- `sort=<create_at>, <asc>` | `GET`       | `200 OK` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
+| ACTION                           | RESPONSE                                                | STATUS CODE                 |
+|----------------------------------|---------------------------------------------------------|-----------------------------|
+| - _Is not authenticated_         | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
+|                                  |                                                         |                             |
+| - ANY other exception(unhandled) | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |      
 
 ### 2.5 SEE a NOTE
 
@@ -177,10 +189,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |-------------------|-------------|----------|
 | `/api/notes/{id}` | `GET`       | `200 OK` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
-| - _Note not found_                                      | `404 Not Found`    |
+| ACTION                              | RESPONSE                                                | STATUS CODE                 |
+|-------------------------------------|---------------------------------------------------------|-----------------------------|
+| - _Is not authenticated_            | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
+| - _Try to see a note of other user_ | `Void`                                                  | `404 Not Found`             |
+|                                     |                                                         |                             |
+| - ANY other exception(unhandled)    | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |      
 
 ### 2.6 UPDATE/CREATE a NOTE (pass the id)
 
@@ -188,10 +202,14 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |------------------|-------------|------------------|
 | `api/notes/{id}` | `PUT`       | `204 NO CONTENT` |
 
-| FAIL                                                                     | RESPONSE           |
-|--------------------------------------------------------------------------|--------------------|
-| - _Title is required_<br/>- _Title must be between 1 and 255 characters_ | `400 Bad Request`  |`
-| - _You need to be authenticated to perform this action_                  | `401 Unauthorized` |
+| Action / Passing [CreateNoteDTO](src/main/java/org/cris6h16/apirestspringboot/DTOs/CreateNoteDTO.java) in `/{id}` | RESPONSE                                             | STATUS CODE                 |
+|-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|-----------------------------| 
+| - _`Title` is null_                                                                                               | - `Title is required`                                | `400 Bad Request`           |
+| - _`Title` has just white spaces_                                                                                 | - `Title is required`                                |                             |
+| - _`Title` is greater than 255 characters_                                                                        | - `Title must be less than 255 characters`           |                             |
+| - _Is not authenticated_                                                                                          | - `You must be authenticated to perform this action` | `401 Unauthorized`          |
+|                                                                                                                   |                                                      |                             |
+| - ANY other exception(unhandled)                                                                                  | - `Internal Server Error -> Unhandled`               | `500 Internal Server Error` |
 
 ### 2.7 DELETE a NOTE
 
@@ -199,10 +217,13 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |------------------|-------------|------------------|
 | `api/notes/{id}` | `DELETE`    | `204 NO CONTENT` |
 
-| FAIL                                                    | RESPONSE           |
-|---------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_ | `401 Unauthorized` |
-| - _Note not found_                                      | `404 Not Found`    |
+| ACTION                                                                                                      | RESPONSE                                                | STATUS CODE                 |
+|-------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|-----------------------------|
+| - Is not authenticated                                                                                      | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
+| - Try to delete an non-existent note                                                                        | - `Note not found`                                      | `404 Not Found`             |
+| - Try to delete a note of other user( based on the retrieved by  _`findByUserId(...)`_ -> return nothing )_ | - `Note not found`                                      |                             |
+|                                                                                                             |                                                         |                             |
+| - ANY other exception(unhandled)                                                                            | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |
 
 <hr>
 
@@ -212,9 +233,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------------------------------------------------------------------------|-------------|----------|
 | `/api/users`<br/>- `page=<1>`<br/>- `size=<2>`<br/>- `sort=<create_at>, <asc>` | `GET`       | `200 OK` |
 
-| FAIL                                                                                                          | RESPONSE           |
-|---------------------------------------------------------------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_<br>- _You need to be an admin to perform this action_ | `401 Unauthorized` |
+| Action                           | RESPONSE                                                | STATUS CODE                 |
+|----------------------------------|---------------------------------------------------------|-----------------------------|
+| - _Is not authenticated_         | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
+| - _Is not an admin_              | - `You need to be an admin to perform this action`      |                             |
+|                                  |                                                         |                             |
+| - ANY other exception(unhandled) | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |      
 
 ### 2.9 DELETE a USER
 
@@ -222,10 +246,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `DELETE`    | `204 NO CONTENT` |
 
-| FAIL                                                                                           | RESPONSE           |
-|------------------------------------------------------------------------------------------------|--------------------|
-| - _You need to be authenticated to perform this action_<br>- _You aren't the owner of this ID_ | `401 Unauthorized` |
-| - _User not found_ *** _if you let multi sessions_ ***                                         | `404 Not Found`    |
+| Action                                 | RESPONSE                                                | STATUS CODE                 |
+|----------------------------------------|---------------------------------------------------------|-----------------------------|
+| - _Try to delete other user's account_ | `You aren't the owner of this id`                       | `401 Unauthorized`          | 
+| - _Is not authenticated_               | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
+|                                        |                                                         |                             |
+| - _ANY other exception(unhandled)_     | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |      
 
 #
 
