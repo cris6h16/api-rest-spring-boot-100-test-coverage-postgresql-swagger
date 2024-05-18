@@ -21,6 +21,11 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 
 4. JDK:
     - `21`
+  
+
+
+
+- You can see the used dependencies in the `pom.xml` file
 
 ## 1. DEFINING THE PROJECT
 
@@ -54,7 +59,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 - we'll return a body if something goes wrong.
 
 
-- You can see the used dependencies in the `pom.xml` file
 
 ### 1.3 Endpoints
 
