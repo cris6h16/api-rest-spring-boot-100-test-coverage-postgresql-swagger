@@ -23,9 +23,7 @@ public class Cons {
         }
 
         public static class Fails {
-            public static class MultiSession {
-                public static final String NOT_FOUND = "User not found";
-            }
+            public static final String NOT_FOUND = "User not found";
         }
     }
 

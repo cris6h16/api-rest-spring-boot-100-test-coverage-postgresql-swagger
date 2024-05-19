@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Service.Interfaces;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
@@ -9,10 +8,14 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
+/**
+ * @author <a href="github.com/cris6h16" target="_blank"> cris6h16 </a>
+ */
 public interface NoteService {
-    ResponseEntity<Void> createNote(@Valid @NotNull CreateNoteDTO note);
-    ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable);
-    ResponseEntity<PublicNoteDTO> getNoteById(Long id);
-    ResponseEntity<Void> updateNoteById(Long id, @Valid @NotNull CreateNoteDTO note); // @valid because is PUT not PATCH, then all fields are required
-    ResponseEntity<Void> deleteNoteById(Long id);
+    PublicNoteDTO get(Long noteId, Long userId);
+    Long create(CreateNoteDTO note, Long userId);
+    void put(Long noteId, CreateNoteDTO note, Long userId);
+    void delete(Long noteId, Long userId);
+    List<PublicNoteDTO> getPage(Pageable pageable, Long userId);
+
 }

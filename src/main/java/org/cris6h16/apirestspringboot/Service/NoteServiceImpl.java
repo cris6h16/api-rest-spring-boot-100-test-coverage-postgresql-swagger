@@ -1,39 +1,32 @@
 package org.cris6h16.apirestspringboot.Service;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
-import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-// IMPORT constants of User
-import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Fails.*;
-
-import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Fails.NOT_FOUND;
+
 @Service
 public class NoteServiceImpl implements NoteService {
-    NoteRepository noteRepository;
-    UserRepository userRepository;
+    private final NoteRepository noteRepository;
+    private final UserRepository userRepository;
 
     public NoteServiceImpl(NoteRepository noteRepository, UserRepository userRepository) {
         this.noteRepository = noteRepository;
@@ -42,17 +35,15 @@ public class NoteServiceImpl implements NoteService {
 
 
     @Override
-    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> createNote(/*@Valid*/ @NotNull CreateNoteDTO note) {
-        Long id = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+    public Long create(CreateNoteDTO note, Long userId) {
 
         UserEntity user = userRepository
-                .findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND)); // if was deleted while it was authenticated, avoid it with some like that: `.maximumSessions(1).maxSessionsPreventsLogin(true)`
+                .findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
 
         NoteEntity noteEntity = NoteEntity.builder()
                 .title(note.getTitle())
@@ -62,27 +53,24 @@ public class NoteServiceImpl implements NoteService {
 
         noteRepository.save(noteEntity);
 
-        return ResponseEntity.created(URI.create("/api/notes/" + noteEntity.getId()))
-                .build();
+        return noteEntity.getId();
     }
 
     @Override
-    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable) {
+    public List<PublicNoteDTO> getPage(Pageable pageable, Long userId) {
 
-        Long id = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
-        Page<NoteEntity> page = noteRepository.findByUserId(id,
+        Page<NoteEntity> page = noteRepository.findByUserId(userId,
                 PageRequest.of(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
                         pageable.getSortOr(Sort.by(Sort.Direction.ASC, "id"))
                 ));
 
-        List<PublicNoteDTO> pnDTOs = page.stream()
+        return page.stream()
                 .map(note -> PublicNoteDTO.builder()
                         .id(note.getId())
                         .title(note.getTitle())
@@ -91,48 +79,43 @@ public class NoteServiceImpl implements NoteService {
                         .updatedAt(note.getUpdatedAt())
                         .build())
                 .collect(Collectors.toList());
-
-        return ResponseEntity.ok(pnDTOs);
     }
 
     @Override
-    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<PublicNoteDTO> getNoteById(Long noteId) {
-        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+    public PublicNoteDTO get(Long noteId, Long userId) {
 
         NoteEntity note = noteRepository
                 .findByIdAndUserId(noteId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
 
-        return ResponseEntity.ok(PublicNoteDTO.builder()
+        return PublicNoteDTO.builder()
                 .id(note.getId())
                 .title(note.getTitle())
                 .content(note.getContent())
                 .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
-                .build());
+                .build();
     }
 
     @Override
-    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> updateNoteById(Long id, @NotNull /*@Valid*/ CreateNoteDTO note) { //@valid because is a PUT --> all fields are required
-        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+    public void put(Long noteId, CreateNoteDTO note, Long userId) {
+
         UserEntity user = userRepository
                 .findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
 
         NoteEntity noteEntity = noteRepository
-                .findByIdAndUserId(id, userId)
+                .findByIdAndUserId(noteId, userId)
                 .orElse(NoteEntity.builder()
-                        .id(id)
+                        .id(noteId)
                         .user(user)
                         .title(note.getTitle())
                         .content(note.getContent())
@@ -143,25 +126,20 @@ public class NoteServiceImpl implements NoteService {
         noteEntity.setContent(note.getContent());
 
         noteRepository.save(noteEntity);
-
-        return ResponseEntity.noContent().build();
     }
 
     @Override
-    @PreAuthorize("@AuthCustomResponses.checkIfIsAuthenticated()")
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public ResponseEntity<Void> deleteNoteById(Long id) {
-        Long userId = ((UserWithId) (SecurityContextHolder.getContext().getAuthentication().getPrincipal())).getId();
+    public void delete(Long noteId, Long userId) {
 
         NoteEntity note = noteRepository
-                .findByIdAndUserId(id, userId)
+                .findByIdAndUserId(noteId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
 
         noteRepository.delete(note);
-
-        return ResponseEntity.noContent().build();
     }
+
 }

@@ -1,49 +1,63 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 //@RestController
 @Controller
 @ResponseBody
-@RequestMapping("/api/notes")
+@RequestMapping(path = NoteController.path)
+@PreAuthorize("isAuthenticated()")
 public class NoteController {
-    NoteServiceImpl noteService;
+
+    public static final String path = "/api/notes";
+    private final NoteServiceImpl noteService;
 
     public NoteController(NoteServiceImpl noteService) {
         this.noteService = noteService;
     }
 
     @PostMapping
-    public ResponseEntity<Void> createNote(@RequestBody CreateNoteDTO note) {
-        return noteService.createNote(note);
+    public ResponseEntity<Void> create(@RequestBody CreateNoteDTO note, @MyId Long principalId) {
+        Long id = noteService.create(note, principalId);
+        URI uri = URI.create(path + "/" + id);
+
+        return ResponseEntity.created(uri).build();
     }
 
     @GetMapping
-    public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable) {
-        return noteService.getPage(pageable);
+    public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable, @MyId Long principalId) {
+        List<PublicNoteDTO> list = noteService.getPage(pageable, principalId);
+        return ResponseEntity.ok(list);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<PublicNoteDTO> getNoteById(@PathVariable Long id) {
-        return noteService.getNoteById(id);
+    @GetMapping("/{noteId}")
+    public ResponseEntity<PublicNoteDTO> get(@PathVariable Long noteId, @MyId Long principalId) {
+        PublicNoteDTO en = noteService.get(noteId, principalId);
+        return ResponseEntity.ok(en);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Void> updateNote(@PathVariable Long id,
-                                           @RequestBody CreateNoteDTO note) {
-        return noteService.updateNoteById(id, note);
+    @PutMapping("/{noteId}")
+    public ResponseEntity<Void> update(@PathVariable Long noteId,
+                                       @RequestBody CreateNoteDTO note,
+                                       @MyId Long principalId) {
+        noteService.put(noteId, note, principalId);
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNoteById(@PathVariable Long id) {
-        return noteService.deleteNoteById(id);
+    @DeleteMapping("/{noteId}")
+    public ResponseEntity<Void> delete(@PathVariable Long noteId, @MyId Long principalId) {
+        noteService.delete(noteId, principalId);
+        return ResponseEntity.noContent().build();
     }
 }
