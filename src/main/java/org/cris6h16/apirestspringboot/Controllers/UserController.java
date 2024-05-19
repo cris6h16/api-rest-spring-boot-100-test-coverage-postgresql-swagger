@@ -16,6 +16,7 @@ import java.util.List;
 @ResponseBody
 @RequestMapping("/api/users")
 public class UserController {
+    public static final String path = "/api/users";
 
     UserServiceImpl userService;
 

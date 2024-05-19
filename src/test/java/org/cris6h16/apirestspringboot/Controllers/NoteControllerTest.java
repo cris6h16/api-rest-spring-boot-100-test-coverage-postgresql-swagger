@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
@@ -9,10 +10,7 @@ import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,6 +21,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.BufferedReader;
@@ -44,7 +43,7 @@ import static org.cris6h16.apirestspringboot.Controllers.Utils.ResponseUtils.get
 public class NoteControllerTest {
 
     @Autowired
-    TestRestTemplate rt;
+    private TestRestTemplate rt;
     @Autowired
     NoteRepository noteRepository;
     @Autowired
@@ -52,18 +51,20 @@ public class NoteControllerTest {
     @Autowired
     ObjectMapper objectMapper; // deserialize JSON to Java objects
 
-    String username = "cris6h16";
-    String pass = "12345678";
-    String email = "cristiamherrera21@gmail.com";
-    Long dbUserID;
+    private static final String username = "cris6h16";
+    private static final String pass = "12345678";
+    private static final String email = "cristiamherrera21@gmail.com";
+    private static Long dbUserID;
 
-    public static final String path = "/api/notes";
+    public static final String path = NoteController.path;
 
 
     @BeforeEach
-    void setUp() {
-        String url = UserControllerTest.path;
+    void createUser() { // create just one user
+        Optional<UserEntity> u = userRepository.findByUsername(username);
+        if (u.isPresent()) return;
 
+        String url = UserController.path;
         CreateUserDTO user = new CreateUserDTO(username, pass, email);
         HttpEntity<CreateUserDTO> entity = new HttpEntity<>(user);
         ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, entity, Void.class);
@@ -71,9 +72,9 @@ public class NoteControllerTest {
         dbUserID = getIdFromLocationHeader(res);
     }
 
-
     @Test
     @DirtiesContext
+    @Order(1)
     void shouldCreateANote() {
         String title = "Hello I'm a title";
         String content = "Hello I'm its content";
@@ -102,7 +103,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    @DirtiesContext
+    @Order(2)
     void shouldNotCreateANoteTitleIsNull() {
         String content = "Hello I'm its content";
         String failMessage = Cons.Note.Validations.TITLE_IS_BLANK_MSG; // "Title is required";
@@ -117,7 +118,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    @DirtiesContext
+    @Order(3)
     void shouldNotCreateANoteTitleIsBlank() {
         String title = "  ";
         String content = "Hello I'm its content";
@@ -133,7 +134,7 @@ public class NoteControllerTest {
     }
 
     @Test
-    @DirtiesContext
+    @Order(4)
     void shouldNotCreateANoteTitleLengthIsGreaterThan255() {
         String title = "a".repeat(256);
         String content = "Hello I'm its content";
@@ -149,22 +150,21 @@ public class NoteControllerTest {
     }
 
     @Test
-    @DirtiesContext
+    @Order(5)
     void shouldNotCreateANoteMustBeAuthenticated() {
         String title = "Hello I'm a title";
         String content = "Hello I'm its content";
-        String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
 
         // Create a note
         HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
-        ResponseEntity<String> res = rt
-                .exchange(path, HttpMethod.POST, note, String.class);
+        ResponseEntity<Void> res = rt
+                .exchange(path, HttpMethod.POST, note, Void.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        assertThat(getFailBodyMsg(res)).isEqualTo(failMessage);
+
+        //todo: doc about some fail messages are not necessary, response codes has implied meaning
     }
 
     @Nested
-    @DirtiesContext
     class with27Notes {
 
         @Autowired
@@ -214,7 +214,7 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
+        @Order(6)
         void shouldNotListAllNotesIsPageable() throws IOException, URISyntaxException {
 
             Integer elements = notesInJson.size();
@@ -232,7 +232,6 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldListAllNotesIsPageable_ASC_DESC() {
             String pageParam = env.getProperty("spring.data.web.pageable.page-parameter", String.class);
             String sizeParam = env.getProperty("spring.data.web.pageable.size-parameter", String.class);
@@ -298,21 +297,15 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotListAllNotesIsNotAuthenticated() {
-            String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
-
             // type reference for the response entity
-            ParameterizedTypeReference<String> responseType = new ParameterizedTypeReference<>() {
-            };
+            ParameterizedTypeReference<String> responseType = new ParameterizedTypeReference<>() {};
             ResponseEntity<String> re = rt
                     .exchange(path, HttpMethod.GET, null, responseType);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(getFailBodyMsg(re)).isEqualTo(failMessage);
         }
 
         @Test
-        @DirtiesContext
         void URIWithNoParamsShouldListInDefaultPageableConfiguration() {
             Integer size = env.getProperty("spring.data.web.pageable.default-page-size", Integer.class);
 
@@ -329,9 +322,7 @@ public class NoteControllerTest {
         }
 
 
-
         @Test
-        @DirtiesContext
         void shouldGetANote() {
             String url = path + "/" + notesIDs.getFirst();
 
@@ -354,20 +345,15 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotGetANoteIsNotAuthenticated() {
-            String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
             String url = path + "/" + notesIDs.getFirst();
-
             // Get the note
             ResponseEntity<String> re = rt
                     .exchange(url, HttpMethod.GET, null, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(getFailBodyMsg(re)).isEqualTo(failMessage);
         }
 
         @Test
-        @DirtiesContext
         void shouldNotGetANoteIsNotFound() {
             String failMessage = Cons.Note.Fails.NOT_FOUND; //"Note not found";
             String url = path + "/" + 999999;
@@ -381,12 +367,13 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
+        @DirtiesContext // im creating a new user
         void shouldNotGetNoteIsNotFoundBecauseIsNotTheOwner() {
-            String urlUsers = UserControllerTest.path;
+            String urlUsers = UserController.path;
             String newUserUsername = "github.com/cris6h16";
             String newUserPass = "12345678";
             String newUserEmail = "cristianmherrera21@gmail.com";
+            String failMessage = Cons.Note.Fails.NOT_FOUND; //"Note not found";
             String url = path + "/" + notesIDs.getFirst();
 
             //create otehr user
@@ -401,15 +388,15 @@ public class NoteControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
             // Get the note
-            ResponseEntity<PublicNoteDTO> responseEntity = rt
+            ResponseEntity<String> responseEntity = rt
                     .withBasicAuth(newUserUsername, newUserPass)
-                    .exchange(url, HttpMethod.GET, null, PublicNoteDTO.class);
+                    .exchange(url, HttpMethod.GET, null, String.class);
             assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(getFailBodyMsg(responseEntity)).isEqualTo(failMessage);
         }
 
 
         // PUT --> CREATE OR REPLACE
-
         @Test
         @DirtiesContext
         void shouldCreateANotePUT() {
@@ -797,7 +784,7 @@ public class NoteControllerTest {
         @DirtiesContext
         void shouldNotDeleteANoteIsNotTheOwnerNotFound() {
             String url = path + "/" + notesIDs.getFirst();
-            String usrPath = UserControllerTest.path;
+            String usrPath = NoteController.path;
             String failMessage = Cons.Note.Fails.NOT_FOUND; //"Note not found";
 
             // create another user
