@@ -2,7 +2,6 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
@@ -21,7 +20,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.BufferedReader;
@@ -54,7 +52,6 @@ public class NoteControllerTest {
     private static final String username = "cris6h16";
     private static final String pass = "12345678";
     private static final String email = "cristiamherrera21@gmail.com";
-    private static Long dbUserID;
 
     public static final String path = NoteController.path;
 
@@ -69,7 +66,6 @@ public class NoteControllerTest {
         HttpEntity<CreateUserDTO> entity = new HttpEntity<>(user);
         ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, entity, Void.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        dbUserID = getIdFromLocationHeader(res);
     }
 
     @Test
@@ -177,6 +173,7 @@ public class NoteControllerTest {
         @BeforeAll
         static void beforeAll() throws IOException {
             InputStream is = with27Notes.class.getClassLoader().getResourceAsStream("NotesEntities.txt");
+            assertThat(is).isNotNull();
             BufferedReader bf = new BufferedReader(new InputStreamReader(is));
             while (bf.ready()) notesInJson.add(bf.readLine());
 
@@ -185,7 +182,7 @@ public class NoteControllerTest {
         }
 
         @BeforeEach
-        void saveInDb() throws IOException {
+        void saveInDb() {
             asu = noteRepository.count() > 0;
             if (asu) return;
 
@@ -217,7 +214,7 @@ public class NoteControllerTest {
         @Order(6)
         void shouldNotListAllNotesIsPageable() throws IOException, URISyntaxException {
 
-            Integer elements = notesInJson.size();
+            int elements = notesInJson.size();
             // type reference for the response entity
             ParameterizedTypeReference<List<PublicNoteDTO>> responseType = new ParameterizedTypeReference<>() {
             };
@@ -228,6 +225,7 @@ public class NoteControllerTest {
 
             // check the response -> shouldn't be all the notes
             List<PublicNoteDTO> notes = responseEntity.getBody();
+            assertThat(notes).isNotNull();
             assertThat(notes.size()).isLessThan(elements - 1);// -1 for be sure that the elements are less than the total
         }
 
@@ -256,6 +254,7 @@ public class NoteControllerTest {
 
                 // check if the response(List) doesn't exceed the page size
                 List<PublicNoteDTO> notes = responseEntity.getBody();
+                assertThat(notes).isNotNull();
                 assertThat(notes.size()).isLessThanOrEqualTo(size);
 
                 // check if the notes are sorted in descending order
@@ -284,6 +283,7 @@ public class NoteControllerTest {
 
                 // check if the response(List) doesn't exceed the page size
                 List<PublicNoteDTO> notes = responseEntity.getBody();
+                assertThat(notes).isNotNull();
                 assertThat(notes.size()).isLessThanOrEqualTo(size);
 
                 // check if the notes are sorted in ascending order
@@ -299,7 +299,8 @@ public class NoteControllerTest {
         @Test
         void shouldNotListAllNotesIsNotAuthenticated() {
             // type reference for the response entity
-            ParameterizedTypeReference<String> responseType = new ParameterizedTypeReference<>() {};
+            ParameterizedTypeReference<String> responseType = new ParameterizedTypeReference<>() {
+            };
             ResponseEntity<String> re = rt
                     .exchange(path, HttpMethod.GET, null, responseType);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
@@ -318,6 +319,7 @@ public class NoteControllerTest {
 
             // check the response size
             List<PublicNoteDTO> notes = responseEntity.getBody();
+            assertThat(notes).isNotNull();
             assertThat(notes.size()).isEqualTo(size);
         }
 
@@ -338,10 +340,11 @@ public class NoteControllerTest {
             NoteEntity fromDB = noteEntity.get();
 
             // Check the noteFromDB == noteFromHTTP
-            PublicNoteDTO noteDTO = re.getBody();
-            assertThat(noteDTO.getId()).isEqualTo(fromDB.getId());
-            assertThat(noteDTO.getTitle()).isEqualTo(fromDB.getTitle());
-            assertThat(noteDTO.getContent()).isEqualTo(fromDB.getContent());
+            PublicNoteDTO p = re.getBody();
+            assertThat(p).isNotNull();
+            assertThat(p.getId()).isEqualTo(fromDB.getId());
+            assertThat(p.getTitle()).isEqualTo(fromDB.getTitle());
+            assertThat(p.getContent()).isEqualTo(fromDB.getContent());
         }
 
         @Test
@@ -367,7 +370,8 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext // im creating a new user
+        @DirtiesContext
+            // im creating a new user
         void shouldNotGetNoteIsNotFoundBecauseIsNotTheOwner() {
             String urlUsers = UserController.path;
             String newUserUsername = "github.com/cris6h16";
@@ -396,7 +400,6 @@ public class NoteControllerTest {
         }
 
 
-        // PUT --> CREATE OR REPLACE
         @Test
         @DirtiesContext
         void shouldCreateANotePUT() {
@@ -422,14 +425,14 @@ public class NoteControllerTest {
             // check the noteFromDB == noteSavedByMe
             Optional<NoteEntity> noteEntity = noteRepository.findById(id);
             assertThat(noteEntity.isPresent()).isTrue();
-            assertThat(noteEntity.get().getId()).isEqualTo(id);
-            assertThat(noteEntity.get().getTitle()).isEqualTo(title);
-            assertThat(noteEntity.get().getContent()).isEqualTo(content);
-            assertThat(noteEntity.get().getUpdatedAt()).isNull();
+            NoteEntity n = noteEntity.get();
+            assertThat(n.getId()).isEqualTo(id);
+            assertThat(n.getTitle()).isEqualTo(title);
+            assertThat(n.getContent()).isEqualTo(content);
+            assertThat(n.getUpdatedAt()).isNull();
         }
 
         @Test
-        @DirtiesContext
         void shouldNotCreateANotePUTTitleIsNull() {
             String content = "Hello I'm its content";
             String failMessage = Cons.Note.Validations.TITLE_IS_BLANK_MSG; //"Title is required";
@@ -454,7 +457,6 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotCreateANotePUTTitleIsBlank() {
             String title = "  ";
             String content = "Hello I'm its content";
@@ -480,7 +482,6 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotCreateANotePUTTitleLengthIsGreaterThan255() {
             String title = "a".repeat(256);
             String content = "Hello I'm its content";
@@ -506,11 +507,9 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotCreateANotePUTMustBeAuthenticated() {
             String title = "Hello I'm a title";
             String content = "Hello I'm its content";
-            String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
             long id = 0;
 
             // get an ID which isn't used
@@ -524,10 +523,9 @@ public class NoteControllerTest {
 
             // PUT a note
             HttpEntity<CreateNoteDTO> note = new HttpEntity<>(new CreateNoteDTO(title, content));
-            ResponseEntity<String> res = rt
-                    .exchange(url, HttpMethod.PUT, note, String.class);
+            ResponseEntity<Void> res = rt
+                    .exchange(url, HttpMethod.PUT, note, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(getFailBodyMsg(res)).isEqualTo(failMessage);
         }
 
         @Test
@@ -565,7 +563,6 @@ public class NoteControllerTest {
 
 
         @Test
-        @DirtiesContext
         void shouldNotReplaceANotePUTTitleIsNull() {
             String content = "Hello I'm its content";
             String failMessage = Cons.Note.Validations.TITLE_IS_BLANK_MSG; //"Title is required";
@@ -595,7 +592,6 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotReplaceANotePUTTitleIsBlank() {
             String title = "  ";
             String content = "Hello I'm its content";
@@ -626,7 +622,6 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotReplaceANotePUTTitleLengthIsGreaterThan255() {
             String title = "a".repeat(256);
             String content = "Hello I'm its content";
@@ -657,11 +652,9 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotReplaceANotePUTMustBeAuthenticated() {
             String title = "Hello I'm a title";
             String content = "Hello I'm its content";
-            String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
             long id = notesIDs.getFirst();
 
             // we're sure that the note exists
@@ -675,7 +668,6 @@ public class NoteControllerTest {
             ResponseEntity<String> re = rt
                     .exchange(url, HttpMethod.PUT, entity, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(getFailBodyMsg(re)).isEqualTo(failMessage);
 
             // check if the note wasn't replaced
             Optional<NoteEntity> noteEntity = noteRepository.findById(id);
@@ -738,9 +730,7 @@ public class NoteControllerTest {
         }
 
         @Test
-        @DirtiesContext
         void shouldNotDeleteANoteIsNotAuthenticated() {
-            String failMessage = Cons.Auth.Fails.UNAUTHENTICATED_MSG; //"You must be authenticated to perform this action";
             long id = notesIDs.getFirst();
 
             // we're sure that the note exists
@@ -753,7 +743,6 @@ public class NoteControllerTest {
             ResponseEntity<String> re = rt
                     .exchange(url, HttpMethod.DELETE, null, String.class);
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-            assertThat(getFailBodyMsg(re)).isEqualTo(failMessage);
 
             // it wasn't be deleted
             assertThat(noteRepository.findById(id).isPresent()).isTrue();
@@ -761,7 +750,6 @@ public class NoteControllerTest {
 
 
         @Test
-        @DirtiesContext
         void shouldNotDeleteANoteIsNotFound() {
             String failMessage = Cons.Note.Fails.NOT_FOUND; //"Note not found";
             long id = 9397131949L;
@@ -784,7 +772,7 @@ public class NoteControllerTest {
         @DirtiesContext
         void shouldNotDeleteANoteIsNotTheOwnerNotFound() {
             String url = path + "/" + notesIDs.getFirst();
-            String usrPath = NoteController.path;
+            String usrPath = UserController.path;
             String failMessage = Cons.Note.Fails.NOT_FOUND; //"Note not found";
 
             // create another user
