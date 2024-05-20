@@ -19,6 +19,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @Getter
 @Setter
 @Builder
+@EqualsAndHashCode(exclude = {"user"})
 public class NoteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -34,7 +35,8 @@ public class NoteEntity {
     private String content;
 
     @Column(name = "created_at", updatable = false) // is a @PrePersist
-    @NotNull(message = "@PrePersist: createdAt, is required") // user can't set it -> We sanitize it in @ControllerAdvice
+    @NotNull(message = "@PrePersist: createdAt, is required")
+    // user can't set it -> We sanitize it in @ControllerAdvice
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 
@@ -48,13 +50,13 @@ public class NoteEntity {
 //    private Date deletedAt;
 
 
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REFRESH) // remember @TEST that delete the Many shouldn't delete the One
-    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_Notes_user_id"))
+    @ManyToOne(fetch = FetchType.LAZY,
+            cascade = {}, // cascaded to the target of the association.
+            targetEntity = UserEntity.class)
+    @JoinColumn(name = "user_id",
+            foreignKey = @ForeignKey(name = "fk_notes_user_id"),
+            referencedColumnName = "id")
     private UserEntity user;
-
-
-
 
 
     // TODO: improve -> single responsibility principle
@@ -62,6 +64,7 @@ public class NoteEntity {
     public void prePersist() {
         this.createdAt = new Date();
     }
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = new Date(System.currentTimeMillis());

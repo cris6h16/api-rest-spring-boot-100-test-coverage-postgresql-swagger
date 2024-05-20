@@ -130,7 +130,9 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void delete(Long id) {
-        userRepository.deleteById(id);
+        UserEntity usr = userRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
+        userRepository.delete(usr);
     }
 
     @Override

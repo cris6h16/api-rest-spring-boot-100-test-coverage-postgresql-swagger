@@ -90,7 +90,7 @@ public class UserControllerTest {
         Long id = getIdFromLocationHeader(res);
 
         // Get the user
-        Optional<UserEntity> userEntity = userRepository.findByIdEagerly(id);
+        Optional<UserEntity> userEntity = userRepository.findById(id);
         assertThat(userEntity.isPresent()).isTrue();
 
 
@@ -330,7 +330,7 @@ public class UserControllerTest {
             ResponseEntity<Void> res = rt.exchange(path, HttpMethod.POST, user, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             Long id = getIdFromLocationHeader(res);
-            before = userRepository.findByIdEagerly(id).get();
+            before = userRepository.findById(id).get();
 
             rt // PATCH isn't supported by TestRestTemplate
                     .getRestTemplate()
@@ -361,7 +361,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `username` was updated
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
 
             {   // restore the old values for comparison
@@ -394,7 +394,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `email` was updated
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
 
             {   // restore the old values for comparison
@@ -427,7 +427,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `password` was updated
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(passwordEncoder.matches(forUPDT.getPassword(), updated.getPassword())).isTrue();
 
             {   // restore the old values for comparison
@@ -462,7 +462,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `username`, `email` & `password` were updated
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(updated.getUsername()).isEqualTo(forUPDT.getUsername());
             assertThat(updated.getEmail()).isEqualTo(forUPDT.getEmail());
             assertThat(passwordEncoder.matches(forUPDT.getPassword(), updated.getPassword())).isTrue();
@@ -503,7 +503,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `updatedAt` was updated
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(updated.getUpdatedAt()).isNotNull();
             assertThat(updated.getUpdatedAt()).isAfter(new Date(System.currentTimeMillis() - (1000 * 60 * 60 * 48))); // 48 hours ago
         }
@@ -533,7 +533,7 @@ public class UserControllerTest {
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
             // get from DB & check if `createdAt`, `roles` & `notes` are the same
-            updated = userRepository.findByIdEagerly(id).get();
+            updated = userRepository.findById(id).get();
             assertThat(updated.getCreatedAt()).isEqualTo(before.getCreatedAt());
             assertThat(updated.getRoles()).isEqualTo(before.getRoles());
 //            assertThat(updated.getNotes()).isEqualTo(before.getNotes());  --> LAZY
@@ -563,7 +563,7 @@ public class UserControllerTest {
             assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
             // get from DB & check if all values are the same
-            UserEntity updated = userRepository.findByIdEagerly(id).get();
+            UserEntity updated = userRepository.findById(id).get();
             assertThat(updated).isEqualTo(before);
         }
 
@@ -591,7 +591,7 @@ public class UserControllerTest {
             assertThat(getFailBodyMsg(re)).isEqualToIgnoringCase(failBodyMssg);
 
             // get from DB & check if all values are the same
-            UserEntity updated = userRepository.findByIdEagerly(id).get();
+            UserEntity updated = userRepository.findById(id).get();
             assertThat(updated).isEqualTo(before);
         }
 
@@ -611,7 +611,7 @@ public class UserControllerTest {
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
             // get from DB & check if all values are the same
-            UserEntity updated = userRepository.findByIdEagerly(id).get();
+            UserEntity updated = userRepository.findById(id).get();
             assertThat(updated).isEqualTo(before);
         }
 
@@ -660,7 +660,7 @@ public class UserControllerTest {
             assertThat(re.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
 
             // check if really doesn't exist a user with that id
-            assertThat(userRepository.findByIdEagerly(id)).isNotPresent();
+            assertThat(userRepository.findById(id)).isNotPresent();
         }
 
         @Test
@@ -687,7 +687,7 @@ public class UserControllerTest {
 
             // check if fromDB == before_to_try_update
 
-            assertThat(userRepository.findByIdEagerly(id).get()).isEqualTo(before);
+            assertThat(userRepository.findById(id).get()).isEqualTo(before);
         }
 
         @Test
@@ -714,7 +714,7 @@ public class UserControllerTest {
 
             // check if fromDB == before_to_try_update
 
-            assertThat(userRepository.findByIdEagerly(id).get()).isEqualTo(before);
+            assertThat(userRepository.findById(id).get()).isEqualTo(before);
         }
 
 

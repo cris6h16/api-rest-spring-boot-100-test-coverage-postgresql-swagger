@@ -59,4 +59,22 @@ public class Cons {
             }
         }
     }
+
+    // use in the final: {}, used to format in the log
+    public class ExceptionHandler{
+        public class defMsg{
+            public class DataIntegrityViolation{
+                public static final String UNHANDLED = "DataIntegrityViolationException -> UNHANDLED {}";
+            }
+            public class ConstraintViolation{
+                public static final String UNHANDLED = "ConstraintViolationException -> UNHANDLED {}";
+            }
+            public class IllegalArgumentException{
+                public static final String UNHANDLED = "IllegalArgumentException -> UNHANDLED {}";
+            }
+            public class Exception{
+                public static final String UNHANDLED = "Exception -> UNHANDLED {}";
+            }
+        }
+    }
 }

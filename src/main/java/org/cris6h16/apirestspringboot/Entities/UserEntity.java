@@ -31,7 +31,7 @@ indexes = {
 @ToString(exclude = {"notes"})
 @Getter
 @Setter
-@EqualsAndHashCode // take in mind the LAZYs, Try to compare with EAGER fetches
+@EqualsAndHashCode(exclude = {"notes"}) // take in mind the LAZYs, Try to compare with EAGER fetches
 @Builder
 public class UserEntity {
 
@@ -70,7 +70,7 @@ public class UserEntity {
 //    private Date deletedAt;
 
     @ManyToMany(fetch = FetchType.EAGER,
-            cascade = CascadeType.ALL,
+            cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, // i don't want to delete the roles when I delete a user, but I want to save the unsaved roles(id=null)
             targetEntity = RoleEntity.class)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -80,7 +80,12 @@ public class UserEntity {
     )
     private Set<RoleEntity> roles;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    // added here just for: if I delete a USER then delete all the NOTES
+    @OneToMany(fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            targetEntity = NoteEntity.class,
+            orphanRemoval = true,
+            mappedBy = "user")
     private Set<NoteEntity> notes;
 
 

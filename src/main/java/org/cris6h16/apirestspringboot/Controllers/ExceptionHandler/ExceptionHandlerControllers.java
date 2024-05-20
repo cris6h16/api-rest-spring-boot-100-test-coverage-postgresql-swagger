@@ -17,84 +17,84 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-// import constants.Cons.User.*
+import org.cris6h16.apirestspringboot.Constants.Cons.User;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
-
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Fails.*;
 
 // Handles an exception in any annotated: @RestController, @Controller, or @RequestMapping
 @RestControllerAdvice // global exception handler for RESTful controllers
 @Slf4j
 public class ExceptionHandlerControllers {
-    Map<String, String> map; // for client -> toJson(map)
-    String msgL, forClient; // exception message lowercased, message for client
     ObjectMapper objectMapper;
 
     public ExceptionHandlerControllers(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.map = new HashMap<>(1);
-        map.put("message", "Internal Server Error -> Unhandled");
-
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<String> handleConflict(DataIntegrityViolationException ex) {
-        msgL = ex.getMessage().toLowerCase();
+        String msg = ex.getMessage();
+        String forClient = Cons.ExceptionHandler.defMsg.DataIntegrityViolation.UNHANDLED;
 
-        // @UniqueConstraint were violated
-        if (thisContains(msgL, "unique constraint")) {
-            if (thisContains(msgL, USERNAME_UNIQUE_NAME)) forClient = USERNAME_UNIQUE_MSG;
-            else if (thisContains(msgL, EMAIL_UNIQUE_NAME)) forClient = EMAIL_UNIQUE_MSG;
+        boolean inUsername = thisContains(msg, "unique constraint", USERNAME_UNIQUE_NAME);
+        boolean inEmail = thisContains(msg, "unique constraint", EMAIL_UNIQUE_NAME);
+        boolean isHandledUniqueViolation = inUsername || inEmail;
 
-            map.put("message", forClient);
-            log.debug("DataIntegrityViolationException: {}", forClient);
-
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(getMapInJson());
+        if (isHandledUniqueViolation) {
+            forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
+            log.debug(forClient, msg);
+            return buildResponse(HttpStatus.CONFLICT, forClient);
         }
 
-
-        // Generic if wasn't handled
-        log.error("DataIntegrityViolationException -> UNHANDLED: {}", msgL);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
+        log.error(forClient, msg);
+        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
     }
 
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
+        String forClient = "ConstraintViolationException -> UNHANDLED {}";
         Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
         if (!violations.isEmpty()) {
             forClient = violations.iterator().next().getMessage();
-            map.put("message", forClient);
             log.debug("ConstraintViolationException: {}", forClient);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
+            return buildResponse(HttpStatus.BAD_REQUEST, forClient);
         }
 
-        log.error("ConstraintViolationException -> UNHANDLED: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
+        log.error(forClient, ex.getMessage());
+        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
     }
 
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        msgL = ex.getMessage().toLowerCase();
+        String forClient = "IllegalArgumentException -> UNHANDLED {}";
+        String msgL = ex.getMessage();
         if (thisContains(msgL, "for input string")) {
-            map.put("message", Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
             log.debug("IllegalArgumentException: {}", Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getMapInJson());
+            return buildResponse(HttpStatus.BAD_REQUEST, Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
         }
 
         log.error("IllegalArgumentException -> UNHANDLED: {}", msgL);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(getMapInJson());
+        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
     }
 
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
-        map.put("message", ex.getReason());
-        log.debug("ResponseStatusException: {}", ex.getReason());
-        return ResponseEntity.status(ex.getStatusCode()).body(getMapInJson());
+        return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason());
     }
 
-    String getMapInJson() {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleException(Exception ex) {
+        String msg = ex.getMessage();
+        String forClient = "Exception -> UNHANDLED {}";
+        log.error(forClient, ex.getMessage());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, forClient);
+    }
+
+    String getMapInJson(Map map) {
         try {
             return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
@@ -105,5 +105,11 @@ public class ExceptionHandlerControllers {
 
     public boolean thisContains(String msg, String... strings) {
         return Stream.of(strings).anyMatch(msg.toLowerCase()::contains);
+    }
+
+    private ResponseEntity<String> buildResponse(HttpStatus status, String message) {
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("message", message);
+        return ResponseEntity.status(status).body(getMapInJson(responseMap));
     }
 }

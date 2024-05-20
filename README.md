@@ -21,8 +21,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 
 4. JDK:
     - `21`
-  
-
 
 
 - You can see the used dependencies in the `pom.xml` file
@@ -57,8 +55,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 - The user can't modify audit fields.
 - user can only get his profile information
 - we'll return a body if something goes wrong.
-
-
 
 ### 1.3 Endpoints
 
@@ -250,12 +246,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |--------------|-------------|------------------|
 | `/api/users` | `DELETE`    | `204 NO CONTENT` |
 
-| Action                                 | RESPONSE                                                | STATUS CODE                 |
-|----------------------------------------|---------------------------------------------------------|-----------------------------|
-| - _Try to delete other user's account_ | `You aren't the owner of this id`                       | `401 Unauthorized`          | 
-| - _Is not authenticated_               | - `You need to be authenticated to perform this action` | `401 Unauthorized`          |
-|                                        |                                                         |                             |
-| - _ANY other exception(unhandled)_     | - `Internal Server Error -> Unhandled`                  | `500 Internal Server Error` |      
+| Action                                 | RESPONSE                               | STATUS CODE                 |
+|----------------------------------------|----------------------------------------|-----------------------------|
+| - _Try to delete other user's account_ | `You aren't the owner of this id`      | `401 Unauthorized`          | 
+| - _Is not authenticated_               | _`void`_                               | `401 Unauthorized`          |
+|                                        |                                        |                             |
+| - _ANY other exception(unhandled)_     | - `Internal Server Error -> Unhandled` | `500 Internal Server Error` |      
 
 #
 
@@ -269,17 +265,9 @@ any change made in the future will trigger a test failure.
 Developing with TDD ensure the coverage of "all" possible code which are coverable, in this case mainly the Controllers,
 is also necessary write test for boundary cases in the `@Service` (just an example).
 
-![img_3.png](img_3.png)
+[//]: # (todo: add image of coverage)
 
 - One of my coverage in a `@Service` class
-
-![img_11.png](img_11.png)  
-![img_9.png](img_9.png)  
-![img_8.png](img_8.png)  
-![img_7.png](img_7.png)  
-![img_6.png](img_6.png)  
-![img_5.png](img_5.png)  
-![img_4.png](img_4.png)
 
 I recommend you run yourself the tests to see the coverage
 
@@ -375,18 +363,23 @@ specific points (for defining & things like that).
 
 - User tests:
 
-![img.png](img.png)       
-![img_1.png](img_1.png)
+[//]: # (todo: add image of tests passed)
 
 - Note tests:
 
-![img_2.png](img_2.png)
+[//]: # (todo: add image of tests passed)
 
-### Total time taken
+### Total time taken (already functional)
 
 | Minutes | Hours |
-|---------|----|
-| 2755    | 46 |   
+|---------|-------|
+| 2755    | 46    |
+
+### Total time taken (a wide refactor)
+
+| Minutes | Hours |
+|---------|-------|
+|         | 9.5   |
 
 ### Some Questions that you probably have
 
@@ -478,3 +471,5 @@ specific points (for defining & things like that).
 > cannot throw exceptions with its status code and message, because here you are handling the exceptions, if you throw
 > an custom exception with response & message or any other here,
 > your response can be a `500 Internal Server Error`.
+
+8. Header of security added by default
