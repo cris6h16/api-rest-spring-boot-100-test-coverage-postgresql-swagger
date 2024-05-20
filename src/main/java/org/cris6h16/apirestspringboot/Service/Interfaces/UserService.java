@@ -1,26 +1,17 @@
 package org.cris6h16.apirestspringboot.Service.Interfaces;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.UpdateUserDTO;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface UserService {
-    ResponseEntity<Void> createUser(@NotNull @Valid CreateUserDTO dto);
+    Long create(CreateUpdateUserDTO dto);
+    PublicUserDTO get(Long id);
+    void update(Long id, CreateUpdateUserDTO dto);
+    void delete(Long id);
+    List<PublicUserDTO> get(Pageable pageable);
 
-    ResponseEntity<PublicUserDTO> getByIdLazy(Long id);
-
-    ResponseEntity<Void> updateUser(Long id, @NotNull @Valid UpdateUserDTO dto);
-
-    ResponseEntity<Void> deleteUser(Long id);
-
-    ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable);
-
-    // for test purposes
+    // todo: delete notes in userentity for see what happens( i consider that note attribite isn't necessary)
 }

@@ -3,7 +3,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
@@ -62,8 +62,8 @@ public class NoteControllerTest {
         if (u.isPresent()) return;
 
         String url = UserController.path;
-        CreateUserDTO user = new CreateUserDTO(username, pass, email);
-        HttpEntity<CreateUserDTO> entity = new HttpEntity<>(user);
+        CreateUpdateUserDTO user = new CreateUpdateUserDTO(username, pass, email);
+        HttpEntity<CreateUpdateUserDTO> entity = new HttpEntity<>(user);
         ResponseEntity<Void> res = rt.exchange(url, HttpMethod.POST, entity, Void.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
     }
@@ -381,12 +381,12 @@ public class NoteControllerTest {
             String url = path + "/" + notesIDs.getFirst();
 
             //create otehr user
-            CreateUserDTO u = CreateUserDTO.builder()
+            CreateUpdateUserDTO u = CreateUpdateUserDTO.builder()
                     .username(newUserUsername)
                     .password(newUserPass)
                     .email(newUserEmail)
                     .build();
-            HttpEntity<CreateUserDTO> entity = new HttpEntity<>(u);
+            HttpEntity<CreateUpdateUserDTO> entity = new HttpEntity<>(u);
             ResponseEntity<Void> res = rt
                     .exchange(urlUsers, HttpMethod.POST, entity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -779,12 +779,12 @@ public class NoteControllerTest {
             String newUserUsername = "github.com/cris6h16";
             String newUserPass = "12345678";
             String newUserEmail = "cristianmherrera21@gmail.com";
-            CreateUserDTO u = CreateUserDTO.builder()
+            CreateUpdateUserDTO u = CreateUpdateUserDTO.builder()
                     .username(newUserUsername)
                     .password(newUserPass)
                     .email(newUserEmail)
                     .build();
-            HttpEntity<CreateUserDTO> entity = new HttpEntity<>(u);
+            HttpEntity<CreateUpdateUserDTO> entity = new HttpEntity<>(u);
             ResponseEntity<Void> res = rt
                     .exchange(usrPath, HttpMethod.POST, entity, Void.class);
             assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);

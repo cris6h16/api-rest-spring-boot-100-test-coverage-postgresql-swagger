@@ -1,12 +1,9 @@
 package org.cris6h16.apirestspringboot.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 // import Constants.Cons.User.*
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
 
 @NoArgsConstructor
@@ -19,7 +16,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
  */
 @JsonFormat // how your DTO is serialized and deserialized.
 @Builder
-public class CreateUserDTO {
+public class CreateUpdateUserDTO {
     private String username;
     private String password;
     private String email;
