@@ -64,16 +64,15 @@ public class Cons {
     public class ExceptionHandler{
         public class defMsg{
             public class DataIntegrityViolation{
-                public static final String UNHANDLED = "DataIntegrityViolationException -> UNHANDLED {}";
+                public static final String UNHANDLED = "Data Integrity Violation, probably you violated Constrains like Unique Constrain {}";
+
             }
             public class ConstraintViolation{
-                public static final String UNHANDLED = "ConstraintViolationException -> UNHANDLED {}";
+                public static final String UNHANDLED = "Validation failed for the provided input, probably you provided an invalid email, blank username, etc {}";
             }
             public class IllegalArgumentException{
-                public static final String UNHANDLED = "IllegalArgumentException -> UNHANDLED {}";
-            }
-            public class Exception{
-                public static final String UNHANDLED = "Exception -> UNHANDLED {}";
+                public static final String UNHANDLED = "Invalid input provided, probably you passed a wrong datatype required, etc {}";
+            public static final String NUMBER_FORMAT = "You passed a wrong number format";
             }
         }
     }

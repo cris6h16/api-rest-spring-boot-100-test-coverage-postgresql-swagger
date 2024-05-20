@@ -15,15 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
-import org.cris6h16.apirestspringboot.Constants.Cons.User;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Fails.*;
 
-// Handles an exception in any annotated: @RestController, @Controller, or @RequestMapping
-@RestControllerAdvice // global exception handler for RESTful controllers
+@RestControllerAdvice // global exception handler for REST controllers
 @Slf4j
 public class ExceptionHandlerControllers {
     ObjectMapper objectMapper;
@@ -32,7 +27,7 @@ public class ExceptionHandlerControllers {
         this.objectMapper = objectMapper;
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ExceptionHandler(value = {DataIntegrityViolationException.class})
     public ResponseEntity<String> handleConflict(DataIntegrityViolationException ex) {
         String msg = ex.getMessage();
         String forClient = Cons.ExceptionHandler.defMsg.DataIntegrityViolation.UNHANDLED;
@@ -52,9 +47,9 @@ public class ExceptionHandlerControllers {
     }
 
 
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler(value = {ConstraintViolationException.class})
     public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
-        String forClient = "ConstraintViolationException -> UNHANDLED {}";
+        String forClient = Cons.ExceptionHandler.defMsg.ConstraintViolation.UNHANDLED;
         Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
         if (!violations.isEmpty()) {
             forClient = violations.iterator().next().getMessage();
@@ -67,32 +62,28 @@ public class ExceptionHandlerControllers {
     }
 
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler(value = {IllegalArgumentException.class})
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        String forClient = "IllegalArgumentException -> UNHANDLED {}";
-        String msgL = ex.getMessage();
-        if (thisContains(msgL, "for input string")) {
-            log.debug("IllegalArgumentException: {}", Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
-            return buildResponse(HttpStatus.BAD_REQUEST, Cons.Controller.Fails.Argument.DATATYPE_PASSED_WRONG);
+        String forClient = Cons.ExceptionHandler.defMsg.IllegalArgumentException.UNHANDLED;
+        String msg = ex.getMessage();
+
+        if (ex instanceof NumberFormatException) {
+            forClient = Cons.ExceptionHandler.defMsg.IllegalArgumentException.NUMBER_FORMAT;
+            log.debug(forClient, msg);
+            return buildResponse(HttpStatus.BAD_REQUEST, forClient);
         }
 
-        log.error("IllegalArgumentException -> UNHANDLED: {}", msgL);
+        log.error(forClient, msg);
         return buildResponse(HttpStatus.BAD_REQUEST, forClient);
     }
 
 
-    @ExceptionHandler(ResponseStatusException.class)
+    @ExceptionHandler(value = {ResponseStatusException.class})
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
         return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason());
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception ex) {
-        String msg = ex.getMessage();
-        String forClient = "Exception -> UNHANDLED {}";
-        log.error(forClient, ex.getMessage());
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, forClient);
-    }
+//    @ExceptionHandler(Exception.class) // absorbs some exceptions
 
     String getMapInJson(Map map) {
         try {
@@ -104,7 +95,11 @@ public class ExceptionHandlerControllers {
     }
 
     public boolean thisContains(String msg, String... strings) {
-        return Stream.of(strings).anyMatch(msg.toLowerCase()::contains);
+        boolean contains = true;
+        for (String s : strings) {
+            contains = contains && msg.contains(s);
+        }
+        return contains;
     }
 
     private ResponseEntity<String> buildResponse(HttpStatus status, String message) {
