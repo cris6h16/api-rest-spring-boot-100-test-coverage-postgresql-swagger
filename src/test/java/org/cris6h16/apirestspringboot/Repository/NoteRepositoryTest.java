@@ -66,8 +66,10 @@ public class NoteRepositoryTest {
 
 
     /**
-     * Deletes all users and notes from the database before each test, then saves the
-     * users and notes from the {@code userNotes} map.
+     * <ol>
+     *     <li>Deletes all from {@link UserRepository } & {@link NoteRepositoryTest}</li>
+     *     <li>Saves all the users and notes from {@code userNotes} map</li>
+     * </ol>
      */
     @BeforeEach
     void setUp() {
@@ -80,7 +82,7 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@code findByUserId} method from {@link NoteRepository}.<br>
+     * Tests the {@link  NoteRepository#findByUserId(Long)} method.<br>
      * The method should return a list of notes(size=5) of each user.
      */
     @Test
@@ -102,7 +104,7 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@code findByIdAndUserId} method from {@link NoteRepository}.<br>
+     * Tests the {@link NoteRepository#findByIdAndUserId(Long, Long)} method.<br>
      * Try to fetch each note(10) with each user(2), if the user is the owner of the note
      * then the method should return a non-empty {@code Optional} with the note, otherwise
      * it should return an empty {@code Optional}.
@@ -133,14 +135,14 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@code findByUserId} method from {@link NoteRepository} with pagination.<br>
+     * Tests the {@link  NoteRepository#findByUserId(Long, Pageable)} )} method <br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in ascending order.
      *
      */
     @Test
-    void NoteRepository_testFindByUserIdPageableASC_returnPages() {
+    void NoteRepository_FindByUserIdPageable_returnPagesASC() {
         // Arrange
         assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);
@@ -177,14 +179,14 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@code findByUserId} method from {@link NoteRepository} with pagination.<br>
+     * Tests the {@link  NoteRepository#findByUserId(Long, Pageable)} )} method <br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in descending order.
      *
      */
     @Test
-    void NoteRepository_testFindByUserIdPageableDES_returnPages() {
+    void NoteRepository_FindByUserIdPageable_returnPagesDES() {
         // Arrange
         assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);

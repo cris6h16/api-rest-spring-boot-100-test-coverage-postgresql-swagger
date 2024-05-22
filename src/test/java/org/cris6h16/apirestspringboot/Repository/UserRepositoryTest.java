@@ -61,6 +61,12 @@ public class UserRepositoryTest {
     }
 
 
+    /**
+     * <ol>
+     * <li>Deletes all from the {@link UserRepository} & {@link RoleRepository}</li>
+     * <li>save a instance of {@link RoleEntity} & {@link UserEntity}</li>
+     * </ol>
+     */
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -70,6 +76,9 @@ public class UserRepositoryTest {
         userRepository.save(usr);
     }
 
+    /**
+     * Tests the {@link UserRepository#findByUsername(String)} method.<br>
+     */
     @Test
     @Order(1)
     void UserRepository_findByUsername_returnANonemptyOptional() {
@@ -85,6 +94,9 @@ public class UserRepositoryTest {
         assertThat(result.get().getUsername()).isEqualTo(usr.getUsername());
     }
 
+    /**
+     * Tests the {@link UserRepository#findByEmail(String)} method.<br>
+     */
     @Test
     @Order(2)
     void UserRepository_findByEmail_returnANonemptyOptional() {
@@ -100,6 +112,9 @@ public class UserRepositoryTest {
         assertThat(result.get().getEmail()).isEqualTo(usr.getEmail());
     }
 
+    /**
+     * Tests the {@link UserRepository#executeInTransaction(Runnable)} method.<br>
+     */
     @Test
     @Order(3)
     void UserRepository_executeInTransaction_returnTrue() {
