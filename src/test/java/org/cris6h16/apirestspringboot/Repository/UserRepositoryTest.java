@@ -16,27 +16,57 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Test class for {@link UserRepository}.<br>
+ * This class uses an embedded {@code H2} database to simulate the real database environment.<br>
+ *
+ * Using the {@code H2} database provides the following benefits:
+ * <ul>
+ *   <li>Isolation: Tests run in an isolated environment, ensuring no interference with the real database.</li>
+ *   <li>Speed: Embedded databases like H2 execute faster than real databases, speeding up test execution.</li>
+ *   <li>Maintenance: There is no need to clean the database manually, even if the database structure changes.</li>
+ * </ul>
+ *
+ * Although you can configure tests to use the actual database, it is not recommended due to potential issues such as:
+ * <ul>
+ *   <li>Loss of isolation: Tests may interfere with real data, leading to inconsistent results.</li>
+ *   <li>Slower execution: Real databases typically perform slower than in-memory databases like H2.</li>
+ *   <li>Manual cleanup: Changes in the database structure may require manual cleanup, complicating test maintenance.</li>
+ * </ul>
+ *
+ * @author  <a href="https://github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
 public class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private RoleRepository roleRepository;
     private UserEntity usr;
 
+    /**
+     * Initializes the {@link UserEntity} object to be used in the tests.
+     */
     public UserRepositoryTest() {
+        RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_ADMIN).build();
         usr = UserEntity.builder()
                 .id(null)
                 .username("testUser1")
                 .password("12345678")
                 .email("test2@example.com")
-                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_ADMIN).build())) // CASCADE.PERSIST for RoleEntity
+                .roles(Set.of(roles))
                 .build();
     }
 
+
     @BeforeEach
     void setUp() {
-        if (userRepository.findByUsername(usr.getUsername()).isPresent()) return;
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+
+        roleRepository.saveAll(usr.getRoles());
         userRepository.save(usr);
     }
 
