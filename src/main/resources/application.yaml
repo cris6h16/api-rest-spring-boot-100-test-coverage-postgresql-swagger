@@ -26,6 +26,9 @@ spring:
         page-parameter: page
         size-parameter: size
 
+  sql:
+    init:
+      mode: never # execute a sql script when the application starts
 
 
 debug: true

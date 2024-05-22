@@ -8,14 +8,13 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
-public interface NoteRepository extends CrudRepository<NoteEntity, Long>, PagingAndSortingRepository<NoteEntity, Long>{
+public interface NoteRepository extends CrudRepository<NoteEntity, Long>, PagingAndSortingRepository<NoteEntity, Long> {
 
-    //    @Query("SELECT ue.notes FROM UserEntity ue LEFT JOIN FETCH ue.notes n WHERE ue.id = :userId")
-
-    @Query("SELECT n FROM NoteEntity n WHERE n.user.id = ?1")
-    Collection<NoteEntity> findByUserId(Long userID);
+    List<NoteEntity> findByUserId(Long userID);
 
     Optional<NoteEntity> findByIdAndUserId(Long id, Long userId);
 

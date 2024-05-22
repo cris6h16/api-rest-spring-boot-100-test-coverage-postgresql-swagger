@@ -33,7 +33,7 @@ indexes = {
 @Setter
 @EqualsAndHashCode(exclude = {"notes"}) // take in mind the LAZYs, Try to compare with EAGER fetches
 @Builder
-public class UserEntity {
+public class UserEntity implements Cloneable{
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -88,6 +88,15 @@ public class UserEntity {
             mappedBy = "user")
     private Set<NoteEntity> notes;
 
+    @Override
+    public UserEntity clone() {
+        try {
+            UserEntity clone = (UserEntity) super.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
 
     // TODO: fix  =>  Single Responsibility Principle is violated here.
     @PrePersist
@@ -99,10 +108,4 @@ public class UserEntity {
     public void preUpdate() {
         updatedAt = new Date(System.currentTimeMillis());
     }
-
-//    @PostRemove --> I decided not implement soft delete
-//    public void preRemove() {
-//        deletedAt = new Date(System.currentTimeMillis());
-//    }
-
 }
