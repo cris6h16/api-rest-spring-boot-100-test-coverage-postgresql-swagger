@@ -49,20 +49,19 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public Long create(CreateUpdateUserDTO dto) {
-        Optional<RoleEntity> roles = roleRepository.findByName(ERole.ROLE_USER);
-        if (roles.isEmpty()) roles = Optional.of(new RoleEntity(null, ERole.ROLE_USER));
-        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
+        verifyPassword(dto);// throws if not
 
-        UserEntity user = UserEntity.builder()
+        RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
+                .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
+
+        UserEntity saved = userRepository.save(UserEntity.builder()
                 .username(dto.getUsername())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .email(dto.getEmail())
-                .roles(Set.of(roles.get()))
-                .build();
+                .roles(Set.of(roles)) //cascading
+                .build());
 
-        userRepository.save(user);
-
-        return user.getId();
+        return saved.getId();
     }
 
 
@@ -97,31 +96,30 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void update(Long id, CreateUpdateUserDTO dto) {
-
         UserEntity usr = userRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
 
-        boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank();
-        boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank();
-        boolean updatePassword = dto.getPassword() != null && !dto.getPassword().isBlank();
+        boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
+        boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
+        boolean updatePassword = dto.getPassword() != null && !dto.getPassword().isBlank() && !passwordEncoder.matches(dto.getPassword(), usr.getPassword());
 
-
-        if (updateUsername) {
-            if (userRepository.findByUsername(dto.getUsername()).isPresent())
-                throw new AlreadyExistsException.Username();
-            usr.setUsername(dto.getUsername());
-        }
-
-        if (updateEmail) {
-            if (userRepository.findByEmail(dto.getEmail()).isPresent())
-                throw new AlreadyExistsException.Email();
-            usr.setEmail(dto.getEmail());
-        }
+        if (updateUsername) usr.setUsername(dto.getUsername());
+        if (updateEmail) usr.setEmail(dto.getEmail());
         if (updatePassword) {
-            if (dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
+            verifyPassword(dto);// throws if not
             usr.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         userRepository.save(usr);
+    }
+
+    /**
+     * The unique earlier verification, this is in the service layer due that the password pass to repository encrypted
+     * then it means that the password always will have a length greater than 8
+     *
+     * @param dto
+     */
+    void verifyPassword(CreateUpdateUserDTO dto) {
+        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
     }
 
     @Override

@@ -544,6 +544,17 @@ public class UserControllerTest {
         @DirtiesContext
         void shouldNotUpdateUsernameAlreadyExists_CONFLICT() {
             String failBodyMssg = Cons.User.Constrains.USERNAME_UNIQUE_MSG; //"Username already exists"
+            assertThat(userRepository.findById(id)).isPresent();
+
+            //create a new user
+            CreateUpdateUserDTO forCreation2 = CreateUpdateUserDTO.builder()
+                    .username("cris6h16_2")
+                    .password("12345678")
+                    .email("cris6h16_2@gmail.com")
+                    .build();
+            HttpEntity<CreateUpdateUserDTO> user = new HttpEntity<>(forCreation2);
+            ResponseEntity<Void> res = rt.exchange(path, HttpMethod.POST, user, Void.class);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
             // from user in DB
             String url = path + "/" + id;
@@ -552,7 +563,7 @@ public class UserControllerTest {
 
             // DTO for updated `username`
             CreateUpdateUserDTO forUPDT = new CreateUpdateUserDTO();
-            forUPDT.setUsername(username);
+            forUPDT.setUsername(forCreation2.getUsername());
             HttpEntity<CreateUpdateUserDTO> httpEntity = new HttpEntity<>(forUPDT);
 
             // update: `username`

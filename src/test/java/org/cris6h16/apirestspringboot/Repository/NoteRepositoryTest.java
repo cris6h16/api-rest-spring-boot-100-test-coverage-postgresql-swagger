@@ -55,8 +55,7 @@ public class NoteRepositoryTest {
      */
     public NoteRepositoryTest() {
         List<NoteEntity> n1 = assignAUser(createNotes(1, 5), createUser("cris6h16"));
-        List<NoteEntity> n2 = assignAUser(createNotes(6, 10), createUser("cris6h16_2"));
-
+        List<NoteEntity> n2 = assignAUser(createNotes(6, 10), createUser("github.com/cris6h16"));
         userNotes = new HashMap<>();
         UserEntity user1 = n1.get(0).getUser();
         UserEntity user2 = n2.get(0).getUser();

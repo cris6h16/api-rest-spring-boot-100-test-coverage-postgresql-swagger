@@ -4,6 +4,7 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.lang.NonNullApi;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +16,9 @@ public interface UserRepository extends
         CrudRepository<UserEntity, Long>,
         PagingAndSortingRepository<UserEntity, Long> {
 
+
     Optional<UserEntity> findByUsername(String username); // --> UserDetailServiceImpl |--| check if already exists -> @Service
+
     Optional<UserEntity> findByEmail(String email);
 
 //    @Query("SELECT u FROM UserEntity u LEFT JOIN FETCH u.notes n WHERE u.id = ?1")
@@ -25,8 +28,12 @@ public interface UserRepository extends
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class)
     default boolean executeInTransaction(Runnable runnable) {
-        Objects.requireNonNull(runnable);
-        runnable.run();
+        try {
+            Objects.requireNonNull(runnable);
+            runnable.run();
+        } catch (Exception e) {
+            return false;
+        }
         return true;
     }
 }
