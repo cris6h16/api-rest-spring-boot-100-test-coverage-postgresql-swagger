@@ -65,7 +65,7 @@ public class UserEntity implements Cloneable{
     private Date updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER,
-            cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, // i don't want to delete the roles when I delete a user, but I want to save the unsaved roles(id=null)
+            cascade = {CascadeType.PERSIST}, // i don't want to delete the roles when I delete a user, but I want to save the unsaved roles(id=null)
             targetEntity = RoleEntity.class)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -79,8 +79,12 @@ public class UserEntity implements Cloneable{
     @OneToMany(fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,
             targetEntity = NoteEntity.class,
-            orphanRemoval = true,
-            mappedBy = "user")
+            orphanRemoval = true
+//            ,            mappedBy = "user"
+    )
+    @JoinColumn(name = "user_id",
+            foreignKey = @ForeignKey(name = "fk_notes_user_id"),
+            referencedColumnName = "id")
     private Set<NoteEntity> notes;
 
     @Override

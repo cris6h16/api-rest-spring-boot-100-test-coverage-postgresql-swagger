@@ -42,12 +42,9 @@ public class NoteEntity {
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY,
-            cascade = {}, // cascaded to the target of the association.
-            targetEntity = UserEntity.class)
-    @JoinColumn(name = "user_id",
-            foreignKey = @ForeignKey(name = "fk_notes_user_id"),
-            referencedColumnName = "id")
-    private UserEntity user;
+//    @ManyToOne(fetch = FetchType.LAZY,
+//            cascade = {}, // cascaded to the target of the association.
+//            targetEntity = UserEntity.class)
+//    private UserEntity user;
 
 }
