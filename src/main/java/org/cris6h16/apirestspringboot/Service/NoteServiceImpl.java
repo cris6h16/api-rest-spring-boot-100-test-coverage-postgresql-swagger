@@ -49,11 +49,12 @@ public class NoteServiceImpl implements NoteService {
         NoteEntity noteEntity = NoteEntity.builder()
                 .title(note.getTitle())
                 .content(note.getContent())
-                .user(user)
                 .updatedAt(new Date())
                 .build();
 
-        noteRepository.save(noteEntity);
+//        user.getNotes().add(noteEntity);  // overload
+        user.putNoteEntities(noteEntity);
+        userRepository.save(user);
 
         return noteEntity.getId();
     }
@@ -72,7 +73,7 @@ public class NoteServiceImpl implements NoteService {
                         pageable.getSortOr(Sort.by(Sort.Direction.ASC, "id"))
                 ));
 
-        return page.stream()
+        return page.stream() //TODO: see the generated query of pageable (because they say that is not necessary include in the @Query)
                 .map(note -> PublicNoteDTO.builder()
                         .id(note.getId())
                         .title(note.getTitle())
@@ -114,20 +115,19 @@ public class NoteServiceImpl implements NoteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
 
         NoteEntity noteEntity = noteRepository
-                .findByIdAndUserId(noteId, userId)
+                .findByIdAndUserId(noteId, userId) // If exists get it, else create ==> exists || create ==> same ID
                 .orElse(NoteEntity.builder()
                         .id(noteId)
-                        .user(user)
                         .title(note.getTitle())
                         .content(note.getContent())
                         .updatedAt(new Date())
                         .build()
                 );
-
         noteEntity.setTitle(note.getTitle());
         noteEntity.setContent(note.getContent());
 
-        noteRepository.save(noteEntity);
+        user.putNoteEntities(noteEntity); // ID exists ? replace : add
+        userRepository.save(user);
     }
 
     @Override

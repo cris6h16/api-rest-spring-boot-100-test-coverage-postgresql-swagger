@@ -19,7 +19,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @Getter
 @Setter
 @Builder
-@EqualsAndHashCode(exclude = {"user"})
+@EqualsAndHashCode
 public class NoteEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -34,17 +34,8 @@ public class NoteEntity {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-//    @Column(name = "created_at", updatable = false) // due that updates will be only HTTP PUT
-//    @Temporal(TemporalType.DATE)
-//    private Date createdAt;
-
     @Column(name = "updated_at")
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
-
-//    @ManyToOne(fetch = FetchType.LAZY,
-//            cascade = {}, // cascaded to the target of the association.
-//            targetEntity = UserEntity.class)
-//    private UserEntity user;
 
 }

@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class CascadingUserEntity {
     private UserRepository userRepository;
     private UserEntity usr;
     private RoleEntity role;
-    private Set<NoteEntity> notes;
+    private NoteEntity[] notes;
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
@@ -54,7 +55,7 @@ public class CascadingUserEntity {
 
 
     private void initializeAndPrepare() {
-        notes = new HashSet<>();
+        notes = new NoteEntity[10];
 
         role = RoleEntity.builder()
                 .id(null)
@@ -72,7 +73,7 @@ public class CascadingUserEntity {
                     .title("cris6h16's note title" + i)
                     .content("cris6h16's note content")
                     .build();
-            notes.add(note);
+            notes[i] = note;
         }
     }
 
@@ -121,17 +122,16 @@ public class CascadingUserEntity {
     @Tag("NoteEntity")
     public void CascadingUserEntity_WhenPersist_NoteEntity_Cascade() {
         // Arrange
-        usr.setNotes(notes);
+        usr.putNoteEntities(notes);
 
         // Act
         userRepository.saveAndFlush(usr);
 
         // Assert
         assertThat(userRepository.count()).isEqualTo(1);
-        assertThat(noteRepository.count()).isEqualTo(notes.size());
-        assertThat(noteRepository.findAll().stream()
-                .allMatch(n -> n.getUser().getId().equals(usr.getId())))
-                .isTrue();
+        assertThat(noteRepository.count()).isEqualTo(notes.length);
+        assertThat(noteRepository.findByUserId(usr.getId()).toArray())
+                .containsAll(Arrays.asList(notes));
     }
 
     @Test
@@ -139,9 +139,9 @@ public class CascadingUserEntity {
     @Tag("NoteEntity")
     public void CascadingUserEntity_WhenRemove_NoteEntity_Cascade() {
         // Arrange
-        usr.setNotes(notes);
+        usr.putNoteEntities(notes);
         userRepository.saveAndFlush(usr);
-        boolean saved = userRepository.count() == 1 && noteRepository.count() == notes.size();
+        boolean saved = userRepository.count() == 1 && noteRepository.count() == notes.length;
 
         // Act
         userRepository.delete(usr);

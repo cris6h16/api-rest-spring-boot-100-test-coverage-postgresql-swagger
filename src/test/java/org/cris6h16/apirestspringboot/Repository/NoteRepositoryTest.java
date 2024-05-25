@@ -24,14 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Test class for {@link NoteRepository}<br>
  * This class uses an embedded {@code H2} database to simulate the real database environment.<br>
- *
+ * <p>
  * Using the {@code H2} database provides the following benefits:
  * <ul>
  *   <li>Isolation: Tests run in an isolated environment, ensuring no interference with the real database.</li>
  *   <li>Speed: Embedded databases like H2 execute faster than real databases, speeding up test execution.</li>
  *   <li>Maintenance: There is no need to clean the database manually, even if the database structure changes.</li>
  * </ul>
- *
+ * <p>
  * Although you can configure tests to use the actual database, it is not recommended due to potential issues such as:
  * <ul>
  *   <li>Loss of isolation: Tests may interfere with real data, leading to inconsistent results.</li>
@@ -51,9 +51,7 @@ public class NoteRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    private Map<UserEntity, List<NoteEntity>> userNotes;
-
-
+    private Map<UserEntity, NoteEntity[]> userNotes;
 
 
     /**
@@ -74,9 +72,8 @@ public class NoteRepositoryTest {
         // `userNotes`
         initializeAndPrepare();
 
-        // save each separately to avoid cascades
+        // save users then notes also
         userRepository.saveAllAndFlush(userNotes.keySet());
-        noteRepository.saveAllAndFlush(userNotes.values().stream().flatMap(noteList -> noteList.stream()).toList());
     }
 
     /**
@@ -95,9 +92,7 @@ public class NoteRepositoryTest {
 
             // Assert
             assertThat(notes).hasSize(5);
-            for (NoteEntity note : notes) {
-                assertThat(note.getUser().getId()).isEqualTo(user.getId());
-            }
+            assertThat(notes).containsAll(Arrays.asList(userNotes.get(user)));
         }
     }
 
@@ -114,20 +109,17 @@ public class NoteRepositoryTest {
         assertThat(userRepository.count()).isEqualTo(2);
 
         for (UserEntity usr : userNotes.keySet()) {
-            for (NoteEntity n : userNotes.values().stream().flatMap(List::stream).toList()) {
+            for (NoteEntity n : userNotes.values().stream().flatMap(Arrays::stream).toList()) { // { [], [] } -> { , , , , }
                 // Act
                 Optional<NoteEntity> found = noteRepository.findByIdAndUserId(n.getId(), usr.getId());
 
-                Long userId = usr.getId();
-                Long userIdInNote = n.getUser().getId();
+                boolean isOwner = noteRepository.findByUserId(usr.getId()).contains(n);
                 // Assert
-                if (userId.equals(userIdInNote)) {
+                if (isOwner) {
                     assertThat(found).isPresent();
                     assertThat(found.get().getId()).isEqualTo(n.getId());
-                    assertThat(found.get().getUser().getId()).isEqualTo(usr.getId());
-                } else {
-                    assertThat(found).isEmpty();
-                }
+                } else assertThat(found).isEmpty();
+
             }
         }
     }
@@ -137,7 +129,6 @@ public class NoteRepositoryTest {
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in ascending order.
-     *
      */
     @Test
     void NoteRepository_FindByUserIdPageable_returnPagesASC() {
@@ -181,7 +172,6 @@ public class NoteRepositoryTest {
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in descending order.
-     *
      */
     @Test
     void NoteRepository_FindByUserIdPageable_returnPagesDES() {
@@ -221,16 +211,17 @@ public class NoteRepositoryTest {
     }
 
 
-
     /**
      * Creates two users with 5 notes each and assigns them to the {@code userNotes} map.
      */
-    void initializeAndPrepare(){
-        List<NoteEntity> n1 = assignAUser(createNotes(1, 5), createUser("cris6h16"));
-        List<NoteEntity> n2 = assignAUser(createNotes(6, 10), createUser("github.com/cris6h16"));
+    void initializeAndPrepare() {
         userNotes = new HashMap<>();
-        UserEntity user1 = n1.get(0).getUser();
-        UserEntity user2 = n2.get(0).getUser();
+        NoteEntity[] n1 = createNotes(1, 5);
+        NoteEntity[] n2 = createNotes(6, 10);
+        UserEntity user1 = createUser("cris6h16");
+        UserEntity user2 = createUser("github.com/cris6h16");
+        user1.putNoteEntities(n1);
+        user2.putNoteEntities(n2);
         userNotes.put(user1, n1);
         userNotes.put(user2, n2);
     }
@@ -244,16 +235,11 @@ public class NoteRepositoryTest {
                 .build();
     }
 
-    private List<NoteEntity> createNotes(int startSuffix, int endSuffix) {
+    private NoteEntity[] createNotes(int startSuffix, int endSuffix) {
         List<NoteEntity> notes = new ArrayList<>();
         for (int i = startSuffix; i <= endSuffix; i++) {
             notes.add(NoteEntity.builder().title("title" + i).content("content" + i).build());
         }
-        return notes;
-    }
-
-    private List<NoteEntity> assignAUser(List<NoteEntity> notes, UserEntity user) {
-        notes.forEach(note -> note.setUser(user));
-        return notes;
+        return notes.toArray(new NoteEntity[0]);
     }
 }

@@ -113,7 +113,6 @@ public class NoteConstrainsValidationsTest {
                 .id(null)
                 .title("the first cris6h16's note")
                 .content("the content of the first cris6h16's note")
-                .user(usr)
                 .build();
     }
 }

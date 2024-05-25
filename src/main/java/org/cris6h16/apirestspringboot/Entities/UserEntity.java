@@ -6,8 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 // import static VALUES of VALIDATIONS and CONSTRAINTS
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
@@ -33,7 +32,7 @@ indexes = {
 @Setter
 @EqualsAndHashCode(exclude = {"notes"}) // take in mind the LAZYs, Try to compare with EAGER fetches
 @Builder
-public class UserEntity implements Cloneable{
+public class UserEntity implements Cloneable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -75,17 +74,30 @@ public class UserEntity implements Cloneable{
     )
     private Set<RoleEntity> roles;
 
-    // added here just for: if I delete a USER then delete all the NOTES
     @OneToMany(fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,
             targetEntity = NoteEntity.class,
-            orphanRemoval = true
-//            ,            mappedBy = "user"
-    )
+            orphanRemoval = true)
     @JoinColumn(name = "user_id",
             foreignKey = @ForeignKey(name = "fk_notes_user_id"),
             referencedColumnName = "id")
-    private Set<NoteEntity> notes;
+    @Getter(AccessLevel.NONE)
+    // doesn't have sense for me: `user.getNotes().add(note)` or `user.getNotes().remove(note)`
+    @Setter(AccessLevel.NONE) // the best would be to add not replace
+    private Set<NoteEntity> notes = new HashSet<>();
+
+
+    /**
+     * todo: Make sure use with eager fetches<br>
+     * Add notes to the user, if any note has an {@code id}, it will replace the existing note with the same {@code id}
+     * @param notes notes to add
+     */
+    public void putNoteEntities(NoteEntity... notes) {
+        Arrays.stream(notes)
+                .filter(n -> n.getId() != null)
+                .forEach(passed -> this.notes.removeIf(owned -> owned.getId().equals(passed.getId())));
+        this.notes.addAll(Set.of(notes));
+    }
 
     @Override
     public UserEntity clone() {
