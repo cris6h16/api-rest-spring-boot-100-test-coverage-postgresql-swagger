@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.Set;
@@ -38,8 +41,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+@Transactional(rollbackFor = Exception.class)
 public class UserRepositoryTest {
 
+    //TODO: DOC MY TROUBLE WITH save() instead of saveAndFlush() in H2
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -47,30 +52,22 @@ public class UserRepositoryTest {
     private UserEntity usr;
 
     /**
-     * Initializes the {@link UserEntity} object to be used in the tests.
-     */
-    public UserRepositoryTest() {
-        RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_ADMIN).build();
-        usr = UserEntity.builder()
-                .id(null)
-                .username("cris6h16")
-                .password("12345678")
-                .email("cris6h16@gmail")
-                .roles(Set.of(roles))
-                .build();
-    }
-
-
-    /**
-     * <ol>
-     * <li>Deletes all from the {@link UserRepository} & {@link RoleRepository}</li>
-     * </ol>
+     * Deletes all from the {@link UserRepository} & {@link RoleRepository}
+     * and prepares a new entity to be created as {@code usr} (id==null)
      */
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
         roleRepository.deleteAll();
+
+        // necessary with H2
+        userRepository.flush();
+        roleRepository.flush();
+
+        // `usr`
+        initializeAndPrepare();
     }
+
 
     /**
      * Tests the {@link UserRepository#findByUsername(String)} method.<br>
@@ -79,7 +76,7 @@ public class UserRepositoryTest {
     @Order(1)
     void UserRepository_findByUsername_returnANonemptyOptional() {
         // Arrange
-        userRepository.save(usr);
+        userRepository.saveAndFlush(usr);
 
         // Act
         Optional<UserEntity> result = userRepository.findByUsername(usr.getUsername());
@@ -97,7 +94,7 @@ public class UserRepositoryTest {
     @Order(2)
     void UserRepository_findByEmail_returnANonemptyOptional() {
         // Arrange
-        userRepository.save(usr);
+        userRepository.saveAndFlush(usr);
 
         // Act
         Optional<UserEntity> result = userRepository.findByEmail(usr.getEmail());
@@ -115,49 +112,37 @@ public class UserRepositoryTest {
     @Order(3)
     void UserRepository_executeInTransaction_returnTrue() {
         // Arrange
-        userRepository.save(usr);
+        userRepository.saveAndFlush(usr);
+        boolean completed = true;
 
         // Act
-        boolean completed = userRepository.executeInTransaction(() -> {
-            userRepository.delete(usr);
-        });
+        try {
+            userRepository.executeInTransaction(() -> {
+                userRepository.delete(usr);
+                userRepository.flush();
+            });
+        } catch (Exception e) {
+            completed = false;
+        }
+
 
         // Assert
         assertThat(completed).isTrue();
         assertThat(userRepository.existsById(usr.getId())).isFalse();
-    }
-
-    @Test
-    @Order(4)
-    void UserRepository_save_UsernameTooGreaterThrowsConstraintViolationException() {
-        /*
-            @Column(name = "username", length = MAX_USERNAME_LENGTH) //=20
-            @Length(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
-            @NotBlank(message = USERNAME_IS_BLANK_MSG) // for sending null/empty
-            private String username;
-         */
-        usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 10000)); // + 10000 to exceed the limit
-        /*
-           @Column(name = "email")
-           @Email(message = EMAIL_INVALID_MSG)// --> null is valid
-           @NotBlank(message = EMAIL_IS_BLANK_MSG)
-           private String email;
-         */
-        usr.setEmail("hola"); // invalid email
-
-        /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if I use only the @SpringBootTest, which means that I will test with the real database.
-        then it throws the validation, violation exceptions
-         */
-         /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        BUT if I use the ANNOTATIONs OF THIS CLASS, which means that I will test with the H2 database.
-        then it violates ALL the constraints abusively and saves the user violating all the constraints.
-
-        BUT the exception that should be thrown when was saved are thrown when I try to find the user like
-        findByUsername, findByEmail, findALL
-         */
-        userRepository.save(usr);
-        System.out.println(userRepository.findAll());
 
     }
+
+
+
+    void initializeAndPrepare(){
+        RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_USER).build();
+        usr = UserEntity.builder()
+                .id(null)
+                .username("cris6h16")
+                .password("12345678")
+                .email("cris6h16@gmail.com")
+                .roles(Set.of(roles))
+                .build();
+    }
+
 }

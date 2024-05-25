@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+@Transactional(rollbackFor = Exception.class)
 public class RoleRepositoryTest {
 
     @Autowired
@@ -42,25 +44,18 @@ public class RoleRepositoryTest {
     private List<RoleEntity> roles;
 
     /**
-     * Initializes the roles list
-     */
-    public RoleRepositoryTest() {
-        roles = List.of(
-                RoleEntity.builder().name(ERole.ROLE_USER).build(),
-                RoleEntity.builder().name(ERole.ROLE_ADMIN).build()
-        );
-    }
-
-    /**
      * <ol>
      *     <li>Deletes all roles from the repository</li>
+     *     <li>Reassign a list of roles for creation to {@code roles}</li>
      *     <li>Saves all roles to the repository</li>
      * </ol>
      */
     @BeforeEach
     void setUp() {
         roleRepository.deleteAll();
-        roleRepository.saveAll(roles);
+        roleRepository.flush(); // due to H2
+        initializeAndPrepare();
+        roleRepository.saveAllAndFlush(roles);
     }
 
     /**
@@ -80,4 +75,13 @@ public class RoleRepositoryTest {
             assertThat(fromDB.getName()).isEqualTo(role.getName());
         });
     }
+
+    void initializeAndPrepare(){
+        roles = List.of(
+                RoleEntity.builder().name(ERole.ROLE_USER).build(),
+                RoleEntity.builder().name(ERole.ROLE_ADMIN).build()
+        );
+    }
+
+
 }

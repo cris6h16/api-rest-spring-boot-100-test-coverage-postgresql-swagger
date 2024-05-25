@@ -7,17 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureDataJpa;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -42,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+@Transactional(rollbackFor = Exception.class)
 public class NoteRepositoryTest {
     @Autowired
     private NoteRepository noteRepository;
@@ -50,18 +50,7 @@ public class NoteRepositoryTest {
 
     private Map<UserEntity, List<NoteEntity>> userNotes;
 
-    /**
-     * Creates two users with 5 notes each and assigns them to the {@code userNotes} map.
-     */
-    public NoteRepositoryTest() {
-        List<NoteEntity> n1 = assignAUser(createNotes(1, 5), createUser("cris6h16"));
-        List<NoteEntity> n2 = assignAUser(createNotes(6, 10), createUser("github.com/cris6h16"));
-        userNotes = new HashMap<>();
-        UserEntity user1 = n1.get(0).getUser();
-        UserEntity user2 = n2.get(0).getUser();
-        userNotes.put(user1, n1);
-        userNotes.put(user2, n2);
-    }
+
 
 
     /**
@@ -75,9 +64,16 @@ public class NoteRepositoryTest {
         userRepository.deleteAll();
         noteRepository.deleteAll();
 
+        // necessary with H2
+        userRepository.flush();
+        noteRepository.flush();
+
+        // `userNotes`
+        initializeAndPrepare();
+
         // save each separately to avoid cascades
-        userRepository.saveAll(userNotes.keySet());
-        noteRepository.saveAll(userNotes.values().stream().flatMap(noteList -> noteList.stream()).toList());
+        userRepository.saveAllAndFlush(userNotes.keySet());
+        noteRepository.saveAllAndFlush(userNotes.values().stream().flatMap(noteList -> noteList.stream()).toList());
     }
 
     /**
@@ -219,6 +215,21 @@ public class NoteRepositoryTest {
                     break;
             }
         }
+    }
+
+
+
+    /**
+     * Creates two users with 5 notes each and assigns them to the {@code userNotes} map.
+     */
+    void initializeAndPrepare(){
+        List<NoteEntity> n1 = assignAUser(createNotes(1, 5), createUser("cris6h16"));
+        List<NoteEntity> n2 = assignAUser(createNotes(6, 10), createUser("github.com/cris6h16"));
+        userNotes = new HashMap<>();
+        UserEntity user1 = n1.get(0).getUser();
+        UserEntity user2 = n2.get(0).getUser();
+        userNotes.put(user1, n1);
+        userNotes.put(user2, n2);
     }
 
 
