@@ -1,23 +1,20 @@
 package org.cris6h16.apirestspringboot.Suites;
 
+import org.cris6h16.apirestspringboot.Entities.Integration.CascadingUserEntity;
 import org.cris6h16.apirestspringboot.Entities.NoteConstrainsValidationsTest;
 import org.cris6h16.apirestspringboot.Entities.UserConstrainsValidationsTest;
 import org.cris6h16.apirestspringboot.Repository.NoteRepositoryTest;
 import org.cris6h16.apirestspringboot.Repository.RoleRepositoryTest;
 import org.cris6h16.apirestspringboot.Repository.UserRepositoryTest;
-import org.junit.platform.suite.api.IncludeTags;
-import org.junit.platform.suite.api.SelectClasses;
-import org.junit.platform.suite.api.Suite;
+import org.junit.platform.suite.api.*;
 
 public class TestSuites {
 
     @Suite
-    @SelectClasses({
-            UserRepositoryTest.class,
-            NoteRepositoryTest.class,
-            RoleRepositoryTest.class,
-            UserConstrainsValidationsTest.class,
-            NoteConstrainsValidationsTest.class
+    @SelectPackages({
+            "org.cris6h16.apirestspringboot.Repository",
+            "org.cris6h16.apirestspringboot.Entities",
+            "org.cris6h16.apirestspringboot.Entities.Integration"
     })
     public static class AllTests {
     }
@@ -40,6 +37,14 @@ public class TestSuites {
             NoteConstrainsValidationsTest.class
     })
     public static class CorrectTaggedTests {
+    }
+
+    @Suite
+    @SelectClasses({
+            CascadingUserEntity.class
+    })
+    public static class EntitiesIntegrationTests {
+
     }
 }
 

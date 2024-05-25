@@ -74,6 +74,7 @@ public class NoteRepositoryTest {
 
         // save users then notes also
         userRepository.saveAllAndFlush(userNotes.keySet());
+
     }
 
     /**
@@ -137,7 +138,7 @@ public class NoteRepositoryTest {
         assertThat(userRepository.count()).isEqualTo(2);
         byte pageSize = 2;
         byte pageNumber = 0;
-        Sort sort = Sort.by(Sort.Order.asc("title"));
+        Sort sort = Sort.by(Sort.Order.asc("n.title"));
         byte[] expectedEachPageElements = new byte[]{2, 2, 1};
 
         byte expectedTotalPages = 3;
@@ -180,7 +181,7 @@ public class NoteRepositoryTest {
         assertThat(userRepository.count()).isEqualTo(2);
         byte pageSize = 2;
         byte pageNumber = 0;
-        Sort sort = Sort.by(Sort.Order.desc("title"));
+        Sort sort = Sort.by(Sort.Order.desc("n.title"));
         byte[] expectedEachPageElements = new byte[]{2, 2, 1};
 
         byte expectedTotalPages = 3;
@@ -232,6 +233,7 @@ public class NoteRepositoryTest {
                 .username(username)
                 .email(username + "@example.com")
                 .password("12345678")
+                .notes(new HashSet<>())
                 .build();
     }
 

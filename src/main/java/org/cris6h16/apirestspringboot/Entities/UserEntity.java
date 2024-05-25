@@ -30,9 +30,9 @@ indexes = {
 @ToString(exclude = {"notes"})
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = {"notes"}) // take in mind the LAZYs, Try to compare with EAGER fetches
+//@EqualsAndHashCode(exclude = {"notes"})  // doesn't work, I spent a lot of time trying to make it work, even I excluded all, just works including only the `id`
 @Builder
-public class UserEntity implements Cloneable {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -90,6 +90,7 @@ public class UserEntity implements Cloneable {
     /**
      * todo: Make sure use with eager fetches<br>
      * Add notes to the user, if any note has an {@code id}, it will replace the existing note with the same {@code id}
+     *
      * @param notes notes to add
      */
     public void putNoteEntities(NoteEntity... notes) {
@@ -99,14 +100,33 @@ public class UserEntity implements Cloneable {
         this.notes.addAll(Set.of(notes));
     }
 
-    @Override
-    public UserEntity clone() {
-        try {
-            UserEntity clone = (UserEntity) super.clone();
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
-    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        UserEntity that = (UserEntity) obj;
+        boolean isEquals = false;
+        {
+            boolean idEquals = Objects.equals(id, that.id);
+            boolean usernameEquals = Objects.equals(username, that.username);
+            boolean passwordEquals = Objects.equals(password, that.password);
+            boolean emailEquals = Objects.equals(email, that.email);
+            boolean createdAtEquals = Objects.equals(createdAt, that.createdAt);
+            boolean updatedAtEquals = Objects.equals(updatedAt, that.updatedAt);
+            boolean rolesEquals = Objects.equals(roles, that.roles);
+            boolean notesEquals = Objects.equals(notes, that.notes);
+
+            isEquals = idEquals &&
+                    usernameEquals &&
+                    emailEquals &&
+                    rolesEquals &&
+                    notesEquals &&
+                    passwordEquals &&
+                    createdAtEquals &&
+                    updatedAtEquals;
+        }
+
+        return isEquals;
+    }
 }

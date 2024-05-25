@@ -17,16 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-//@DataJpaTest
-//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-//@Transactional(rollbackFor = Exception.class)
-//@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SpringBootTest
+@DataJpaTest
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@Transactional(rollbackFor = Exception.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CascadingUserEntity {
 
     @Autowired
@@ -66,6 +64,7 @@ public class CascadingUserEntity {
                 .username("cris6h16")
                 .password("12345678")
                 .email("cristianmherrera21@gmail.com")
+                .notes(new HashSet<>())
                 .build();
         for (int i = 0; i < 10; i++) {
             NoteEntity note = NoteEntity.builder()
@@ -99,7 +98,7 @@ public class CascadingUserEntity {
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     @Tag("RoleEntity")
     public void CascadingUserEntity_WhenRemove_RoleEntity_NotCascade() {
         // Arrange
@@ -118,7 +117,7 @@ public class CascadingUserEntity {
 
 
     @Test
-    @Order(3)
+    @Order(2)
     @Tag("NoteEntity")
     public void CascadingUserEntity_WhenPersist_NoteEntity_Cascade() {
         // Arrange

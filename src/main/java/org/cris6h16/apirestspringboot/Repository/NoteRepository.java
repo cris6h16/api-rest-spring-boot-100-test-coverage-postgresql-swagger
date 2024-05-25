@@ -26,4 +26,5 @@ public interface NoteRepository extends JpaRepository<NoteEntity, Long>, PagingA
     @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
     Page<NoteEntity> findByUserId(Long userID, Pageable pageable);
 
+
 }
