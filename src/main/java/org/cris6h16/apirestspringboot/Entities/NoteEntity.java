@@ -34,21 +34,13 @@ public class NoteEntity {
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "created_at", updatable = false) // is a @PrePersist
-    @NotNull(message = "@PrePersist: createdAt, is required")
-    // user can't set it -> We sanitize it in @ControllerAdvice
-    @Temporal(TemporalType.DATE)
-    private Date createdAt;
+//    @Column(name = "created_at", updatable = false) // due that updates will be only HTTP PUT
+//    @Temporal(TemporalType.DATE)
+//    private Date createdAt;
 
     @Column(name = "updated_at")
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
-
-    // won't delete softly
-//    @Column(name = "deleted_at")
-//    @Temporal(TemporalType.DATE)
-//    private Date deletedAt;
-
 
     @ManyToOne(fetch = FetchType.LAZY,
             cascade = {}, // cascaded to the target of the association.
@@ -57,22 +49,5 @@ public class NoteEntity {
             foreignKey = @ForeignKey(name = "fk_notes_user_id"),
             referencedColumnName = "id")
     private UserEntity user;
-
-
-    // TODO: improve -> single responsibility principle
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = new Date();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = new Date(System.currentTimeMillis());
-    }
-//    @PreRemove --> I decided don't delete softly
-//    public void preRemove() {
-//        this.deletedAt = new Date(System.currentTimeMillis());
-//    }
-
 
 }

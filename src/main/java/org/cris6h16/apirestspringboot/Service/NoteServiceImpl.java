@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,7 @@ public class NoteServiceImpl implements NoteService {
                 .title(note.getTitle())
                 .content(note.getContent())
                 .user(user)
+                .updatedAt(new Date())
                 .build();
 
         noteRepository.save(noteEntity);
@@ -75,7 +77,7 @@ public class NoteServiceImpl implements NoteService {
                         .id(note.getId())
                         .title(note.getTitle())
                         .content(note.getContent())
-                        .createdAt(note.getCreatedAt())
+                        .updatedAt(note.getUpdatedAt())
                         .updatedAt(note.getUpdatedAt())
                         .build())
                 .collect(Collectors.toList());
@@ -96,7 +98,6 @@ public class NoteServiceImpl implements NoteService {
                 .id(note.getId())
                 .title(note.getTitle())
                 .content(note.getContent())
-                .createdAt(note.getCreatedAt())
                 .updatedAt(note.getUpdatedAt())
                 .build();
     }
@@ -119,6 +120,7 @@ public class NoteServiceImpl implements NoteService {
                         .user(user)
                         .title(note.getTitle())
                         .content(note.getContent())
+                        .updatedAt(new Date())
                         .build()
                 );
 

@@ -64,11 +64,6 @@ public class UserEntity implements Cloneable{
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 
-//  // won't delete softly
-//    @Column(name = "deleted_at")
-//    @Temporal(TemporalType.DATE)
-//    private Date deletedAt;
-
     @ManyToMany(fetch = FetchType.EAGER,
             cascade = {CascadeType.PERSIST, CascadeType.REFRESH}, // i don't want to delete the roles when I delete a user, but I want to save the unsaved roles(id=null)
             targetEntity = RoleEntity.class)
@@ -98,14 +93,4 @@ public class UserEntity implements Cloneable{
         }
     }
 
-    // TODO: fix  =>  Single Responsibility Principle is violated here.
-    @PrePersist
-    public void prePersist() {
-        createdAt = new Date(System.currentTimeMillis());
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = new Date(System.currentTimeMillis());
-    }
 }

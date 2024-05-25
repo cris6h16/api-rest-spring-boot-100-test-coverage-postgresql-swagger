@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
 @Transactional(rollbackFor = Exception.class)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserRepositoryTest {
 
     //TODO: DOC MY TROUBLE WITH save() instead of saveAndFlush() in H2
@@ -67,7 +68,6 @@ public class UserRepositoryTest {
         // `usr`
         initializeAndPrepare();
     }
-
 
     /**
      * Tests the {@link UserRepository#findByUsername(String)} method.<br>

@@ -16,7 +16,5 @@ public class PublicNoteDTO {
     private Long id;
     private String title;
     private String content;
-    private Date createdAt;
     private Date updatedAt;
-    private Date deletedAt;
 }

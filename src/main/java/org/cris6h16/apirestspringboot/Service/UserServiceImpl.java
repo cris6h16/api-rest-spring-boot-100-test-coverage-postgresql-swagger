@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,6 +60,7 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .email(dto.getEmail())
                 .roles(Set.of(roles)) //cascading
+                .createdAt(new Date())
                 .build());
 
         return saved.getId();
@@ -102,6 +104,9 @@ public class UserServiceImpl implements UserService {
         boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
         boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
         boolean updatePassword = dto.getPassword() != null && !dto.getPassword().isBlank() && !passwordEncoder.matches(dto.getPassword(), usr.getPassword());
+        boolean wantUpdate = updateUsername || updateEmail || updatePassword;
+
+        if (!wantUpdate) return;
 
         if (updateUsername) usr.setUsername(dto.getUsername());
         if (updateEmail) usr.setEmail(dto.getEmail());
@@ -109,6 +114,7 @@ public class UserServiceImpl implements UserService {
             verifyPassword(dto);// throws if not
             usr.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
+        usr.setUpdatedAt(new Date());
         userRepository.save(usr);
     }
 
