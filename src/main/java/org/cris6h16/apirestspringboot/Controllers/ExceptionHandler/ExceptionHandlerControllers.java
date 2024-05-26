@@ -27,24 +27,6 @@ public class ExceptionHandlerControllers {
         this.objectMapper = objectMapper;
     }
 
-    @ExceptionHandler(value = {DataIntegrityViolationException.class})
-    public ResponseEntity<String> handleConflict(DataIntegrityViolationException ex) {
-        String msg = ex.getMessage();
-        String forClient = Cons.ExceptionHandler.defMsg.DataIntegrityViolation.UNHANDLED;
-
-        boolean inUsername = thisContains(msg, "unique constraint", USERNAME_UNIQUE_NAME);
-        boolean inEmail = thisContains(msg, "unique constraint", EMAIL_UNIQUE_NAME);
-        boolean isHandledUniqueViolation = inUsername || inEmail;
-
-        if (isHandledUniqueViolation) {
-            forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
-            log.debug(forClient, msg);
-            return buildResponse(HttpStatus.CONFLICT, forClient);
-        }
-
-        log.error(forClient, msg);
-        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
-    }
 
 
     @ExceptionHandler(value = {ConstraintViolationException.class})

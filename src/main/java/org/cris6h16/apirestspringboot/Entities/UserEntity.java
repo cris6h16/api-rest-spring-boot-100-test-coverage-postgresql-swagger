@@ -34,6 +34,7 @@ indexes = {
 @Builder
 public class UserEntity {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)

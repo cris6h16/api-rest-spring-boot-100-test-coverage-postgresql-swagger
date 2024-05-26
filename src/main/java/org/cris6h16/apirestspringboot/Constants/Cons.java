@@ -1,4 +1,5 @@
 package org.cris6h16.apirestspringboot.Constants;
+import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 
 public class Cons {
     public class User {
@@ -24,7 +25,13 @@ public class Cons {
 
         public static class Fails {
             public static final String NOT_FOUND = "User not found";
-            public static final String NULL = "User received is null";
+        }
+
+        /**
+         * {@link CreateUpdateUserDTO}
+         */
+        public static class DTO {
+            public static final String NULL = "User to update/create cannot be null";
         }
     }
 
@@ -61,11 +68,11 @@ public class Cons {
         }
     }
 
-    // use in the final: {}, used to format in the log
+    // todo: correct ExceptionHandler pass to service
     public class ExceptionHandler{
         public class defMsg{
             public class DataIntegrityViolation{
-                public static final String UNHANDLED = "Data Integrity Violation, probably you violated Constrains like Unique Constrain {}";
+                public static final String UNHANDLED = "Something went wrong ( UNHANDLED ), probably you're violating some like a unique constraint (e.g. email or username already exists)";
 
             }
             public class ConstraintViolation{

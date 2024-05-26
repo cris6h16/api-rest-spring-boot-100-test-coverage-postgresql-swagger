@@ -2,16 +2,18 @@ package org.cris6h16.apirestspringboot.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.Exceptions.service.UserServiceException;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.PreExceptions.NotFoundException;
-import org.cris6h16.apirestspringboot.Service.PreExceptions.PasswordIsTooShortException;
-import org.cris6h16.apirestspringboot.Service.PreExceptions.AlreadyExistsException;
 import org.cris6h16.apirestspringboot.DTOs.*;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,16 +22,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.EMAIL_UNIQUE_MSG;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
+
 @Service
 public class UserServiceImpl implements UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
@@ -50,23 +55,60 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(CreateUpdateUserDTO dto)  {
-        verifyPassword(dto);// throws if not
+    public Long create(CreateUpdateUserDTO dto) {
+        try {
+            verifyDTO(dto, "create");
 
-        RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
-                .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
+            RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
+                    .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
-        UserEntity saved = userRepository.save(UserEntity.builder()
-                .username(dto.getUsername())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .email(dto.getEmail())
-                .roles(Set.of(roles)) //cascading
-                .createdAt(new Date())
-                .build());
+            UserEntity saved = userRepository.save(UserEntity.builder()
+                    .username(dto.getUsername())
+                    .password(passwordEncoder.encode(dto.getPassword()))
+                    .email(dto.getEmail())
+                    .roles(Set.of(roles)) //cascading
+                    .createdAt(new Date())
+                    .build());
 
-        return saved.getId();
+            return saved.getId();
+
+        } catch (Exception e) {
+            throw exceptionHandled(e);
+        }
     }
 
+    UserServiceException exceptionHandled(Exception e) {
+        String forClient;
+        HttpStatus recommendedStatus;
+
+        if (e instanceof DataIntegrityViolationException) {
+            recommendedStatus = HttpStatus.CONFLICT;
+            boolean inUsername = thisContains(e.getMessage(), "unique constraint", USERNAME_UNIQUE_NAME);
+            boolean inEmail = thisContains(e.getMessage(), "unique constraint", EMAIL_UNIQUE_NAME);
+            boolean isHandledUniqueViolation = inUsername || inEmail;
+            if (isHandledUniqueViolation) {
+                forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
+            } else {
+                forClient = Cons.ExceptionHandler.defMsg.DataIntegrityViolation.UNHANDLED;
+                log.error(forClient, e.getMessage());
+            }
+        }
+
+        else if (e instanceof IllegalArgumentException){
+            forClient = e.getMessage();
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+        }
+
+        return new UserServiceException()
+    }
+
+    public boolean thisContains(String msg, String... strings) {
+        boolean contains = true;
+        for (String s : strings) {
+            contains = contains && msg.contains(s);
+        }
+        return contains;
+    }
 
     @Override
     @Transactional(
@@ -110,7 +152,7 @@ public class UserServiceImpl implements UserService {
         if (updateUsername) usr.setUsername(dto.getUsername());
         if (updateEmail) usr.setEmail(dto.getEmail());
         if (updatePassword) {
-            verifyPassword(dto);// throws if not
+            verifyDTO(dto);// throws if not
             usr.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
         usr.setUpdatedAt(new Date());
@@ -122,9 +164,17 @@ public class UserServiceImpl implements UserService {
      * then it means that the password always will have a length greater than 8
      *
      * @param dto the user to verify its password
+     * @throws Exception                if the operation passed is not implemented
+     * @throws IllegalArgumentException and its message If is business logic error
      */
-    void verifyPassword(CreateUpdateUserDTO dto) {
-        if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
+    void verifyDTO(CreateUpdateUserDTO dto, String operation) throws Exception {
+        if (dto == null) throw new IllegalArgumentException(Cons.User.DTO.NULL);
+
+        boolean isCreate = operation.equals("create");
+        boolean passInvalid = dto.getPassword() == null || dto.getPassword().length() < 8;
+
+        if (isCreate && passInvalid) throw new IllegalArgumentException(PASS_IS_TOO_SHORT_MSG);
+        else throw new Exception("Operation not implemented");
     }
 
     @Override
