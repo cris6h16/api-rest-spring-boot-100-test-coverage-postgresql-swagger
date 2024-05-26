@@ -1,4 +1,5 @@
 package org.cris6h16.apirestspringboot.Constants;
+
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 
 public class Cons {
@@ -50,38 +51,20 @@ public class Cons {
 
     public class Auth {
         public class Fails {
-            public static final String UNAUTHENTICATED_MSG = "You must be authenticated to perform this action";
             public static final String IS_NOT_YOUR_ID_MSG = "You aren't the owner of this id";
-
-            public class Authority {
-                public static final String IS_NOT_ADMIN = "You must be an admin to perform this action";
-            }
         }
     }
 
-    public class Controller {
-        public class Fails {
-            public class Argument {
-
-                public static final String DATATYPE_PASSED_WRONG = "The datatype passed by you is wrong";
-            }
+    public class Response {
+        public static class ForClient {
+            public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
         }
     }
 
-    // todo: correct ExceptionHandler pass to service
-    public class ExceptionHandler{
-        public class defMsg{
-            public class DataIntegrityViolation{
-                public static final String UNHANDLED = "Something went wrong ( UNHANDLED ), probably you're violating some like a unique constraint (e.g. email or username already exists)";
-
-            }
-            public class ConstraintViolation{
-                public static final String UNHANDLED = "Validation failed for the provided input, probably you provided an invalid email, blank username, etc {}";
-            }
-            public class IllegalArgumentException{
-                public static final String UNHANDLED = "Invalid input provided, probably you passed a wrong datatype required, etc {}";
-            public static final String NUMBER_FORMAT = "You passed a wrong number format";
-            }
+    public class Services {
+        public static class User {
+            public static final String ID_INVALID = "Invalid user id";
         }
     }
+
 }

@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,44 +29,15 @@ public class ExceptionHandlerControllers {
     }
 
 
-
-    @ExceptionHandler(value = {ConstraintViolationException.class})
-    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException ex) {
-        String forClient = Cons.ExceptionHandler.defMsg.ConstraintViolation.UNHANDLED;
-        Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
-        if (!violations.isEmpty()) {
-            forClient = violations.iterator().next().getMessage();
-            log.debug("ConstraintViolationException: {}", forClient);
-            return buildResponse(HttpStatus.BAD_REQUEST, forClient);
-        }
-
-        log.error(forClient, ex.getMessage());
-        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
+    @ExceptionHandler(value = {AbstractServiceExceptionWithStatus.class})
+    public ResponseEntity<String> handleServiceExceptionWithStatus(AbstractServiceExceptionWithStatus ex) {
+        return buildResponse(ex.getRecommendedStatus(), ex.getMessage());
     }
-
-
-    @ExceptionHandler(value = {IllegalArgumentException.class})
-    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
-        String forClient = Cons.ExceptionHandler.defMsg.IllegalArgumentException.UNHANDLED;
-        String msg = ex.getMessage();
-
-        if (ex instanceof NumberFormatException) {
-            forClient = Cons.ExceptionHandler.defMsg.IllegalArgumentException.NUMBER_FORMAT;
-            log.debug(forClient, msg);
-            return buildResponse(HttpStatus.BAD_REQUEST, forClient);
-        }
-
-        log.error(forClient, msg);
-        return buildResponse(HttpStatus.BAD_REQUEST, forClient);
-    }
-
 
     @ExceptionHandler(value = {ResponseStatusException.class})
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
         return buildResponse(HttpStatus.valueOf(ex.getStatusCode().value()), ex.getReason());
     }
-
-//    @ExceptionHandler(Exception.class) // absorbs some exceptions
 
     String getMapInJson(Map map) {
         try {
