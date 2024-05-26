@@ -1,4 +1,5 @@
 spring:
+
   application:
     name: api-rest-spring-boot
 
@@ -36,6 +37,6 @@ debug: true
 server:
   port: 8080
   error:
-    include-message: always
+    include-message: never
     include-exception: off
     include-stacktrace: never

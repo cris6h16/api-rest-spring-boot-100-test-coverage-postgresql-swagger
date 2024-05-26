@@ -81,8 +81,7 @@ public class UserEntity {
     @JoinColumn(name = "user_id",
             foreignKey = @ForeignKey(name = "fk_notes_user_id"),
             referencedColumnName = "id")
-    @Getter(AccessLevel.NONE)
-    // doesn't have sense for me: `user.getNotes().add(note)` or `user.getNotes().remove(note)`
+    @Getter(AccessLevel.NONE) // avoid get all
     @Setter(AccessLevel.NONE) // the best would be to add not replace
     private Set<NoteEntity> notes = new HashSet<>();
 

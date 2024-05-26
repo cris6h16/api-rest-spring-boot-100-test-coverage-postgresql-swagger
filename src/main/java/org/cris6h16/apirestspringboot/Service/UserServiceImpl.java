@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.PreExceptions.NotFoundException;
 import org.cris6h16.apirestspringboot.Service.PreExceptions.PasswordIsTooShortException;
 import org.cris6h16.apirestspringboot.Service.PreExceptions.AlreadyExistsException;
 import org.cris6h16.apirestspringboot.DTOs.*;
@@ -49,7 +50,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(CreateUpdateUserDTO dto) {
+    public Long create(CreateUpdateUserDTO dto)  {
         verifyPassword(dto);// throws if not
 
         RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
@@ -73,8 +74,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public PublicUserDTO get(Long id) {
-        UserEntity usr = userRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
+        UserEntity usr = userRepository.findById(id).orElseThrow(NotFoundException.User::new);
 
         // get roles --> is EAGER
         Set<RoleDTO> roles = usr.getRoles().stream()
@@ -98,8 +98,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void update(Long id, CreateUpdateUserDTO dto) {
-        UserEntity usr = userRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
+        UserEntity usr = userRepository.findById(id).orElseThrow(NotFoundException.User::new);
 
         boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
         boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
@@ -122,7 +121,7 @@ public class UserServiceImpl implements UserService {
      * The unique earlier verification, this is in the service layer due that the password pass to repository encrypted
      * then it means that the password always will have a length greater than 8
      *
-     * @param dto
+     * @param dto the user to verify its password
      */
     void verifyPassword(CreateUpdateUserDTO dto) {
         if (dto.getPassword() == null || dto.getPassword().length() < 8) throw new PasswordIsTooShortException();
@@ -134,8 +133,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void delete(Long id) {
-        UserEntity usr = userRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
+        UserEntity usr = userRepository.findById(id).orElseThrow(NotFoundException.User::new);
         userRepository.delete(usr);
     }
 

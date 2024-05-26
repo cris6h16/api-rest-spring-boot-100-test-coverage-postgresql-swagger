@@ -24,6 +24,7 @@ public class Cons {
 
         public static class Fails {
             public static final String NOT_FOUND = "User not found";
+            public static final String NULL = "User received is null";
         }
     }
 

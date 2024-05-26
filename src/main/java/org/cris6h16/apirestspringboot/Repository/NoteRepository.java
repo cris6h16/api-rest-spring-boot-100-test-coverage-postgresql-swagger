@@ -16,7 +16,7 @@ import java.util.Optional;
 
 public interface NoteRepository extends JpaRepository<NoteEntity, Long>, PagingAndSortingRepository<NoteEntity, Long> {
 
-//    @Profile("hola")
+    @Profile("hola")
     @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
     List<NoteEntity> findByUserId(Long userID);
 
