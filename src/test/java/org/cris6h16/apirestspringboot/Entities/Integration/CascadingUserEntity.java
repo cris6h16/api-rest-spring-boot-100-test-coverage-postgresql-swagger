@@ -129,7 +129,7 @@ public class CascadingUserEntity {
         // Assert
         assertThat(userRepository.count()).isEqualTo(1);
         assertThat(noteRepository.count()).isEqualTo(notes.size());
-        assertThat(noteRepository.findByUserId(usr.getId()).toArray())
+        assertThat(noteRepository.findByUser(usr).toArray())
                 .containsAll(notes);
     }
 

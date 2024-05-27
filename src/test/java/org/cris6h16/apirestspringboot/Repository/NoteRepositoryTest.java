@@ -78,33 +78,34 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUserId(Long)} method.<br>
+     * Tests the {@link  NoteRepository#findByUser(UserEntity)} method.<br>
      * The method should return a list of notes(size=5) of each user.
      */
     @Test
-    void NoteRepository_findByUserId_returnAListOfHisNotes() {
+    void NoteRepository_findByUser_returnAListOfHisNotes() {
         // Arrange
         assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);
 
         for (UserEntity user : userNotes.keySet()) {
             // Act
-            List<NoteEntity> notes = noteRepository.findByUserId(user.getId());
+            List<NoteEntity> notes = noteRepository.findByUser(user);
 
             // Assert
-            assertThat(notes).hasSize(5);
-            assertThat(notes).containsAll(userNotes.get(user));
+            assertThat(notes)
+                    .hasSize(5)
+                    .containsAll(userNotes.get(user));
         }
     }
 
     /**
-     * Tests the {@link NoteRepository#findByIdAndUserId(Long, Long)} method.<br>
+     * Tests the {@link NoteRepository#findByIdAndUser(Long, UserEntity)} method.<br>
      * Try to fetch each note(10) with each user(2), if the user is the owner of the note
      * then the method should return a non-empty {@code Optional} with the note, otherwise
      * it should return an empty {@code Optional}.
      */
     @Test
-    void NoteRepository_findByIdAndUserId_returnANonemptyOptionalIfIsHisNote() {
+    void NoteRepository_findByIdAndUser_returnANonemptyOptionalIfIsHisNote() {
         // Arrange
         assertThat(userRepository.count()).isEqualTo(2);
         assertThat(noteRepository.count()).isEqualTo(10);
@@ -112,45 +113,45 @@ public class NoteRepositoryTest {
         for (UserEntity usr : userNotes.keySet()) {
             for (NoteEntity n : userNotes.values().stream().flatMap(Set::stream).toList()) { // { {}, {} } -> { , , , , }
                 // Act
-                Optional<NoteEntity> found = noteRepository.findByIdAndUserId(n.getId(), usr.getId());
+                Optional<NoteEntity> found = noteRepository.findByIdAndUser(n.getId(), usr);
 
-                boolean isOwner = noteRepository.findByUserId(usr.getId()).contains(n);
+                boolean isOwner = n.getUser().getId().equals(usr.getId());
                 // Assert
                 if (isOwner) {
                     assertThat(found).isPresent();
-                    assertThat(found.get().getId()).isEqualTo(n.getId());
-                } else assertThat(found).isEmpty();
+                    assertThat(found.get()).isEqualTo(n);
 
+                } else assertThat(found).isEmpty();
             }
         }
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUserId(Long, Pageable)} )} method <br>
+     * Tests the {@link  NoteRepository#findByUser(UserEntity, Pageable)} )} method <br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
-     * the {@code title} field in ascending order.
+     * the {@link NoteEntity#getTitle()} field in ascending order.
      */
     @Test
-    void NoteRepository_FindByUserIdPageable_returnPagesASC() {
+    void NoteRepository_FindByUserPageable_returnPagesASC() {
         // Arrange
         assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);
         byte pageSize = 2;
         byte pageNumber = 0;
-        Sort sort = Sort.by(Sort.Order.asc("n.title"));
+        Sort sort = Sort.by(Sort.Order.asc("title"));
         byte[] expectedEachPageElements = new byte[]{2, 2, 1};
 
         byte expectedTotalPages = 3;
         byte expectedTotalElements = 5;
 
-        for (Long userId : userNotes.keySet().stream().map(UserEntity::getId).toList()) {
+        for (UserEntity usr : userNotes.keySet()) {
             pageNumber = 0;
 
             for (byte thisPageSize : expectedEachPageElements) {
                 // Act
                 Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-                Page<NoteEntity> page = noteRepository.findByUserId(userId, pageable);
+                Page<NoteEntity> page = noteRepository.findByUser(usr, pageable);
 
                 // Assert
                 assertThat(page).isNotNull();
@@ -162,38 +163,37 @@ public class NoteRepositoryTest {
                 assertThat(page.stream().map(NoteEntity::getTitle))
                         .isSortedAccordingTo(Comparator.naturalOrder());
 
-                if (++pageNumber >= page.getTotalPages())
-                    break;
+                if (++pageNumber >= page.getTotalPages()) break;
             }
         }
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUserId(Long, Pageable)} )} method <br>
+     * Tests the {@link  NoteRepository#findByUser(UserEntity, Pageable)} )} method <br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in descending order.
      */
     @Test
-    void NoteRepository_FindByUserIdPageable_returnPagesDES() {
+    void NoteRepository_FindByUserPageable_returnPagesDES() {
         // Arrange
         assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);
         byte pageSize = 2;
         byte pageNumber = 0;
-        Sort sort = Sort.by(Sort.Order.desc("n.title"));
+        Sort sort = Sort.by(Sort.Order.desc("title"));
         byte[] expectedEachPageElements = new byte[]{2, 2, 1};
 
         byte expectedTotalPages = 3;
         byte expectedTotalElements = 5;
 
-        for (Long userId : userNotes.keySet().stream().map(UserEntity::getId).toList()) {
+        for (UserEntity usr : userNotes.keySet()) {
             pageNumber = 0;
 
             for (byte thisPageSize : expectedEachPageElements) {
                 // Act
                 Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-                Page<NoteEntity> page = noteRepository.findByUserId(userId, pageable);
+                Page<NoteEntity> page = noteRepository.findByUser(usr, pageable);
 
                 // Assert
                 assertThat(page).isNotNull();
