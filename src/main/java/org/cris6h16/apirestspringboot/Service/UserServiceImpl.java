@@ -20,6 +20,7 @@ import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,15 +45,18 @@ public class UserServiceImpl implements UserService {
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
     ObjectMapper objectMapper;
+    ServiceUtils serviceUtils;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper,
+                           ServiceUtils serviceUtils) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.objectMapper = objectMapper;
+        this.serviceUtils = serviceUtils;
     }
 
     @Override
@@ -82,6 +86,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     @Override
     @Transactional(
             isolation = Isolation.READ_UNCOMMITTED, // read uncommitted to avoid locks
@@ -89,8 +94,7 @@ public class UserServiceImpl implements UserService {
     )
     public PublicUserDTO get(Long id) {
         try {
-            verifyId(id);
-            UserEntity usr = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+            UserEntity usr = validateIdAndGetUser(id);
 
             // get roles --> is EAGER
             Set<RoleDTO> roles = usr.getRoles().stream()
@@ -119,9 +123,7 @@ public class UserServiceImpl implements UserService {
     )
     public void update(Long id, CreateUpdateUserDTO dto) {
         try {
-            verifyId(id);
-
-            UserEntity usr = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+            UserEntity usr = validateIdAndGetUser(id);
 
             boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
             boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
@@ -133,7 +135,7 @@ public class UserServiceImpl implements UserService {
             if (updateUsername) usr.setUsername(dto.getUsername());
             if (updateEmail) usr.setEmail(dto.getEmail());
             if (updatePassword) {
-                verifyPasswordInDTO(dto);// throws if not
+                verifyPasswordInDTO(dto);
                 usr.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
             usr.setUpdatedAt(new Date());
@@ -145,6 +147,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
@@ -152,10 +155,8 @@ public class UserServiceImpl implements UserService {
     )
     public void delete(Long id) {
         try {
-            verifyId(id);
-            UserEntity usr = userRepository.findById(id).orElseThrow(UserNotFoundException::new);
+            UserEntity usr = validateIdAndGetUser(id);
             userRepository.delete(usr);
-
         } catch (Exception e) {
             throw createATraversalExceptionHandled(e);
         }
@@ -206,65 +207,12 @@ public class UserServiceImpl implements UserService {
         if (passInvalid) throw new PasswordTooShortException();
     }
 
-    /**
-     * @param id the id to verify
-     * @throws AbstractServiceExceptionWithStatus if the id is invalid
-     */
-    void verifyId(Long id) {
-        if (id == null || id > 0) throw new InvalidIdException();
+
+    private UserEntity validateIdAndGetUser(Long id) {
+        return this.serviceUtils.validateIdAndGetUser(id);
     }
 
-
-
-    UserServiceTraversalException createATraversalExceptionHandled(@NotNull Exception e) {
-        String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
-        HttpStatus recommendedStatus = null; // also here, but with null
-
-        // unique violations { primary key, unique constraints }
-        if (e instanceof DuplicateKeyException) {
-            recommendedStatus = HttpStatus.CONFLICT;
-            boolean inUsername = thisContains(e.getMessage(), USERNAME_UNIQUE_NAME);
-            boolean inEmail = thisContains(e.getMessage(), EMAIL_UNIQUE_NAME);
-            boolean isHandledUniqueViolation = inUsername || inEmail;
-
-            if (isHandledUniqueViolation) forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
-            else log.error("DuplicateKeyException: {}", e.getMessage());
-        }
-
-        // data integrity violations { not blank, invalid email, max length, etc }
-        if (e instanceof ConstraintViolationException && forClient.isBlank()) {
-            recommendedStatus = HttpStatus.BAD_REQUEST;
-            Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) e).getConstraintViolations();
-
-            if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
-            else log.error("ConstraintViolationException: {}", e.getMessage());
-        }
-
-        // customs exceptions with status { user not found, password too short }
-        if (e instanceof AbstractServiceExceptionWithStatus && forClient.isBlank()) {
-            recommendedStatus = ((AbstractServiceExceptionWithStatus) e).getRecommendedStatus();
-            forClient = e.getMessage();
-        }
-
-        // unhandled exceptions -> generic error
-        if (forClient.isBlank()) {
-            if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            forClient = Cons.Response.ForClient.GENERIC_ERROR;
-            log.error("Unhandled exception: {}", e.getMessage());
-        }
-
-
-        return new UserServiceTraversalException(forClient, recommendedStatus);
+    private UserServiceTraversalException createATraversalExceptionHandled(Exception e) {
+        return (UserServiceTraversalException) serviceUtils.createATraversalExceptionHandled(e, true);
     }
-
-
-    public boolean thisContains(String msg, String... strings) {
-        boolean contains = true;
-        for (String s : strings) {
-            contains = contains && msg.contains(s);
-        }
-        return contains;
-    }
-
-
 }

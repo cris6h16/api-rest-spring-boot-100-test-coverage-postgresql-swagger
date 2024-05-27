@@ -18,6 +18,11 @@ import java.util.Optional;
 public interface NoteRepository extends JpaRepository<NoteEntity, Long>,
         PagingAndSortingRepository<NoteEntity, Long> {
 
+    /**
+     * <b>JUST FOR TESTING</b> you should never try to retrieve all notes
+     * @param user user
+     * @return All notes owned by the user
+     */
     List<NoteEntity> findByUser(UserEntity user);
 
     Optional<NoteEntity> findByIdAndUser(Long noteId, UserEntity user);
@@ -28,7 +33,7 @@ public interface NoteRepository extends JpaRepository<NoteEntity, Long>,
 
 
 
-    // PLZ avoid UNIDIRECTIONALs
+    // PLZ avoid UNIDIRECTIONALs to avoid this kind of queries
 //    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
 //    List<NoteEntity> findByUserId(Long userID);
 //
