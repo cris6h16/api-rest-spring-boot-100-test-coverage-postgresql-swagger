@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -13,14 +14,12 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.*;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.InvalidIdException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,11 +36,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
-    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
@@ -242,15 +240,8 @@ public class UserServiceImpl implements UserService {
             else log.error("ConstraintViolationException: {}", e.getMessage());
         }
 
-        // business logic errors pre-handled { password too short }
-        if (e instanceof IllegalArgumentException && forClient.isBlank()) {
-            recommendedStatus = HttpStatus.BAD_REQUEST;
-            if (thisContains(e.getMessage(), PASS_IS_TOO_SHORT_MSG)) forClient = PASS_IS_TOO_SHORT_MSG;
-            else log.error("IllegalArgumentException: {}", e.getMessage());
-        }
-
         // customs exceptions with status { user not found, password too short }
-        if (e instanceof AbstractServiceExceptionWithStatus) {
+        if (e instanceof AbstractServiceExceptionWithStatus && forClient.isBlank()) {
             recommendedStatus = ((AbstractServiceExceptionWithStatus) e).getRecommendedStatus();
             forClient = e.getMessage();
         }

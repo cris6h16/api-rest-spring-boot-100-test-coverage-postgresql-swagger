@@ -49,6 +49,10 @@ public class Cons {
 
     }
 
+    public class CommonInEntity {
+            public static final String ID_INVALID = "Invalid id";
+    }
+
     public class Auth {
         public class Fails {
             public static final String IS_NOT_YOUR_ID_MSG = "You aren't the owner of this id";
@@ -58,12 +62,6 @@ public class Cons {
     public class Response {
         public static class ForClient {
             public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
-        }
-    }
-
-    public class Services {
-        public static class User {
-            public static final String ID_INVALID = "Invalid user id";
         }
     }
 

@@ -1,13 +1,22 @@
 package org.cris6h16.apirestspringboot.Service;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.Common.InvalidIdException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceTraversalException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +29,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Fails.NOT_FOUND;
 
 @Service
+@Slf4j
 public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
@@ -41,22 +52,28 @@ public class NoteServiceImpl implements NoteService {
             rollbackFor = Exception.class
     )
     public Long create(CreateNoteDTO note, Long userId) {
+        try {
+            validateId(userId);
+            UserEntity user = userRepository.findById(userId)
+                    .orElseThrow(UserNotFoundException::new);
 
-        UserEntity user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, Cons.User.Fails.NOT_FOUND));
+            NoteEntity noteEntity = NoteEntity.builder()
+                    .title(note.getTitle())
+                    .content(note.getContent())
+                    .updatedAt(new Date())
+                    .build();
 
-        NoteEntity noteEntity = NoteEntity.builder()
-                .title(note.getTitle())
-                .content(note.getContent())
-                .updatedAt(new Date())
-                .build();
+            noteEntity.setUser(user);
+            noteRepository.save(noteEntity);
 
-        noteEntity.setUser(user);
-        noteRepository.save(noteEntity);
+            return noteEntity.getId();
 
-        return noteEntity.getId();
+        } catch (Exception e) {
+            throw getTraversalException(e);
+        }
     }
+
+
 
     @Override
     @Transactional(
@@ -142,4 +159,36 @@ public class NoteServiceImpl implements NoteService {
         noteRepository.delete(note);
     }
 
+    NoteServiceTraversalException getTraversalException(Exception e) {
+        String forClient = "";
+        HttpStatus recommendedStatus = null;
+
+        // data integrity violations { not blank, invalid email, max length, etc }
+        if (e instanceof ConstraintViolationException && forClient.isBlank()) {
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+            Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) e).getConstraintViolations();
+
+            if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
+            else log.error("ConstraintViolationException: {}", e.getMessage());
+        }
+
+        // validations here { user not found }
+        if (e instanceof AbstractServiceExceptionWithStatus && forClient.isBlank()) {
+            recommendedStatus = ((AbstractServiceExceptionWithStatus) e).getRecommendedStatus();
+            forClient = e.getMessage();
+        }
+
+        // unhandled exceptions -> generic error
+        if (forClient.isBlank()) {
+            if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            forClient = Cons.Response.ForClient.GENERIC_ERROR;
+            log.error("Unhandled exception: {}", e.getMessage());
+        }
+
+        return new NoteServiceTraversalException(forClient, recommendedStatus);
+    }
+
+    void validateId(Long id) {
+        if (id == null || id <= 0) throw new InvalidIdException();
+    }
 }
