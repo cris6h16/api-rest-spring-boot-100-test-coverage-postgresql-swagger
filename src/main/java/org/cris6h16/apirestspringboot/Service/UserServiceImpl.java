@@ -1,31 +1,24 @@
 package org.cris6h16.apirestspringboot.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.*;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -35,8 +28,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 
 @Service
 @Slf4j
@@ -66,7 +57,7 @@ public class UserServiceImpl implements UserService {
     )
     public Long create(CreateUpdateUserDTO dto) {
         try {
-            verifyPasswordInDTO(dto);
+            verifyDTONotNullAndPassword(dto);
 
             RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
                     .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
@@ -135,7 +126,7 @@ public class UserServiceImpl implements UserService {
             if (updateUsername) usr.setUsername(dto.getUsername());
             if (updateEmail) usr.setEmail(dto.getEmail());
             if (updatePassword) {
-                verifyPasswordInDTO(dto);
+                verifyDTONotNullAndPassword(dto);
                 usr.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
             usr.setUpdatedAt(new Date());
@@ -201,7 +192,7 @@ public class UserServiceImpl implements UserService {
      * @param dto the user to verify its password
      * @throws AbstractServiceExceptionWithStatus If dto is null || password in dto is invalid
      */
-    void verifyPasswordInDTO(CreateUpdateUserDTO dto) {
+    void verifyDTONotNullAndPassword(CreateUpdateUserDTO dto) {
         if (dto == null) throw new CreateUpdateDTOIsNullException();
         boolean passInvalid = (dto.getPassword() == null || dto.getPassword().length() < 8);
         if (passInvalid) throw new PasswordTooShortException();
