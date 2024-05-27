@@ -15,7 +15,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @Table(name = "notes")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"user"})
+@ToString
 @Getter
 @Setter
 @Builder
@@ -37,5 +37,11 @@ public class NoteEntity {
     @Column(name = "updated_at")
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY,
+            cascade = {},
+            optional = true,
+            targetEntity = UserEntity.class)
+    private UserEntity user;
 
 }

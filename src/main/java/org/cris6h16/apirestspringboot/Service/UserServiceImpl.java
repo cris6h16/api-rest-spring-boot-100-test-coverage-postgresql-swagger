@@ -12,6 +12,10 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.*;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.InvalidIdException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
@@ -76,7 +80,7 @@ public class UserServiceImpl implements UserService {
             return saved.getId();
 
         } catch (Exception e) {
-            throw createAnExceptionHandled(e);
+            throw createATraversalExceptionHandled(e);
         }
     }
 
@@ -105,7 +109,7 @@ public class UserServiceImpl implements UserService {
                     .build();
 
         } catch (Exception e) {
-            throw createAnExceptionHandled(e);
+            throw createATraversalExceptionHandled(e);
         }
     }
 
@@ -138,7 +142,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(usr);
 
         } catch (Exception e) {
-            throw createAnExceptionHandled(e);
+            throw createATraversalExceptionHandled(e);
         }
     }
 
@@ -155,7 +159,7 @@ public class UserServiceImpl implements UserService {
             userRepository.delete(usr);
 
         } catch (Exception e) {
-            throw createAnExceptionHandled(e);
+            throw createATraversalExceptionHandled(e);
         }
     }
 
@@ -186,7 +190,7 @@ public class UserServiceImpl implements UserService {
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
-            throw createAnExceptionHandled(e);
+            throw createATraversalExceptionHandled(e);
         }
     }
 
@@ -214,7 +218,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-    UserServiceExceptionHandled createAnExceptionHandled(@NotNull Exception e) {
+    UserServiceTraversalException createATraversalExceptionHandled(@NotNull Exception e) {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
 
@@ -259,7 +263,7 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        return new UserServiceExceptionHandled(forClient, recommendedStatus);
+        return new UserServiceTraversalException(forClient, recommendedStatus);
     }
 
 

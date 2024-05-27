@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Repository;
 
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,17 +15,27 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public interface NoteRepository extends JpaRepository<NoteEntity, Long>, PagingAndSortingRepository<NoteEntity, Long> {
+public interface NoteRepository extends JpaRepository<NoteEntity, Long>,
+        PagingAndSortingRepository<NoteEntity, Long> {
 
-    @Profile("hola")
-    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
-    List<NoteEntity> findByUserId(Long userID);
+    List<NoteEntity> findByUser(UserEntity user);
 
-    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE n.id = ?1 AND  u.id = ?2")
-    Optional<NoteEntity> findByIdAndUserId(Long noteId, Long userId);
+    Optional<NoteEntity> findByIdAndUser(Long noteId, UserEntity user);
 
-    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
-    Page<NoteEntity> findByUserId(Long userID, Pageable pageable);
+    Page<NoteEntity> findByUser(UserEntity user, Pageable pageable);
 
+
+
+
+
+    // PLZ avoid UNIDIRECTIONALs
+//    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
+//    List<NoteEntity> findByUserId(Long userID);
+//
+//    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE n.id = ?1 AND  u.id = ?2")
+//    Optional<NoteEntity> findByIdAndUserId(Long noteId, Long userId);
+//
+//    @Query("SELECT n FROM UserEntity u JOIN u.notes n WHERE u.id = ?1")
+//    Page<NoteEntity> findByUserId(Long userID, Pageable pageable);
 
 }

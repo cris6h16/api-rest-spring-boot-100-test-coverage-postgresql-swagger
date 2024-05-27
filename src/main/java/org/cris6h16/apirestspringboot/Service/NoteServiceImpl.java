@@ -52,9 +52,8 @@ public class NoteServiceImpl implements NoteService {
                 .updatedAt(new Date())
                 .build();
 
-//        user.getNotes().add(noteEntity);  // overload
-        user.putNoteEntities(noteEntity);
-        userRepository.save(user);
+        noteEntity.setUser(user);
+        noteRepository.save(noteEntity);
 
         return noteEntity.getId();
     }
@@ -126,8 +125,7 @@ public class NoteServiceImpl implements NoteService {
         noteEntity.setTitle(note.getTitle());
         noteEntity.setContent(note.getContent());
 
-        user.putNoteEntities(noteEntity); // ID exists ? replace : add
-        userRepository.save(user);
+        noteRepository.save(noteEntity);
     }
 
     @Override

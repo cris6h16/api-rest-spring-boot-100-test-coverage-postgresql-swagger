@@ -51,7 +51,7 @@ public class NoteRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-    private Map<UserEntity, NoteEntity[]> userNotes;
+    private Map<UserEntity, Set<NoteEntity>> userNotes;
 
 
     /**
@@ -74,7 +74,7 @@ public class NoteRepositoryTest {
 
         // save users then notes also
         userRepository.saveAllAndFlush(userNotes.keySet());
-
+        noteRepository.saveAllAndFlush(userNotes.values().stream().flatMap(Set::stream).toList());// { {}, {} } -> { , , , , }
     }
 
     /**
@@ -93,7 +93,7 @@ public class NoteRepositoryTest {
 
             // Assert
             assertThat(notes).hasSize(5);
-            assertThat(notes).containsAll(Arrays.asList(userNotes.get(user)));
+            assertThat(notes).containsAll(userNotes.get(user));
         }
     }
 
@@ -106,11 +106,11 @@ public class NoteRepositoryTest {
     @Test
     void NoteRepository_findByIdAndUserId_returnANonemptyOptionalIfIsHisNote() {
         // Arrange
-        assertThat(noteRepository.count()).isEqualTo(10);
         assertThat(userRepository.count()).isEqualTo(2);
+        assertThat(noteRepository.count()).isEqualTo(10);
 
         for (UserEntity usr : userNotes.keySet()) {
-            for (NoteEntity n : userNotes.values().stream().flatMap(Arrays::stream).toList()) { // { [], [] } -> { , , , , }
+            for (NoteEntity n : userNotes.values().stream().flatMap(Set::stream).toList()) { // { {}, {} } -> { , , , , }
                 // Act
                 Optional<NoteEntity> found = noteRepository.findByIdAndUserId(n.getId(), usr.getId());
 
@@ -217,14 +217,10 @@ public class NoteRepositoryTest {
      */
     void initializeAndPrepare() {
         userNotes = new HashMap<>();
-        NoteEntity[] n1 = createNotes(1, 5);
-        NoteEntity[] n2 = createNotes(6, 10);
-        UserEntity user1 = createUser("cris6h16");
-        UserEntity user2 = createUser("github.com/cris6h16");
-        user1.putNoteEntities(n1);
-        user2.putNoteEntities(n2);
-        userNotes.put(user1, n1);
-        userNotes.put(user2, n2);
+        Set<NoteEntity> n1 = setUser(createNotes(1, 5), createUser("cris6h16"));
+        Set<NoteEntity> n2 = setUser(createNotes(6, 10), createUser("github.com/cris6h16"));
+        userNotes.put(n1.iterator().next().getUser(), n1);
+        userNotes.put(n2.iterator().next().getUser(), n2);
     }
 
 
@@ -237,11 +233,17 @@ public class NoteRepositoryTest {
                 .build();
     }
 
-    private NoteEntity[] createNotes(int startSuffix, int endSuffix) {
-        List<NoteEntity> notes = new ArrayList<>();
+    private Set<NoteEntity> createNotes(int startSuffix, int endSuffix) {
+        Set<NoteEntity> notes = new HashSet<>();
         for (int i = startSuffix; i <= endSuffix; i++) {
             notes.add(NoteEntity.builder().title("title" + i).content("content" + i).build());
         }
-        return notes.toArray(new NoteEntity[0]);
+        return notes;
+    }
+
+
+    private Set<NoteEntity> setUser(Set<NoteEntity> notes, UserEntity user) {
+        for (NoteEntity note : notes) note.setUser(user);
+        return notes;
     }
 }

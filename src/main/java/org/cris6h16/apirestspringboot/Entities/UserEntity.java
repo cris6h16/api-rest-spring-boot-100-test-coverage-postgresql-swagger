@@ -65,7 +65,7 @@ public class UserEntity {
     private Date updatedAt;
 
     @ManyToMany(fetch = FetchType.EAGER,
-            cascade = {CascadeType.PERSIST}, // i don't want to delete the roles when I delete a user, but I want to save the unsaved roles(id=null)
+            cascade = {CascadeType.PERSIST},
             targetEntity = RoleEntity.class)
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -82,24 +82,7 @@ public class UserEntity {
     @JoinColumn(name = "user_id",
             foreignKey = @ForeignKey(name = "fk_notes_user_id"),
             referencedColumnName = "id")
-    @Getter(AccessLevel.NONE) // avoid get all
-    @Setter(AccessLevel.NONE) // the best would be to add not replace
     private Set<NoteEntity> notes = new HashSet<>();
-
-
-    /**
-     * todo: Make sure use with eager fetches<br>
-     * Add notes to the user, if any note has an {@code id}, it will replace the existing note with the same {@code id}
-     *
-     * @param notes notes to add
-     */
-    public void putNoteEntities(NoteEntity... notes) {
-        Arrays.stream(notes)
-                .filter(n -> n.getId() != null)
-                .forEach(passed -> this.notes.removeIf(owned -> owned.getId().equals(passed.getId())));
-        this.notes.addAll(Set.of(notes));
-    }
-
 
     @Override
     public boolean equals(Object obj) {
