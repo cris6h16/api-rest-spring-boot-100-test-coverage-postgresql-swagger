@@ -9,12 +9,14 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -22,8 +24,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +40,10 @@ class UserServiceImplTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private ServiceUtils serviceUtils;
+
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -47,14 +52,17 @@ class UserServiceImplTest {
      * It in the entity layer, because the password is passed encrypted.
      */
     @Test
-    @Tag("UserServiceTraversalException")
     @Tag("create")
+    @Tag("UserServiceTraversalException")
     void UserService_create_ThrowsPasswordIsTooShortException() {
         CreateUpdateUserDTO dto = CreateUpdateUserDTO.builder()
                 .username("cris6h16")
                 .password("1234567")
                 .email("cris6h16@gmail.com")
                 .build();
+
+        when(serviceUtils.createATraversalExceptionHandled(any(), anyBoolean()))
+                .thenReturn(new UserServiceTraversalException("Password is too short", HttpStatus.BAD_REQUEST));
 
         assertThatThrownBy(() -> userService.create(dto))
                 .isInstanceOf(UserServiceTraversalException.class)
@@ -373,7 +381,7 @@ class UserServiceImplTest {
         CreateUpdateUserDTO dto = createValidDTO();
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.create(id, dto))
+        assertThatThrownBy(() -> userService.update(id, dto))
                 .isInstanceOf(UserServiceTraversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -593,6 +601,112 @@ class UserServiceImplTest {
     }
 
 
+    @Test
+    @Tag("get(pageable)")
+    void UserService_get_Pageable_pageNumInvalid_Negative() {
+        // Arrange
+        int pageNum = -1;
+        int pageSize = 1;
+        Pageable pageable = PageRequest.of(
+                pageNum,
+                pageSize,
+                Sort.by(Sort.Direction.ASC, "id"));
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(pageable))
+                .isInstanceOf(UserServiceTraversalException.class)
+                .hasMessageStartingWith("Page")
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("get(pageable)")
+    void UserService_get_Pageable_pageSizeInvalid_Negative() {
+        // Arrange
+        int pageNum = 1;
+        int pageSize = -1;
+        Pageable pageable = PageRequest.of(
+                pageNum,
+                pageSize,
+                Sort.by(Sort.Direction.ASC, "id"));
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(pageable))
+                .isInstanceOf(UserServiceTraversalException.class)
+                .hasMessageStartingWith("Page")
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("get(pageable)")
+    void UserService_get_PageableNull() {
+        // Arrange
+        int pageNum = 1;
+        int pageSize = 1;
+        Pageable pageable = null;
+
+        try {
+            // Act
+            userService.get(pageable);
+        } catch (IllegalArgumentException e) {
+            // Assert
+            assertThat(e.getMessage()).contains("Pageable must not be null");
+        }
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(pageable))
+                .isInstanceOf(UserServiceTraversalException.class)
+                .hasMessageStartingWith("")
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("get(pageable)")
+        void UserService_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail(){
+        // Arrange
+        int pageNum = 0;
+        int pageSize = 10;
+        Pageable pageable = PageRequest.of(
+                pageNum,
+                pageSize,
+                Sort.by(Sort.Direction.ASC, "ttt"));
+
+        when(userRepository.findAll(pageable))
+                .thenReturn(createValidUserEntities(10));
+        try {
+            userService.get(pageable);
+        }catch (Exception e) {
+            System.out.println(e);
+        }
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(pageable))
+                .isInstanceOf(UserServiceTraversalException.class)
+                .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("get(pageable)")
+        void UserService_get_Pageable_UnhandledException(){
+        // Arrange
+        int pageNum = 0;
+        int pageSize = 10;
+        Pageable pageable = PageRequest.of(
+                pageNum,
+                pageSize,
+                Sort.by(Sort.Direction.ASC, "id"));
+
+        when(userRepository.findAll(pageable))
+                .thenThrow(new RuntimeException("cris6h16's Unhandled exception"));
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(pageable))
+                .isInstanceOf(UserServiceTraversalException.class)
+                .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
     CreateUpdateUserDTO createADTOForUpdate(String attributeThatYouWantToUpdate, String val) {
         List<String> attributes = Arrays.asList("username", "email", "password");
 
@@ -602,13 +716,28 @@ class UserServiceImplTest {
 
         CreateUpdateUserDTO.CreateUpdateUserDTOBuilder usr = CreateUpdateUserDTO.builder();
         usr = switch (attributeThatYouWantToUpdate) {
-            case "username" ->  usr.username(val);
-            case "email" ->     usr.email(val);
-            case "password" ->  usr.password(val);
+            case "username" -> usr.username(val);
+            case "email" -> usr.email(val);
+            case "password" -> usr.password(val);
             default -> usr; // should never reach here
         };
 
         return usr.build();
+    }
+
+
+    Page<UserEntity> createValidUserEntities(int n) {
+        List<UserEntity> users = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            users.add(UserEntity.builder()
+                    .id((long) i)
+                    .username("cris6h16" + i)
+                    .email("cris6h16" + i + "@gmail.com")
+                    .password("{bcrypt}$2a81..." + i)
+                    .roles(Set.of(RoleEntity.builder().id(10L).name(ERole.ROLE_USER).build()))
+                    .build());
+        }
+        return new PageImpl<>(users, PageRequest.of(0, 10), n); //todo: add sort by what
     }
 
     UserEntity createValidUserEntity(boolean withRolesUser, boolean withRolesNull) {

@@ -10,6 +10,7 @@ import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceT
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,13 +34,14 @@ public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
     private final ServiceUtils serviceUtils;
+    private final UserServiceImpl userService;
 
     public NoteServiceImpl(NoteRepository noteRepository,
-                           UserRepository userRepository,
-                           ServiceUtils serviceUtils) {
+                           UserRepository userRepository, ServiceUtils serviceUtils, UserServiceImpl userService) {
         this.noteRepository = noteRepository;
         this.userRepository = userRepository;
         this.serviceUtils = serviceUtils;
+        this.userService = userService;
     }
 
 
@@ -174,7 +176,7 @@ public class NoteServiceImpl implements NoteService {
 
     //todo: doc trhows
     private UserEntity validateIdAndGetUser(Long userId) {
-        return this.serviceUtils.validateIdAndGetUser(userId);
+        return this.userService.validateIdAndGetUser(userId);
     }
 
 

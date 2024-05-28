@@ -24,12 +24,6 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Component
 public class ServiceUtils {
 
-    UserRepository userRepository;
-
-    public ServiceUtils(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
     public AbstractServiceExceptionWithStatus createATraversalExceptionHandled(@NotNull Exception e, boolean isUserService) {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
@@ -49,6 +43,14 @@ public class ServiceUtils {
         if (e instanceof AbstractServiceExceptionWithStatus && forClient.isBlank()) {
             recommendedStatus = ((AbstractServiceExceptionWithStatus) e).getRecommendedStatus();
             forClient = e.getMessage();
+        }
+
+        // pageable fails like passed a negative page, size, etc
+        if (e instanceof IllegalArgumentException && forClient.isBlank()) {
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+            boolean pageableFail = this.thisContains(e.getMessage(), "Page");
+            if (pageableFail) forClient = e.getMessage();
+            else log.error("IllegalArgumentException: {}", e.getMessage());
         }
 
 
@@ -91,26 +93,11 @@ public class ServiceUtils {
         return contains;
     }
 
-
-    /**
-     * Validate id  and get user from repository
-     *
-     * @param userId to validate
-     * @return {@link UserEntity}
-     * @throws AbstractServiceExceptionWithStatus if user not found or id is invalid
-     */
-    public UserEntity validateIdAndGetUser(Long userId) {
-        validateId(userId);
-        return userRepository
-                .findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-    }
-
     /**
      * @param id to validate
      * @throws AbstractServiceExceptionWithStatus impl if id is null or less than 1
      */
-    void validateId(Long id) {
+    public void validateId(Long id) {
         if (id == null || id <= 0) throw new InvalidIdException();
     }
 }

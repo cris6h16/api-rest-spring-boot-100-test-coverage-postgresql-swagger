@@ -11,11 +11,13 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -35,18 +37,15 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    ObjectMapper objectMapper;
     ServiceUtils serviceUtils;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            PasswordEncoder passwordEncoder,
-                           ObjectMapper objectMapper,
                            ServiceUtils serviceUtils) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.objectMapper = objectMapper;
         this.serviceUtils = serviceUtils;
     }
 
@@ -199,9 +198,20 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private UserEntity validateIdAndGetUser(Long id) {
-        return this.serviceUtils.validateIdAndGetUser(id);
+    /**
+     * Validate id  and get user from repository
+     *
+     * @param userId to validate
+     * @return {@link UserEntity}
+     * @throws AbstractServiceExceptionWithStatus if user not found or id is invalid
+     */
+    public UserEntity validateIdAndGetUser(Long userId) {
+        serviceUtils.validateId(userId);
+        return userRepository
+                .findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
+
 
     private UserServiceTraversalException createATraversalExceptionHandled(Exception e) {
         return (UserServiceTraversalException) serviceUtils.createATraversalExceptionHandled(e, true);
