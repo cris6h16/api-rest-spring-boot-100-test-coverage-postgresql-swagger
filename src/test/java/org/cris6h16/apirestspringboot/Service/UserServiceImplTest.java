@@ -6,8 +6,7 @@ import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
@@ -63,10 +62,10 @@ class UserServiceImplTest {
                 .build();
 
         when(serviceUtils.createATraversalExceptionHandled(any(), eq(true)))
-                .thenReturn(new UserServiceTraversalException("any", HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS)); // doesn't matter content, we're testing the password
+                .thenReturn(new UserServiceTransversalException("any", HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS)); // doesn't matter content, we're testing the password
 
         assertThatThrownBy(() -> userService.create(dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(null)
                 .hasFieldOrPropertyWithValue("recommendedStatus", (null));
     }
@@ -81,7 +80,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.DTO.NULL)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -100,7 +99,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -196,7 +195,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
         verify(userRepository).findById(id);
@@ -211,7 +210,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -224,7 +223,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -237,7 +236,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -321,7 +320,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
         verify(userRepository).findById(id);
@@ -339,7 +338,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
         verify(userRepository).findById(id);
@@ -355,7 +354,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -369,7 +368,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -383,7 +382,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -397,7 +396,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.DTO.NULL)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -477,7 +476,7 @@ class UserServiceImplTest {
 
         // Act
         assertThatThrownBy(() -> userService.update(original.getId(), dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -524,7 +523,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
         verify(userRepository).findById(id);
@@ -538,7 +537,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -551,7 +550,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -564,7 +563,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -579,7 +578,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
         verify(userRepository).findById(id);
@@ -595,7 +594,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
         verify(userRepository).findById(id);
@@ -615,7 +614,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageStartingWith("Page")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -633,7 +632,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageStartingWith("Page")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -656,7 +655,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageStartingWith("")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -682,7 +681,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -703,7 +702,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
+                .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }

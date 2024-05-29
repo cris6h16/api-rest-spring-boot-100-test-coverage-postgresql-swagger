@@ -5,8 +5,8 @@ import org.springframework.http.HttpStatus;
 
 //todo: docs that thiws will be used for pass to others layers
 @Slf4j
-public class UserServiceTraversalException extends AbstractServiceExceptionWithStatus {
-    public UserServiceTraversalException(String message, HttpStatus recommendedStatus) {
+public class UserServiceTransversalException extends AbstractServiceExceptionWithStatus {
+    public UserServiceTransversalException(String message, HttpStatus recommendedStatus) {
         super(message, recommendedStatus);
     }
 }

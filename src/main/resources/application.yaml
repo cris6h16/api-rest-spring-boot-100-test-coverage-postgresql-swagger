@@ -32,11 +32,26 @@ spring:
       mode: never # execute a sql script when the application starts
 
 
-debug: true
-
 server:
   port: 8080
   error:
     include-message: never
     include-exception: off
     include-stacktrace: never
+
+
+debug: true
+
+logging:
+  level:
+    org:
+      springframework:
+        boot: DEBUG
+        data:
+          jpa: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE

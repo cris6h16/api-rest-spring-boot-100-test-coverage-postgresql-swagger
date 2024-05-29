@@ -46,7 +46,7 @@ public class UserEntity {
     private String username;
 
 
-    @Column(name = "password")
+    @Column(name = "password", updatable = true)
     @NotBlank(message = PASS_IS_BLANK_MSG)
     // @Length(min = 8, message = "Password must be at least 8 characters") --> we handled it directly in @Service, min doesn't work very well, remember that is saved encrypted
     private String password;
@@ -73,7 +73,7 @@ public class UserEntity {
             foreignKey = @ForeignKey(name = "fk_user_id"),
             inverseForeignKey = @ForeignKey(name = "fk_role_id")
     )
-    private Set<RoleEntity> roles;
+    private Set<RoleEntity> roles = new HashSet<>();
 
     @OneToMany(fetch = FetchType.LAZY,
             cascade = CascadeType.ALL,

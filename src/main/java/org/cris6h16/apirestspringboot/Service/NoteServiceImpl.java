@@ -6,11 +6,10 @@ import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteService.NoteNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceTraversalException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -180,7 +179,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
 
-    private NoteServiceTraversalException getTraversalException(Exception e) {
-        return (NoteServiceTraversalException) this.serviceUtils.createATraversalExceptionHandled(e, false);
+    private NoteServiceTransversalException getTraversalException(Exception e) {
+        return (NoteServiceTransversalException) this.serviceUtils.createATraversalExceptionHandled(e, false);
     }
 }

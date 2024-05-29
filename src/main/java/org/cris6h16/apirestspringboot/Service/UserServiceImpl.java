@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -12,12 +11,11 @@ import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServ
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -26,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,14 +54,14 @@ public class UserServiceImpl implements UserService {
         try {
             verifyDTONotNullAndPassword(dto);
 
-            RoleEntity roles = roleRepository.findByName(ERole.ROLE_USER)
+            RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
                     .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
             UserEntity saved = userRepository.save(UserEntity.builder()
                     .username(dto.getUsername())
                     .password(passwordEncoder.encode(dto.getPassword()))
                     .email(dto.getEmail())
-                    .roles(Set.of(roles)) //cascading
+                    .roles(new HashSet<>(Collections.singleton(role))) //todo: doc my troubles: Set.of() is immutable, then i won't be able to merge (e.g. retrieve the entity, change any attribute then .save(obj))
                     .createdAt(new Date())
                     .build());
 
@@ -85,11 +81,15 @@ public class UserServiceImpl implements UserService {
     public PublicUserDTO get(Long id) {
         try {
             UserEntity usr = validateIdAndGetUser(id);
+            Set<RoleDTO> roles;
 
-            // get roles --> is EAGER
-            Set<RoleDTO> roles = usr.getRoles().stream()
-                    .map(role -> new RoleDTO(role.getName()))
-                    .collect(Collectors.toSet());
+            // roles --> is EAGER
+            boolean rolesNull = (usr.getRoles() == null);
+            roles = rolesNull ?
+                    (new HashSet<>(0)) :
+                    (usr.getRoles().stream()
+                            .map(role -> new RoleDTO(role.getName()))
+                            .collect(Collectors.toSet()));
 
             return PublicUserDTO.builder()
                     .id(usr.getId())
@@ -114,6 +114,7 @@ public class UserServiceImpl implements UserService {
     public void update(Long id, CreateUpdateUserDTO dto) {
         try {
             UserEntity usr = validateIdAndGetUser(id);
+            if (dto == null) throw new CreateUpdateDTOIsNullException();
 
             boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
             boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
@@ -135,7 +136,6 @@ public class UserServiceImpl implements UserService {
             throw createATraversalExceptionHandled(e);
         }
     }
-
 
 
     @Override
@@ -213,7 +213,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private UserServiceTraversalException createATraversalExceptionHandled(Exception e) {
-        return (UserServiceTraversalException) serviceUtils.createATraversalExceptionHandled(e, true);
+    private UserServiceTransversalException createATraversalExceptionHandled(Exception e) {
+        return (UserServiceTransversalException) serviceUtils.createATraversalExceptionHandled(e, true);
     }
 }
