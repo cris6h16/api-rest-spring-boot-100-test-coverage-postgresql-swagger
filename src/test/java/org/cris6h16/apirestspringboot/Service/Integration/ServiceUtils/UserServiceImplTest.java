@@ -597,43 +597,6 @@ class UserServiceImplTest {
         verify(userRepository).findById(id);
     }
 
-
-//    @Test
-//    @Tag("get(pageable)")
-//    void UserService_get_Pageable_pageNumInvalid_Negative() {
-//        // Arrange
-//        int pageNum = -1;
-//        int pageSize = 1;
-//        Pageable pageable = PageRequest.of(
-//                pageNum,
-//                pageSize,
-//                Sort.by(Sort.Direction.ASC, "id"));
-//
-//        // Act & Assert
-//        assertThatThrownBy(() -> userService.get(pageable))
-//                .isInstanceOf(UserServiceTransversalException.class)
-//                .hasMessageStartingWith("Page")
-//                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-//    }
-//
-//    @Test
-//    @Tag("get(pageable)")
-//    void UserService_get_Pageable_pageSizeInvalid_Negative() {
-//        // Arrange
-//        int pageNum = 1;
-//        int pageSize = -1;
-//        Pageable pageable = PageRequest.of(
-//                pageNum,
-//                pageSize,
-//                Sort.by(Sort.Direction.ASC, "id"));
-//
-//        // Act & Assert
-//        assertThatThrownBy(() -> userService.get(pageable))
-//                .isInstanceOf(UserServiceTransversalException.class)
-//                .hasMessageStartingWith("Page")
-//                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-//    }
-
     @Test
     @Tag("get(pageable)")
         // todo: correct sintaxis "()"
