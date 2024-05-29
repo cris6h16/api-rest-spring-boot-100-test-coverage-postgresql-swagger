@@ -5,14 +5,12 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceTraversalException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -51,6 +49,17 @@ public class ServiceUtils {
             boolean pageableFail = this.thisContains(e.getMessage(), "Page");
             if (pageableFail) forClient = e.getMessage();
             else log.error("IllegalArgumentException: {}", e.getMessage());
+        }
+
+
+        if (e instanceof PropertyReferenceException && forClient.isBlank()) {
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+            try {
+                forClient = e.getMessage().split("for type")[0].trim(); // No property 'ttt' found for type 'UserEntity'
+            } catch (Exception ignored) {
+                log.error("PropertyReferenceException - TRY CATCH: {}", e.getMessage());
+            }
+            log.error("PropertyReferenceException: {}", e.getMessage());
         }
 
 

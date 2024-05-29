@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Service;
+package org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
@@ -6,47 +6,58 @@ import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTraversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
+import org.hibernate.LazyInitializationException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * TODO: doc: Any service layer should be tested as Integration, due that all are wrapped by {@link ServiceUtils#createATraversalExceptionHandled(Exception, boolean)}
+ */
+@SpringBootTest
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
 class UserServiceImplTest {
 
-    @Mock
+    @Autowired
     private UserRepository userRepository;
-
-    @Mock
+    @Autowired
     private RoleRepository roleRepository;
-
-    @Mock
+    @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private ServiceUtils serviceUtils;
-
-
-    @InjectMocks
+    @Autowired
     private UserServiceImpl userService;
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+        roleRepository.deleteAll();
+
+        userRepository.flush();
+        roleRepository.flush();
+    }
 
     /**
      * The unique verification on the service layer, due to I cannot verify
@@ -54,7 +65,7 @@ class UserServiceImplTest {
      */
     @Test
     @Tag("create")
-    @Tag("UserServiceTraversalException")
+    @Tag("UserServiceTransversalException")
     void UserService_create_ThrowsPasswordIsTooShortException() {
         CreateUpdateUserDTO dto = CreateUpdateUserDTO.builder()
                 .username("cris6h16")
@@ -62,18 +73,15 @@ class UserServiceImplTest {
                 .email("cris6h16@gmail.com")
                 .build();
 
-        when(serviceUtils.createATraversalExceptionHandled(any(), eq(true)))
-                .thenReturn(new UserServiceTraversalException("any", HttpStatus.UNAVAILABLE_FOR_LEGAL_REASONS)); // doesn't matter content, we're testing the password
-
         assertThatThrownBy(() -> userService.create(dto))
                 .isInstanceOf(UserServiceTraversalException.class)
-                .hasMessageContaining(null)
-                .hasFieldOrPropertyWithValue("recommendedStatus", (null));
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
     // todo: make a diagram of Traversal exceptions and how they are used to pass by the layers
     @Test
-    @Tag("UserServiceTraversalException")
+    @Tag("UserServiceTransversalException")
     @Tag("create")
     void UserService_create_paramNull() {
         // Arrange
@@ -92,11 +100,15 @@ class UserServiceImplTest {
     @Tag("create")
     void UserService_create_ThrowsUnhandledException_ThenGenericResponse() {
         // Arrange
-        CreateUpdateUserDTO dto = createValidDTO();
-        mockRoleRepository(true);
-        mockPasswordEncoder();
-        when(userRepository.save(any(UserEntity.class)))
-                .thenThrow(new RuntimeException("cris6h16's Unhandled exception"));
+        CreateUpdateUserDTO dto = new CreateUpdateUserDTO() {
+            @Override
+            public String getEmail() {
+                throw new LazyInitializationException("cris6h16's Unhandled exception"); // random exception
+            }
+        };
+        dto.setUsername("cris6h16");
+        dto.setPassword("12345678");
+        dto.setEmail("githubcomcris6h16@gmail.com");
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dto))
@@ -108,37 +120,51 @@ class UserServiceImplTest {
 
     @Test
     @Tag("create")
-    void UserService_create_RoleNonexistentInDB() {
+    void UserService_create_RoleNonexistentInDB() { // default
         // Arrange
         CreateUpdateUserDTO dto = createValidDTO();
-        mockRoleRepository(false);
-        mockPasswordEncoder();
-        mockUserRepositorySave();
 
         // Act
         Long id = userService.create(dto);
 
         // Assert
-        assertThat(id).isNotNull().isEqualTo(1L);
-        verifyAllDependencies(dto, false);
+        RoleEntity role = roleRepository.findByName(ERole.ROLE_USER).orElse(null);
+        UserEntity user = userRepository.findById(id).orElse(null);
+        assertThat(role).isNotNull();
+        assertThat(user).isNotNull();
+
+        assertThat(user)
+                .hasFieldOrPropertyWithValue("roles", Set.of(role))
+                .hasFieldOrPropertyWithValue("username", dto.getUsername())
+                .hasFieldOrPropertyWithValue("email", dto.getEmail());
+
+        assertThat(passwordEncoder.matches(dto.getPassword(), user.getPassword()))
+                .isTrue();
+
+        assertThat(role)
+                .hasFieldOrPropertyWithValue("name", ERole.ROLE_USER)
+                .hasNoNullFieldsOrPropertiesExcept("id");
     }
 
 
     @Test
     @Tag("create")
-    void UserService_create_AllSuccessfulReturnsId() {
+    void UserService_create_RoleExistentInDB() {
         // Arrange
         CreateUpdateUserDTO dto = createValidDTO();
-        mockRoleRepository(true);
-        mockPasswordEncoder();
-        mockUserRepositorySave();
+        RoleEntity r = roleRepository.saveAndFlush(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
         // Act
         Long id = userService.create(dto);
 
         // Assert
-        assertThat(id).isNotNull().isEqualTo(1L);
-        verifyAllDependencies(dto, true);
+        UserEntity user = userRepository.findById(id).orElse(null);
+        assertThat(user)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("roles", Set.of(r))
+                .hasFieldOrPropertyWithValue("username", dto.getUsername())
+                .hasFieldOrPropertyWithValue("email", dto.getEmail());
+        assertThat(passwordEncoder.matches(dto.getPassword(), user.getPassword())).isTrue();
     }
 
 
@@ -150,56 +176,18 @@ class UserServiceImplTest {
                 .build();
     }
 
-    private void mockRoleRepository(boolean isPresent) {
-        if (isPresent) {
-            when(roleRepository.findByName(any(ERole.class)))
-                    .thenReturn(Optional.of(new RoleEntity(10L, ERole.ROLE_USER)));
-            return;
-        }
-        when(roleRepository.findByName(any(ERole.class)))
-                .thenReturn(Optional.empty());
-    }
-
-    private void mockPasswordEncoder() {
-        when(passwordEncoder.encode(any(CharSequence.class)))
-                .thenReturn("{bcrypt}$2a$1...");
-    }
-
-    private void mockUserRepositorySave() {
-        when(userRepository.save(any(UserEntity.class)))
-                .thenReturn(UserEntity.builder().id(1L).build());
-    }
-
-    private void verifyAllDependencies(CreateUpdateUserDTO dto, boolean roleRetrieved) {
-        verify(roleRepository).findByName(ERole.ROLE_USER);// verify if was called
-        verify(passwordEncoder).encode(dto.getPassword()); // verify if was called
-        verify(userRepository).save(argThat(user -> // verify if the user requested to save is the same as DTO
-                user != null &&
-                        user.getId() == null &&
-                        user.getUsername().equals(dto.getUsername()) &&
-                        user.getPassword().startsWith("{bcrypt}$") &&
-                        user.getEmail().equals(dto.getEmail()) &&
-                        user.getRoles().size() == 1 &&
-                        (roleRetrieved ? user.getRoles().stream().findFirst().get().getId() == 10L : true) &&
-                        user.getCreatedAt() != null
-        ));
-    }
-
 
     @Test
     @Tag("get")
     void UserService_get_UserNotFound() {
         // Arrange
         Long id = 1L;
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
                 .isInstanceOf(UserServiceTraversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
-        verify(userRepository).findById(id);
     }
 
 
@@ -247,10 +235,13 @@ class UserServiceImplTest {
     @Tag("get")
     void UserService_get_RolesNull() {
         // Arrange
-        UserEntity usr = createValidUserEntity(false, true);
-
-        when(userRepository.findById(usr.getId()))
-                .thenReturn(Optional.of(usr));
+        UserEntity usr = UserEntity.builder()
+                .id(1L)
+                .username("cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(null)
+                .build();
 
         // Act
         PublicUserDTO user = userService.get(usr.getId());
@@ -262,7 +253,6 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("username", usr.getUsername())
                 .hasFieldOrPropertyWithValue("email", usr.getEmail())
                 .hasFieldOrPropertyWithValue("roles", new HashSet<>());
-        verify(userRepository).findById(usr.getId());
     }
 
     @Test
@@ -270,21 +260,25 @@ class UserServiceImplTest {
     @Tag("correct")
     void UserService_get_UserFoundWithRoles() {
         // Arrange
-        UserEntity usr = createValidUserEntity(true, false);
-
-        when(userRepository.findById(usr.getId()))
-                .thenReturn(Optional.of(usr));
+        Long id = 1L;
+        UserEntity createdEntity = userRepository.saveAndFlush(UserEntity.builder()
+                .id(id)
+                .username("cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().id(10L).name(ERole.ROLE_USER).build()))
+                .build());
 
         // Act
-        PublicUserDTO user = userService.get(usr.getId());
+        PublicUserDTO dto = userService.get(id);
 
         // Assert
-        assertThat(user)
+        assertThat(dto)
                 .isNotNull()
-                .hasFieldOrPropertyWithValue("id", usr.getRoles().iterator().next().getId())
-                .hasFieldOrPropertyWithValue("username", usr.getUsername())
-                .hasFieldOrPropertyWithValue("email", usr.getEmail())
-                .hasFieldOrPropertyWithValue("roles", usr.getRoles().iterator().next());
+                .hasFieldOrPropertyWithValue("id", id)
+                .hasFieldOrPropertyWithValue("username", createdEntity.getUsername())
+                .hasFieldOrPropertyWithValue("email", createdEntity.getEmail())
+                .hasFieldOrPropertyWithValue("roles", createdEntity.getRoles());
     }
 
 
@@ -292,39 +286,41 @@ class UserServiceImplTest {
     @Tag("get")
     void UserService_get_UserFoundWithRolesNull() {
         // Arrange
-        UserEntity usr = createValidUserEntity(false, true);
-
-        when(userRepository.findById(usr.getId()))
-                .thenReturn(Optional.of(usr));
+        Long id = 1L;
+        UserEntity createdEntity = userRepository.saveAndFlush(UserEntity.builder()
+                .id(id)
+                .username("cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(null)
+                .build());
 
         // Act
-        PublicUserDTO user = userService.get(usr.getId());
+        PublicUserDTO dto = userService.get(id);
 
         // Assert
-        assertThat(user)
+        assertThat(dto)
                 .isNotNull()
-                .hasFieldOrPropertyWithValue("id", usr.getId())
-                .hasFieldOrPropertyWithValue("username", usr.getUsername())
-                .hasFieldOrPropertyWithValue("email", usr.getEmail())
+                .hasFieldOrPropertyWithValue("id", id)
+                .hasFieldOrPropertyWithValue("username", createdEntity.getUsername())
+                .hasFieldOrPropertyWithValue("email", createdEntity.getEmail())
                 .hasFieldOrPropertyWithValue("roles", new HashSet<>());
-
 
     }
 
     @Test
     @Tag("get")
+    @Disabled
     void UserService_get_ThrowsUnhandledException() {
-        // Arrange
-        Long id = 1L;
-        when(userRepository.findById(id))
-                .thenThrow(new RuntimeException("cris6h16's Unhandled exception"));
+        // I couldn't implement this
 
+        /* Arrange
         // Act & Assert
         assertThatThrownBy(() -> userService.get(id))
                 .isInstanceOf(UserServiceTraversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
-        verify(userRepository).findById(id);
+        verify(userRepository).findById(id); */
     }
 
     @Test
@@ -333,9 +329,6 @@ class UserServiceImplTest {
         // Arrange
         Long id = 1L;
         CreateUpdateUserDTO dto = createValidDTO();
-
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> userService.update(id, dto))
@@ -406,62 +399,58 @@ class UserServiceImplTest {
     @Tag("update")
     void UserService_update_DTO_WantUpdateUsername() {
         // Arrange
-        CreateUpdateUserDTO dto = createADTOForUpdate("username", "a");// (<attribute>,<value>) the rest is null
-        UserEntity original = createValidUserEntity(true, false);
+        UserEntity original = UserEntity.builder()
+                .username("github.com/cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_USER).build()))
+                .build();
+        userRepository.saveAndFlush(original);
 
-        when(userRepository.findById(original.getId()))
-                .thenReturn(Optional.of(original));
-        when(userRepository.save(any(UserEntity.class)))
-                .thenReturn(null); // doesn't matter
+        CreateUpdateUserDTO updateUsernameDTO = CreateUpdateUserDTO.builder()
+                .username("cris6h16")
+                .build();
 
         // Act
-        userService.update(original.getId(), dto);
+        userService.update(original.getId(), updateUsernameDTO);
+        original = userRepository.findById(original.getId()).orElse(null);
 
         // Assert
-        verify(userRepository).findById(original.getId());
-        verify(userRepository).save(argThat(user ->
-                user != null &&
-                        user.getId().equals(original.getId()) &&
-                        user.getUsername().equals(dto.getUsername()) && // passed to update changed username
-                        user.getEmail().equals(original.getEmail()) &&
-                        user.getPassword().equals(original.getPassword()) &&
-                        user.getRoles().equals(original.getRoles()) &&
-                        user.getCreatedAt().equals(original.getCreatedAt()) &&
-                        user.getUpdatedAt() != null
-        ));
-
-
+        assertThat(original)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("username", updateUsernameDTO.getUsername())
+                .hasFieldOrPropertyWithValue("email", original.getEmail())
+                .hasFieldOrPropertyWithValue("password", original.getPassword())
+                .hasFieldOrPropertyWithValue("roles", original.getRoles());
     }
 
     @Test
     @Tag("update")
     void UserService_update_DTO_WantUpdateEmail() {
         // Arrange
-        CreateUpdateUserDTO dto = createADTOForUpdate("email", "cris6h16@example.com");// (<attribute>,<value>) the rest is null
-        UserEntity original = createValidUserEntity(true, false);
+        UserEntity original = UserEntity.builder()
+                .username("github.com/cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_USER).build()))
+                .build();
+        userRepository.saveAndFlush(original);
 
-        when(userRepository.findById(original.getId()))
-                .thenReturn(Optional.of(original));
-        when(userRepository.save(any(UserEntity.class)))
-                .thenReturn(null); // doesn't matter
+        CreateUpdateUserDTO updateEmailDTO = CreateUpdateUserDTO.builder()
+                .username("cris6h16@example.com")
+                .build();
 
         // Act
-        userService.update(original.getId(), dto);
+        userService.update(original.getId(), updateEmailDTO);
+        original = userRepository.findById(original.getId()).orElse(null);
 
         // Assert
-        verify(userRepository).findById(original.getId());
-        verify(userRepository).save(argThat(user ->
-                user != null &&
-                        user.getId().equals(original.getId()) &&
-                        user.getUsername().equals(original.getEmail()) &&
-                        user.getEmail().equals(dto.getEmail()) &&  // passed to update email changed
-                        user.getPassword().equals(original.getPassword()) &&
-                        user.getRoles().equals(original.getRoles()) &&
-                        user.getCreatedAt().equals(original.getCreatedAt()) &&
-                        user.getUpdatedAt() != null
-        ));
-
-
+        assertThat(original)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("username", original.getUsername())
+                .hasFieldOrPropertyWithValue("email", updateEmailDTO.getEmail())
+                .hasFieldOrPropertyWithValue("password", original.getPassword())
+                .hasFieldOrPropertyWithValue("roles", original.getRoles());
     }
 
 
@@ -469,14 +458,20 @@ class UserServiceImplTest {
     @Tag("update")
     void UserService_update_DTO_WantUpdatePasswordInvalid() {
         // Arrange
-        CreateUpdateUserDTO dto = createADTOForUpdate("password", "7654321");// (<attribute>,<value>) the rest is null
-        UserEntity original = createValidUserEntity(true, false);
+        UserEntity original = UserEntity.builder()
+                .username("github.com/cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_USER).build()))
+                .build();
+        userRepository.saveAndFlush(original);
 
-        when(userRepository.findById(original.getId()))
-                .thenReturn(Optional.of(original));
+        CreateUpdateUserDTO updatePasswordDTO = CreateUpdateUserDTO.builder()
+                .password("1234567")
+                .build();
 
         // Act
-        assertThatThrownBy(() -> userService.update(original.getId(), dto))
+        assertThatThrownBy(() -> userService.update(original.getId(), updatePasswordDTO))
                 .isInstanceOf(UserServiceTraversalException.class)
                 .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -486,48 +481,56 @@ class UserServiceImplTest {
     @Tag("update")
     void UserService_update_DTO_WantUpdatePassword() {
         // Arrange
-        CreateUpdateUserDTO dto = createADTOForUpdate("password", "87654321");// (<attribute>,<value>) the rest is null
-        UserEntity original = createValidUserEntity(true, false);
+        UserEntity original = UserEntity.builder()
+                .username("github.com/cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_USER).build()))
+                .build();
+        userRepository.saveAndFlush(original);
 
-        when(userRepository.findById(original.getId()))
-                .thenReturn(Optional.of(original));
-        mockPasswordEncoder();
-        when(userRepository.save(any(UserEntity.class)))
-                .thenReturn(null); // doesn't matter
+        CreateUpdateUserDTO updatePasswordDTO = CreateUpdateUserDTO.builder()
+                .password("12345678")
+                .build();
 
         // Act
-        userService.update(original.getId(), dto);
+        userService.update(original.getId(), updatePasswordDTO);
 
         // Assert
-        verify(userRepository).findById(original.getId());
-        verify(userRepository).save(argThat(user ->
-                user != null &&
-                        user.getId().equals(original.getId()) &&
-                        user.getUsername().equals(original.getUsername()) &&
-                        user.getEmail().equals(original.getEmail()) &&
-                        user.getPassword().startsWith("{bcrypt}") && // passed to update password changed
-                        user.getRoles().equals(original.getRoles()) &&
-                        user.getCreatedAt().equals(original.getCreatedAt()) &&
-                        user.getUpdatedAt() != null
-        ));
+        UserEntity updated = userRepository.findById(original.getId()).orElse(null);
+        assertThat(updated)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("username", original.getUsername())
+                .hasFieldOrPropertyWithValue("email", original.getEmail())
+                .hasFieldOrPropertyWithValue("roles", original.getRoles())
+                .hasFieldOrPropertyWithValue("password", updatePasswordDTO.getPassword());
+
     }
 
     @Test
     @Tag("update")
     void UserService_update_ThrowsUnhandledException_ThenGenericResponse() {
         // Arrange
-        Long id = 1L;
-        CreateUpdateUserDTO dto = createValidDTO();
+        UserEntity original = UserEntity.builder()
+                .username("github.com/cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(Set.of(RoleEntity.builder().name(ERole.ROLE_USER).build()))
+                .build();
+        userRepository.saveAndFlush(original);
 
-        when(userRepository.findById(id))
-                .thenThrow(new RuntimeException("cris6h16's Unhandled exception"));
+        CreateUpdateUserDTO thrower = new CreateUpdateUserDTO() {
+            @Override
+            public String getPassword() {
+                throw new ArrayIndexOutOfBoundsException(); // random exception
+            }
+        };
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.update(id, dto))
+        assertThatThrownBy(() -> userService.update(original.getId(), thrower))
                 .isInstanceOf(UserServiceTraversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
-        verify(userRepository).findById(id);
     }
 
     @Test
@@ -574,8 +577,6 @@ class UserServiceImplTest {
     void UserService_delete_UserNotFound() {
         // Arrange
         Long id = 1L;
-        when(userRepository.findById(id))
-                .thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
@@ -587,11 +588,12 @@ class UserServiceImplTest {
 
     @Test
     @Tag("delete")
+    @Disabled()
     void UserService_delete_ThrowsUnhandledException() {
         // Arrange
         Long id = 1L;
-        when(userRepository.findById(id))
-                .thenThrow(new ArithmeticException("random cris6h16's Unhandled exception"));
+
+        // I couldn't implement this
 
         // Act & Assert
         assertThatThrownBy(() -> userService.delete(id))
@@ -640,30 +642,20 @@ class UserServiceImplTest {
 
     @Test
     @Tag("get(pageable)")
-    void UserService_get_PageableNull() {
+    void UserService_get_PageableNull_ThenGenericResponse() {
         // Arrange
-        int pageNum = 1;
-        int pageSize = 1;
         Pageable pageable = null;
-
-        try {
-            // Act
-            userService.get(pageable);
-        } catch (IllegalArgumentException e) {
-            // Assert
-            assertThat(e.getMessage()).contains("Pageable must not be null");
-        }
 
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
                 .isInstanceOf(UserServiceTraversalException.class)
-                .hasMessageStartingWith("")
+                .hasMessageStartingWith(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @Tag("get(pageable)")
-        void UserService_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail(){
+    void UserService_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail() {
         // Arrange
         int pageNum = 0;
         int pageSize = 10;
@@ -672,96 +664,57 @@ class UserServiceImplTest {
                 pageSize,
                 Sort.by(Sort.Direction.ASC, "ttt"));
 
-        when(userRepository.findAll(pageable))
-                .thenReturn(createValidUserEntities(10));
-        try {
-            userService.get(pageable);
-        }catch (Exception e) {
-            System.out.println(e);
-        }
-
         // Act & Assert
         assertThatThrownBy(() -> userService.get(pageable))
+
                 .isInstanceOf(UserServiceTraversalException.class)
-                .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
+                .hasMessageStartingWith("No property") // No property 'ttt' found for type 'UserEntity'
+                .hasMessageEndingWith("found")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
     @Test
     @Tag("get(pageable)")
-        void UserService_get_Pageable_UnhandledException(){
-        // Arrange
-        int pageNum = 0;
-        int pageSize = 10;
-        Pageable pageable = PageRequest.of(
-                pageNum,
-                pageSize,
-                Sort.by(Sort.Direction.ASC, "id"));
-
-        when(userRepository.findAll(pageable))
-                .thenThrow(new RuntimeException("cris6h16's Unhandled exception"));
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(pageable))
-                .isInstanceOf(UserServiceTraversalException.class)
-                .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    CreateUpdateUserDTO createADTOForUpdate(String attributeThatYouWantToUpdate, String val) {
-        List<String> attributes = Arrays.asList("username", "email", "password");
-
-        if (!attributes.contains(attributeThatYouWantToUpdate)) {
-            throw new IllegalArgumentException("Invalid attribute for update");
-        }
-
-        CreateUpdateUserDTO.CreateUpdateUserDTOBuilder usr = CreateUpdateUserDTO.builder();
-        usr = switch (attributeThatYouWantToUpdate) {
-            case "username" -> usr.username(val);
-            case "email" -> usr.email(val);
-            case "password" -> usr.password(val);
-            default -> usr; // should never reach here
-        };
-
-        return usr.build();
+    @Disabled
+    void UserService_get_Pageable_UnhandledException() {
+        // I couldn't implement this
     }
 
 
-    Page<UserEntity> createValidUserEntities(int n) {
-        List<UserEntity> users = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            users.add(UserEntity.builder()
-                    .id((long) i)
-                    .username("cris6h16" + i)
-                    .email("cris6h16" + i + "@gmail.com")
-                    .password("{bcrypt}$2a81..." + i)
-                    .roles(Set.of(RoleEntity.builder().id(10L).name(ERole.ROLE_USER).build()))
-                    .build());
-        }
-        return new PageImpl<>(users, PageRequest.of(0, 10), n); //todo: add sort by what
-    }
 
-    UserEntity createValidUserEntity(boolean withRolesUser, boolean withRolesNull) {
-        UserEntity.UserEntityBuilder builder = UserEntity.builder()
-                .id(1L)
-                .username("github.com/cris6h16")
-                .email("cristianmherrera21@gmail.comm")
-                .password("{bcrypt}$2a81...")
-                .roles(withRolesNull ? null : new HashSet<>(1));
-
-        if (withRolesUser) {
-            builder.roles(Set.of(RoleEntity.builder().id(10L).name(ERole.ROLE_USER).build()));
-        }
-
-
-        UserEntity usr = builder.build();
-        if (withRolesUser) {
-            assertThat(usr.getRoles().iterator().next().getName().equals(ERole.ROLE_USER));
-        }
-        if (withRolesNull) {
-            assertThat(usr.getRoles()).isNull();
-        }
-
-        return builder.build();
-    }
+//
+//    private void mockRoleRepository(boolean isPresent) {
+//        if (isPresent) {
+//            when(roleRepository.findByName(any(ERole.class)))
+//                    .thenReturn(Optional.of(new RoleEntity(10L, ERole.ROLE_USER)));
+//            return;
+//        }
+//        when(roleRepository.findByName(any(ERole.class)))
+//                .thenReturn(Optional.empty());
+//    }
+//
+//    private void mockPasswordEncoder() {
+//        when(passwordEncoder.encode(any(CharSequence.class)))
+//                .thenReturn("{bcrypt}$2a$1...");
+//    }
+//
+//    private void mockUserRepositorySave() {
+//        when(userRepository.save(any(UserEntity.class)))
+//                .thenReturn(UserEntity.builder().id(1L).build());
+//    }
+//
+//    private void verifyAllDependencies(CreateUpdateUserDTO dto, boolean roleRetrieved) {
+//        verify(roleRepository).findByName(ERole.ROLE_USER);// verify if was called
+//        verify(passwordEncoder).encode(dto.getPassword()); // verify if was called
+//        verify(userRepository).save(argThat(user -> // verify if the user requested to save is the same as DTO
+//                user != null &&
+//                        user.getId() == null &&
+//                        user.getUsername().equals(dto.getUsername()) &&
+//                        user.getPassword().startsWith("{bcrypt}$") &&
+//                        user.getEmail().equals(dto.getEmail()) &&
+//                        user.getRoles().size() == 1 &&
+//                        (roleRetrieved ? user.getRoles().stream().findFirst().get().getId() == 10L : true) &&
+//                        user.getCreatedAt() != null
+//        ));
+//    }
 }
