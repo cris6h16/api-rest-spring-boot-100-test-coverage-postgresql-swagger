@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Constants;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 
 public class Cons {
     public class User {
@@ -45,6 +46,13 @@ public class Cons {
 
         public class Fails {
             public static final String NOT_FOUND = "Note not found";
+        }
+
+        /**
+         * {@link CreateNoteDTO}
+         */
+        public static class DTO {
+            public static final String NULL = "Note to update/create cannot be null";
         }
 
     }

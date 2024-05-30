@@ -124,6 +124,7 @@ public class ServiceUtils {
      * @throws AbstractServiceExceptionWithStatus impl if id is null or less than 1
      */
     public void validateId(Long id) {
-        if (id == null || id <= 0) throw new InvalidIdException();
+        if (id == null || id <= 0)
+            throw new InvalidIdException();
     }
 }

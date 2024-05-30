@@ -211,7 +211,7 @@ public class UserServiceImpl implements UserService {
                 .findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
-
+ //todo: write integrations test for Exceptions which weren't tested as UNIQUE CONSTRAISN or any other validation
 
     private UserServiceTransversalException createATraversalExceptionHandled(Exception e) {
         return (UserServiceTransversalException) serviceUtils.createATraversalExceptionHandled(e, true);

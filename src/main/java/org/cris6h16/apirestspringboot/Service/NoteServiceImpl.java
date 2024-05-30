@@ -5,6 +5,8 @@ import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.Common.InvalidIdException;
+import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteService.CreateNoteDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteService.NoteNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
@@ -15,17 +17,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Fails.NOT_FOUND;
 
 @Service
 @Slf4j
@@ -52,6 +50,7 @@ public class NoteServiceImpl implements NoteService {
     public Long create(CreateNoteDTO note, Long userId) {
         try {
             UserEntity user = validateIdAndGetUser(userId);
+            validateDTONotNull(note);
 
             NoteEntity noteEntity = NoteEntity.builder()
                     .title(note.getTitle())
@@ -60,7 +59,7 @@ public class NoteServiceImpl implements NoteService {
                     .build();
 
             noteEntity.setUser(user);
-            noteRepository.save(noteEntity);
+            noteRepository.saveAndFlush(noteEntity); // Changed from `.save()` to one with flush, due to testing with H2
 
             return noteEntity.getId();
 
@@ -69,6 +68,75 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
+    @Override
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public PublicNoteDTO get(Long noteId, Long userId) {
+        try {
+            UserEntity user = validateIdAndGetUser(userId);
+            NoteEntity note = validateIdAndGetNote(noteId, user);
+
+            return PublicNoteDTO.builder()
+                    .id(note.getId())
+                    .title(note.getTitle())
+                    .content(note.getContent())
+                    .updatedAt(note.getUpdatedAt())
+                    .build();
+
+        } catch (Exception e) {
+            throw getTraversalException(e);
+        }
+    }
+
+    @Override
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public void put(Long noteId, CreateNoteDTO dto, Long userId) {
+        try {
+            UserEntity usr = validateIdAndGetUser(userId);
+            validateId(noteId);
+            NoteEntity noteEntity = noteRepository
+                    .findByIdAndUser(noteId, usr) // If exists get it, else create ==> exists || create ==> same ID
+                    .orElse(NoteEntity.builder()
+                            .id(noteId)
+                            .title(dto.getTitle())
+                            .content(dto.getContent())
+                            .updatedAt(new Date())
+                            .build()
+                    );
+
+            noteEntity.setTitle(dto.getTitle());
+            noteEntity.setContent(dto.getContent());
+
+            noteRepository.save(noteEntity);
+
+        } catch (Exception e) {
+            throw getTraversalException(e);
+        }
+    }
+
+    @Override
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    public void delete(Long noteId, Long userId) {
+        try {
+            UserEntity usr = validateIdAndGetUser(userId);
+
+            NoteEntity note = noteRepository.findByIdAndUser(noteId, usr)
+                    .orElseThrow(NoteNotFoundException::new);
+
+            noteRepository.delete(note);
+
+        } catch (Exception e) {
+            throw getTraversalException(e);
+        }
+    }
 
     @Override
     @Transactional(
@@ -101,78 +169,6 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
-    @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
-    public PublicNoteDTO get(Long noteId, Long userId) {
-        try {
-            UserEntity user = validateIdAndGetUser(noteId);
-
-            NoteEntity note = noteRepository
-                    .findByIdAndUser(noteId, user)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, NOT_FOUND));
-
-            return PublicNoteDTO.builder()
-                    .id(note.getId())
-                    .title(note.getTitle())
-                    .content(note.getContent())
-                    .updatedAt(note.getUpdatedAt())
-                    .build();
-
-        } catch (Exception e) {
-            throw getTraversalException(e);
-        }
-    }
-
-    @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
-    public void put(Long noteId, CreateNoteDTO note, Long userId) {
-        try {
-            UserEntity usr = validateIdAndGetUser(userId);
-
-            NoteEntity noteEntity = noteRepository
-                    .findByIdAndUser(noteId, usr) // If exists get it, else create ==> exists || create ==> same ID
-                    .orElse(NoteEntity.builder()
-                            .id(noteId)
-                            .title(note.getTitle())
-                            .content(note.getContent())
-                            .updatedAt(new Date())
-                            .build()
-                    );
-            noteEntity.setTitle(note.getTitle());
-            noteEntity.setContent(note.getContent());
-
-            noteRepository.save(noteEntity);
-
-        } catch (Exception e) {
-            throw getTraversalException(e);
-        }
-    }
-
-    @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
-    public void delete(Long noteId, Long userId) {
-        try {
-            UserEntity usr = validateIdAndGetUser(userId);
-
-            NoteEntity note = noteRepository.findByIdAndUser(noteId, usr)
-                    .orElseThrow(NoteNotFoundException::new);
-
-            noteRepository.delete(note);
-
-        } catch (Exception e) {
-            throw getTraversalException(e);
-        }
-    }
-
     //todo: doc trhows
     private UserEntity validateIdAndGetUser(Long userId) {
         return this.userService.validateIdAndGetUser(userId);
@@ -181,5 +177,21 @@ public class NoteServiceImpl implements NoteService {
 
     private NoteServiceTransversalException getTraversalException(Exception e) {
         return (NoteServiceTransversalException) this.serviceUtils.createATraversalExceptionHandled(e, false);
+    }
+
+    private void validateDTONotNull(CreateNoteDTO dto) {
+        if (dto == null) throw new CreateNoteDTOIsNullException();
+    }
+
+    // todo: doc this
+    private NoteEntity validateIdAndGetNote(Long noteId, UserEntity userInDB) {
+        this.serviceUtils.validateId(noteId);
+        return noteRepository
+                .findByIdAndUser(noteId, userInDB)
+                .orElseThrow(NoteNotFoundException::new);
+    }
+
+    private void validateId(Long noteId) {
+        if (noteId == null || noteId <= 0) throw new InvalidIdException();
     }
 }
