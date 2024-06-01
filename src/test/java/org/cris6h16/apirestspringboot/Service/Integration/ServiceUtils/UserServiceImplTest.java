@@ -309,13 +309,13 @@ class UserServiceImplTest {
 
     }
 
-    @Test
-    @Tag("get")
-    @Disabled
-    void UserService_get_ThrowsUnhandledException() {
+//    @Test
+//    @Tag("get")
+//    @Disabled
+//    void UserService_get_ThrowsUnhandledException() {
         // I couldn't implement this, but has the same handling for all methods;
         // in 'create' al could implement
-    }
+//    }
 
     @Test
     @Tag("update")
@@ -579,23 +579,13 @@ class UserServiceImplTest {
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
-
-    @Test
-    @Tag("delete")
-    @Disabled()
-    void UserService_delete_ThrowsUnhandledException() {
-        // Arrange
-        Long id = 1L;
-
-        // I couldn't implement this
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
-        verify(userRepository).findById(id);
-    }
+//
+//    @Test
+//    @Tag("delete")
+//    @Disabled()
+//    void UserService_delete_ThrowsUnhandledException() {
+//        // I couldn't implement this
+//  }
 
     @Test
     @Tag("get(pageable)")
@@ -631,10 +621,10 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    @Tag("get(pageable)")
-    @Disabled
-    void UserService_get_Pageable_UnhandledException() {
+//    @Test
+//    @Tag("get(pageable)")
+//    @Disabled
+//    void UserService_get_Pageable_UnhandledException() {
         // I couldn't implement this, but has the same handling for all methods;
         // in 'create' al could implement
     }
@@ -675,4 +665,3 @@ class UserServiceImplTest {
 //                        user.getCreatedAt() != null
 //        ));
 //    }
-}
