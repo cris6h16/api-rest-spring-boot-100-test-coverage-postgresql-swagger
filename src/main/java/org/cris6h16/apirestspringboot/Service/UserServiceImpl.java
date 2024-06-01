@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
             RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
                     .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
-            UserEntity saved = userRepository.save(UserEntity.builder()
+            UserEntity saved = userRepository.saveAndFlush(UserEntity.builder()
                     .username(dto.getUsername())
                     .password(passwordEncoder.encode(dto.getPassword()))
                     .email(dto.getEmail())
@@ -130,7 +130,7 @@ public class UserServiceImpl implements UserService {
                 usr.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
             usr.setUpdatedAt(new Date());
-            userRepository.save(usr);
+            userRepository.saveAndFlush(usr);
 
         } catch (Exception e) {
             throw createATraversalExceptionHandled(e);

@@ -112,7 +112,7 @@ public class NoteServiceImpl implements NoteService {
             noteEntity.setTitle(dto.getTitle());
             noteEntity.setContent(dto.getContent());
 
-            noteRepository.save(noteEntity);
+            noteRepository.saveAndFlush(noteEntity);
 
         } catch (Exception e) {
             throw getTraversalException(e);
@@ -127,9 +127,7 @@ public class NoteServiceImpl implements NoteService {
     public void delete(Long noteId, Long userId) {
         try {
             UserEntity usr = validateIdAndGetUser(userId);
-
-            NoteEntity note = noteRepository.findByIdAndUser(noteId, usr)
-                    .orElseThrow(NoteNotFoundException::new);
+            NoteEntity note = validateIdAndGetNote(noteId, usr);
 
             noteRepository.delete(note);
 

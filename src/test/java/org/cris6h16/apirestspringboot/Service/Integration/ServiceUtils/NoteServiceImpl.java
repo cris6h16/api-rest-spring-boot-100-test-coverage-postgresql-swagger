@@ -1,13 +1,9 @@
 package org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils;
 
-import jakarta.transaction.NotSupportedException;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
-import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
@@ -24,17 +20,18 @@ import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
-@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
+//@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
 public class NoteServiceImpl {
     @Autowired
     private NoteService noteService;
@@ -47,6 +44,9 @@ public class NoteServiceImpl {
     void setUp() {
         noteRepository.deleteAll();
         userRepository.deleteAll();
+
+        noteRepository.flush();
+        userRepository.flush();
     }
 
     @Test
@@ -360,8 +360,133 @@ public class NoteServiceImpl {
         title = title.equals("null") ? null : title;
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
+        CreateNoteDTO putDTO = new CreateNoteDTO(title, "content");
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.put(1L, putDTO, userId))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("put")
+    void NoteService_put_ValidDTO_Replaces() {
+        // Arrange
+        UserEntity user = createUserEntity();
+        user.setNotes(createNoteEntities());
+        userRepository.saveAndFlush(user);
+
+        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+        CreateNoteDTO putDTO = new CreateNoteDTO("new title", "new content");
+
+        // Act
+        noteService.put(firstNoteEntity.getId(), putDTO, user.getId());
+
+        // Assert
+        NoteEntity updatedNote = noteRepository.findByIdAndUser(firstNoteEntity.getId(), user).orElse(null);
+        assertThat(updatedNote)
+                .hasFieldOrPropertyWithValue("title", putDTO.getTitle())
+                .hasFieldOrPropertyWithValue("content", putDTO.getContent());
+    }
+
+    @Test
+    @Tag("put")
+    void NoteService_put_UnhandledException() {
+        // Arrange
+        UserEntity user = createUserEntity();
+        user.setNotes(createNoteEntities());
+        userRepository.saveAndFlush(user);
+
+        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+        CreateNoteDTO putDTO = new CreateNoteDTO("new title", "new content") {
+            @Override
+            public String getTitle() {
+                throw new NoSuchElementException("cris6h16's random exception");
+            }
+        };
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.put(firstNoteEntity.getId(), putDTO, user.getId()))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Test
+    @Tag("delete")
+    void NoteService_delete_idInvalidUserId() {
+        // Arrange
+        Long userId = -1L;
+        Long noteId = 1L;
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessage(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+    @Test
+    @Tag("delete")
+    void NoteService_delete_UserNotFound() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 1L;
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessage(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @Tag("delete")
+    void NoteService_delete_idInvalidNoteId() {
+        // Arrange
+        Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
+        Long noteId = 0L;
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessage(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("delete")
+    void NoteService_delete_NoteNotFound() {
+        // Arrange
+        Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
+        Long noteId = 1L;
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .hasMessage(Cons.Note.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
+    }
 
 
+    @Test
+    @Tag("delete")
+    void NoteService_delete_Success() {
+        // Arrange
+        UserEntity user = createUserEntity();
+        user.setNotes(createNoteEntities());
+        userRepository.saveAndFlush(user);
+
+        int notesSize = noteRepository.findByUser(user).size();
+        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+
+        // Act
+        noteService.delete(firstNoteEntity.getId(), user.getId());
+
+        // Assert
+        int sizeNow = noteRepository.findByUser(user).size();
+        assertThat(sizeNow).isEqualTo(notesSize - 1);
+        assertThat(noteRepository.findById(firstNoteEntity.getId())).isEmpty();
     }
 
 

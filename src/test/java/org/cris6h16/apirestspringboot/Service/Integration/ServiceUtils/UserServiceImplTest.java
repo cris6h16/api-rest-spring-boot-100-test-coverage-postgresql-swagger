@@ -38,7 +38,6 @@ import static org.mockito.Mockito.verify;
  */
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
-@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED)
 class UserServiceImplTest {
 
     @Autowired
@@ -439,6 +438,7 @@ class UserServiceImplTest {
 
         // Act
         userService.update(original.getId(), updateEmailDTO);
+        original = userRepository.findById(original.getId()).orElse(null);
 
         // Assert
         assertThat(original)
