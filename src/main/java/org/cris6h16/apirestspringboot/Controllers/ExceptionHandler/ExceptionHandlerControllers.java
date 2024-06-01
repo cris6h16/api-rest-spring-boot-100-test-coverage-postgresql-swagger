@@ -2,12 +2,11 @@ package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +21,8 @@ public class ExceptionHandlerControllers {
     }
 
     // handle my traversals exceptions
-    @ExceptionHandler(value = {AbstractServiceExceptionWithStatus.class})
-    public ResponseEntity<String> handleServiceExceptionWithStatus(AbstractServiceExceptionWithStatus ex) {
+    @ExceptionHandler(value = {AbstractExceptionWithStatus.class})
+    public ResponseEntity<String> handleServiceExceptionWithStatus(AbstractExceptionWithStatus ex) {
         return buildResponse(ex.getRecommendedStatus(), ex.getMessage());
     }
 

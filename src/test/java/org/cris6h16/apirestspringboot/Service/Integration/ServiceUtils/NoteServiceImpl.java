@@ -5,7 +5,7 @@ import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
@@ -58,7 +58,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -72,7 +72,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -86,7 +86,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -100,7 +100,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -117,7 +117,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, user.getId()))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -134,7 +134,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, user.getId()))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -196,7 +196,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(toCreate, user.getId()))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Note.DTO.NULL)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -217,7 +217,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(toCreate, user.getId()))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -231,7 +231,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -245,7 +245,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -259,7 +259,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -273,7 +273,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -317,7 +317,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -332,7 +332,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -348,7 +348,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -364,7 +364,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(1L, putDTO, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -408,7 +408,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(firstNoteEntity.getId(), putDTO, user.getId()))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -422,7 +422,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -435,7 +435,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -449,7 +449,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -463,7 +463,7 @@ public class NoteServiceImpl {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractServiceExceptionWithStatus.class)
+                .isInstanceOf(AbstractExceptionWithStatus.class)
                 .hasMessage(Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }

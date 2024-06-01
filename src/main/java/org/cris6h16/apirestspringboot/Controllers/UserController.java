@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.controller.UserControllerTransversalException;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -11,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.util.List;
@@ -30,7 +30,7 @@ public class UserController {
     }
 
 
-    @PostMapping
+    @PostMapping(consumes = "application/json")
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> create(@RequestBody CreateUpdateUserDTO user) {
         Long id = userService.create(user);
@@ -75,7 +75,7 @@ public class UserController {
 
     void verifyOwnership(Long id, Long principalId) {
         if (!id.equals(principalId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG);
+            throw new UserControllerTransversalException(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG, HttpStatus.FORBIDDEN);
         }
     }
 }

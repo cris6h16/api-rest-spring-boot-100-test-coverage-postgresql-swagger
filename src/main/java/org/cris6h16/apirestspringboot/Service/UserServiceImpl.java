@@ -7,11 +7,11 @@ import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.AbstractServiceExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.CreateUpdateDTOIsNullException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.PasswordTooShortException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserService.UserNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.service.WithStatus.UserServiceTransversalException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.CreateUpdateDTOIsNullException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
@@ -189,7 +189,7 @@ public class UserServiceImpl implements UserService {
      * then it means that the password always will have a length greater than 8
      *
      * @param dto the user to verify its password
-     * @throws AbstractServiceExceptionWithStatus If dto is null || password in dto is invalid
+     * @throws AbstractExceptionWithStatus If dto is null || password in dto is invalid
      */
     void verifyDTONotNullAndPassword(CreateUpdateUserDTO dto) {
         if (dto == null) throw new CreateUpdateDTOIsNullException();
@@ -203,7 +203,7 @@ public class UserServiceImpl implements UserService {
      *
      * @param userId to validate
      * @return {@link UserEntity}
-     * @throws AbstractServiceExceptionWithStatus if user not found or id is invalid
+     * @throws AbstractExceptionWithStatus if user not found or id is invalid
      */
     public UserEntity validateIdAndGetUser(Long userId) {
         serviceUtils.validateId(userId);
