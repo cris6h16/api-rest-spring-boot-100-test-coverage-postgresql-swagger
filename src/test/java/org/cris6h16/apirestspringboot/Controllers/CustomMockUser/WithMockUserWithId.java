@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 public @interface WithMockUserWithId {
     long id() default 1L;
 
-    String username() default "user";
+    String username() default "cris6h16";
 
-    String password() default "password";
+    String password() default "12345678";
 
     String[] roles() default {"ROLE_USER"};
 }

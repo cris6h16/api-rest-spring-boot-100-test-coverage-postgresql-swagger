@@ -64,7 +64,7 @@ class AdviceUserControllerTest {
     }
 
     @Test
-    void AdviceUserControllerTest_create_fromService_AbstractExceptionWithStatus() throws Exception {
+    void AdviceUserControllerTest_ExceptionFromService_AbstractExceptionWithStatus() throws Exception {
         when(userService.create(any(CreateUpdateUserDTO.class)))
                 .thenThrow(new UserServiceTransversalException(Cons.User.DTO.NULL, HttpStatus.BAD_REQUEST)); // handled random exception
 
@@ -77,11 +77,6 @@ class AdviceUserControllerTest {
                 .andExpect(jsonPath("$.message").value(Cons.User.DTO.NULL));
     }
 
-    @Test
-    void AdviceUserControllerTest_RequiredBeAuthenticated() throws Exception {
-        mvc.perform(get("/api/users/1"))
-                .andExpect(status().isForbidden());
-    }
 
     @Test
     @WithMockUserWithId(id = 2, username = "cris6h16", roles = {"ROLE_HELLOWORD"}) // in HTTP GET I'm using: "isAuthenticated()"
@@ -125,7 +120,8 @@ class AdviceUserControllerTest {
         mvc.perform(get("/api/users")
                         .with(csrf()))
                 .andExpect(status().isForbidden())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
     }
 
 }

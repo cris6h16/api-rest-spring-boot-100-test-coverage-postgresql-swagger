@@ -63,6 +63,7 @@ public class Cons {
 
     public class Auth {
         public class Fails {
+            public static final String ACCESS_DENIED = "Access denied";
             public static final String IS_NOT_YOUR_ID_MSG = "You aren't the owner of this id";
         }
     }

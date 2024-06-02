@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
 //@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
-public class NoteServiceImpl {
+public class NoteServiceImplTest {
     @Autowired
     private NoteService noteService;
     @Autowired
@@ -297,14 +297,14 @@ public class NoteServiceImpl {
                 .hasFieldOrPropertyWithValue("content", firstNoteEntity.getContent())
                 .hasFieldOrPropertyWithValue("updatedAt", firstNoteEntity.getUpdatedAt());
     }
-
-    @Test
-    @Tag("get")
-    @Disabled
-    void NoteService_get_UnhandledException() {
-        // I couldn't find a way to throw an unhandled exception in the get method
-        // but with `NoteService_create_UnhandledException` is enough
-    }
+//
+//    @Test
+//    @Tag("get")
+//    @Disabled
+//    void NoteService_get_UnhandledException() {
+//        // I couldn't find a way to throw an unhandled exception in the get method
+//        // but with `NoteService_create_UnhandledException` is enough
+//    }
 
 
     @ParameterizedTest

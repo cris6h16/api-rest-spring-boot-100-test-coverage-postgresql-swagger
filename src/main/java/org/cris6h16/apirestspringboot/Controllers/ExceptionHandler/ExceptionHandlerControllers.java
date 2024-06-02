@@ -42,7 +42,7 @@ public class ExceptionHandlerControllers {
 
     @ExceptionHandler(value = AccessDeniedException.class) // added thanks to the logs (ERROR)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, Cons.Response.ForClient.GENERIC_ERROR);
+        return buildResponse(HttpStatus.FORBIDDEN,Cons.Auth.Fails.ACCESS_DENIED);
     }
 
     // when is e.g. `api/users/1` but was passed `api/users/string`
@@ -55,8 +55,6 @@ public class ExceptionHandlerControllers {
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<String> handleException(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        if (ex.getMessage().contains("request body is missing")) status = HttpStatus.BAD_REQUEST;
-        // add more cases when is bad request, based on the ERROR logs, That can be one of its utilities
 
         log.error("Unhandled exception: {}", ex.toString());
         return buildResponse(status, Cons.Response.ForClient.GENERIC_ERROR);

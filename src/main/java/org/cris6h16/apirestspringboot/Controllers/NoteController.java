@@ -5,6 +5,7 @@ import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -28,7 +29,10 @@ public class NoteController {
         this.noteService = noteService;
     }
 
-    @PostMapping
+    @PostMapping(
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE // if is successful else the defined on Advice
+    )
     public ResponseEntity<Void> create(@RequestBody CreateNoteDTO note, @MyId Long principalId) {
         Long id = noteService.create(note, principalId);
         URI uri = URI.create(path + "/" + id);
@@ -36,19 +40,27 @@ public class NoteController {
         return ResponseEntity.created(uri).build();
     }
 
-    @GetMapping
+    @GetMapping(
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable, @MyId Long principalId) {
         List<PublicNoteDTO> list = noteService.getPage(pageable, principalId);
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping("/{noteId}")
+    @GetMapping(
+            value = "/{noteId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<PublicNoteDTO> get(@PathVariable Long noteId, @MyId Long principalId) {
         PublicNoteDTO en = noteService.get(noteId, principalId);
         return ResponseEntity.ok(en);
     }
 
-    @PutMapping("/{noteId}")
+    @PutMapping(
+            value = "/{noteId}",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<Void> update(@PathVariable Long noteId,
                                        @RequestBody CreateNoteDTO note,
                                        @MyId Long principalId) {
@@ -56,7 +68,8 @@ public class NoteController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{noteId}")
+    // content type is not set because it's not necessary
+    @DeleteMapping(value = "/{noteId}")
     public ResponseEntity<Void> delete(@PathVariable Long noteId, @MyId Long principalId) {
         noteService.delete(noteId, principalId);
         return ResponseEntity.noContent().build();

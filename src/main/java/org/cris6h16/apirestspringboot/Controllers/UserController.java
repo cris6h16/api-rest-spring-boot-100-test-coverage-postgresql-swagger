@@ -8,6 +8,7 @@ import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -31,8 +32,8 @@ public class UserController {
 
 
     @PostMapping(
-            consumes = "application/json",
-            produces = "application/json" // if is successful else the defined on Advice
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE // if is successful else the defined on Advice
     )
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> create(@RequestBody CreateUpdateUserDTO user) {
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     @GetMapping(value = "/{id}",
-            produces = "application/json")
+            produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PublicUserDTO> get(@PathVariable Long id,
                                              @MyId Long principalId) {
@@ -52,8 +53,7 @@ public class UserController {
     }
 
     @PatchMapping(value = "/{id}",
-            consumes = "application/json",
-            produces = "application/json"
+            consumes = MediaType.APPLICATION_JSON_VALUE
     )
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> update(@PathVariable Long id,
@@ -73,7 +73,9 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
+    @GetMapping(
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize("hasRole(T(org.cris6h16.apirestspringboot.Entities.ERole).ROLE_ADMIN)")
     public ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable) {
         List<PublicUserDTO> l = userService.get(pageable);

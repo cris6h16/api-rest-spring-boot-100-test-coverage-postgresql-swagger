@@ -33,8 +33,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-// charge the context due my use of `@MyId` which use behind: `authentication.name.equalsIgnoreCase('anonymousUser') ? -1 : authentication.principal.id`
+@SpringBootTest// charge the context due my use of `@MyId` which use behind: `authentication.name.equalsIgnoreCase('anonymousUser') ? -1 : authentication.principal.id`
 @AutoConfigureMockMvc
 class UserControllerTest {
 
@@ -110,16 +109,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.roles[0].name").value(ERole.ROLE_USER.name()));
     }
 
-    @Test
-    @Disabled(value = "TODO: Implement this as integration test with RestControllerAdvice")
-    @WithMockUserWithId(id = 2, username = "github.com/cris6h16", roles = {"ROLE_HELLOWORD"})
-        // in HTTP GET I'm using: "isAuthenticated()"
-    void UserControllerTest_get_OtherUserAccount_Then403AndReturnFailMessage() throws Exception {
-        mvc.perform(get("/api/users/1"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG));
-    }
 
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
@@ -138,16 +127,6 @@ class UserControllerTest {
     }
 
 
-    @Test
-    @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
-    @Disabled
-    void updateIsNotYourId() throws Exception {
-
-        mvc.perform(patch("/api/users/1")
-                .contentType(MediaType.APPLICATION_JSON));
-
-
-    }
 
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
