@@ -70,6 +70,8 @@ public class Cons {
     public class Response {
         public static class ForClient {
             public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
+            public static final String NO_RESOURCE_FOUND = "No resource found";
+
         }
     }
 

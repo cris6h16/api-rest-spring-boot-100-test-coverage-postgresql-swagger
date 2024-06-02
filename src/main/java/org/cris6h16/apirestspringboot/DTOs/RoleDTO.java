@@ -8,6 +8,7 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 @ToString
 @Getter
 @Setter
+@Builder
 public class RoleDTO {
     private ERole name;
 }

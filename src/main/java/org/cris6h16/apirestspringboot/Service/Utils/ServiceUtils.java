@@ -51,9 +51,9 @@ public class ServiceUtils {
                 if (pageableFail) forClient = e.getMessage();
             }
 
-            if (e instanceof NullPointerException && forClient.isBlank()){
+            if (e instanceof NullPointerException && forClient.isBlank()) {
                 boolean pageablePassedNull = this.thisContains(e.getMessage(), "because \"pageable\" is null");
-                if (pageablePassedNull){
+                if (pageablePassedNull) {
                     recommendedStatus = HttpStatus.BAD_REQUEST;
                     // forClient => empty isn't necessary more info
                 }
@@ -86,19 +86,14 @@ public class ServiceUtils {
             }
 
 
-
-            // unhandled exceptions -> generic error
-            if (forClient.isBlank()) {
-                if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-                forClient = Cons.Response.ForClient.GENERIC_ERROR;
-                logError(e);
-            }
-
-        } catch (Exception ignored) { // if it doesn't reach to the handling for generics(the last) due to some unexpected exception
-            if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            if (forClient.isBlank()) forClient = Cons.Response.ForClient.GENERIC_ERROR;
-            logError(e);
+        } catch (Exception s) { // if it doesn't reach to the handling for generics(the last) due to some unexpected exception
+            log.error("Unexpected exception in ServiceUtils: {}", e.toString());
         }
+
+        // unhandled exceptions -> generic error
+        if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+        if (forClient.isBlank()) forClient = Cons.Response.ForClient.GENERIC_ERROR;
+        logError(e);
 
 
         return isUserService ?
@@ -116,7 +111,7 @@ public class ServiceUtils {
 
     private void logError(Exception e) {
         log.error("Unhandled exception: {}", e.toString());
-         e.printStackTrace();
+        e.printStackTrace();
     }
 
     /**

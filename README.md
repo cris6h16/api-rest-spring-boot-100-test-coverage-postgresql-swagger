@@ -23,7 +23,12 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
     - `21`
 
 
-- You can see the used dependencies in the `pom.xml` file
+- You can see the used dependencies in the `pom.xml` file    
+
+
+#
+
+[//]: # (todo: improve docs, add some diagrams, etc; but this as final step)
 
 ## 1. DEFINING THE PROJECT
 

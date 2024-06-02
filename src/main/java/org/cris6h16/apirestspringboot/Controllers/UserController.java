@@ -30,7 +30,10 @@ public class UserController {
     }
 
 
-    @PostMapping(consumes = "application/json")
+    @PostMapping(
+            consumes = "application/json",
+            produces = "application/json" // if is successful else the defined on Advice
+    )
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> create(@RequestBody CreateUpdateUserDTO user) {
         Long id = userService.create(user);
@@ -38,7 +41,8 @@ public class UserController {
         return ResponseEntity.created(uri).build();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}",
+            produces = "application/json")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PublicUserDTO> get(@PathVariable Long id,
                                              @MyId Long principalId) {
@@ -47,7 +51,10 @@ public class UserController {
         return ResponseEntity.ok(u);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}",
+            consumes = "application/json",
+            produces = "application/json"
+    )
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> update(@PathVariable Long id,
                                        @RequestBody CreateUpdateUserDTO dto,
@@ -73,7 +80,7 @@ public class UserController {
         return ResponseEntity.ok(l);
     }
 
-    void verifyOwnership(Long id, Long principalId) {
+    private void verifyOwnership(Long id, Long principalId) {
         if (!id.equals(principalId)) {
             throw new UserControllerTransversalException(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG, HttpStatus.FORBIDDEN);
         }
