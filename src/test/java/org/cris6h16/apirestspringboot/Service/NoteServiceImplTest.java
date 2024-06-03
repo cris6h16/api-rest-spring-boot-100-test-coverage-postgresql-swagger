@@ -6,26 +6,21 @@ import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 //@SpringBootTest
@@ -44,6 +39,8 @@ public class NoteServiceImplTest {
     NoteRepository noteRepository;
     @Mock
     UserServiceImpl userService;
+    @Mock
+    ServiceUtils serviceUtils;
 
     @InjectMocks
     NoteServiceImpl noteService;
@@ -107,34 +104,28 @@ public class NoteServiceImplTest {
     }
 
 
-
-
     @Test
     @Tag("get")
     void NoteServiceImplTest_get_Successful() {
         // Arrange
         UserEntity user = createUserEntityWithId();
-        NoteEntity note = createNoteEntities().iterator().next();
+        NoteEntity note = createNoteEntityWithId(user);
 
-        when(userService.validateIdAndGetUser(any(Long.class)))
+        doNothing().when(serviceUtils).validateId(any(Long.class));
+        when(userService.validateIdAndGetUser(user.getId()))
                 .thenReturn(user);
-        when(noteService.validateIdAndGetNote(any(Long.class), any(UserEntity.class))
-                .thenReturn(Optional.of(note)));
-
-
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+        when(noteRepository.findByIdAndUser(note.getId(), user))
+                .thenReturn(Optional.of(note));
 
         // Act
-        PublicNoteDTO publicNote = noteService.get(firstNoteEntity.getId(), user.getId());
+        PublicNoteDTO publicNote = noteService.get(note.getId(), user.getId());
 
         // Assert
         assertThat(publicNote)
-                .hasFieldOrPropertyWithValue("id", firstNoteEntity.getId())
-                .hasFieldOrPropertyWithValue("title", firstNoteEntity.getTitle())
-                .hasFieldOrPropertyWithValue("content", firstNoteEntity.getContent())
-                .hasFieldOrPropertyWithValue("updatedAt", firstNoteEntity.getUpdatedAt());
+                .hasFieldOrPropertyWithValue("id", note.getId())
+                .hasFieldOrPropertyWithValue("title", note.getTitle())
+                .hasFieldOrPropertyWithValue("content", note.getContent())
+                .hasFieldOrPropertyWithValue("updatedAt", note.getUpdatedAt());
     }
 
 
@@ -143,20 +134,29 @@ public class NoteServiceImplTest {
     void NoteServiceImplTest_put_ValidDTO_Replaces_Successful() {
         // Arrange
         UserEntity user = createUserEntityWithId();
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
+        NoteEntity toUpdate = createNoteEntityWithId(user);
+        NoteEntity noteUpdated = createNoteEntityWithId(user);
+        noteUpdated.setTitle("new title");
 
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+        when(userService.validateIdAndGetUser(any(Long.class)))
+                .thenReturn(user);
+        when(noteRepository.findByIdAndUser(any(Long.class), any(UserEntity.class))
+        ).thenReturn(Optional.of(noteUpdated));
+
         CreateNoteDTO putDTO = new CreateNoteDTO("new title", "new content");
 
         // Act
-        noteService.put(firstNoteEntity.getId(), putDTO, user.getId());
+        noteService.put(toUpdate.getId(), putDTO, user.getId());
 
         // Assert
-        NoteEntity updatedNote = noteRepository.findByIdAndUser(firstNoteEntity.getId(), user).orElse(null);
-        assertThat(updatedNote)
-                .hasFieldOrPropertyWithValue("title", putDTO.getTitle())
-                .hasFieldOrPropertyWithValue("content", putDTO.getContent());
+        verify(userService).validateIdAndGetUser(any(Long.class));
+        verify(noteRepository).findByIdAndUser(any(Long.class), any(UserEntity.class));
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getTitle().equals(putDTO.getTitle()) &&
+                        passedToDB.getContent().equals(putDTO.getContent()) &&
+                        passedToDB.getId().equals(toUpdate.getId()) &&
+                        passedToDB.getUser().equals(user)
+        ));
     }
 
 
@@ -165,52 +165,59 @@ public class NoteServiceImplTest {
     void NoteServiceImplTest_delete_Successful() {
         // Arrange
         UserEntity user = createUserEntityWithId();
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
+        NoteEntity note = createNoteEntityWithId(user);
 
-        int notesSize = noteRepository.findByUser(user).size();
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
+        doNothing().when(serviceUtils).validateId(any(Long.class));
+        when(userService.validateIdAndGetUser(any(Long.class)))
+                .thenReturn(user);
+        when(noteRepository.findByIdAndUser(note.getId(), user))
+                .thenReturn(Optional.of(note));
+        doNothing().when(noteRepository).delete(note);
 
         // Act
-        noteService.delete(firstNoteEntity.getId(), user.getId());
+        noteService.delete(note.getId(), user.getId());
 
         // Assert
-        int sizeNow = noteRepository.findByUser(user).size();
-        assertThat(sizeNow).isEqualTo(notesSize - 1);
-        assertThat(noteRepository.findById(firstNoteEntity.getId())).isEmpty();
+        verify(serviceUtils).validateId(any(Long.class));
+        verify(userService).validateIdAndGetUser(user.getId());
+        verify(noteRepository).findByIdAndUser(note.getId(), user);
+        verify(noteRepository).delete(note);
     }
 
     @Test
     @Tag("get(pageable)")
     void NoteServiceImplTest_getPageable_Successful() {
         // Arrange
-        UserEntity user = userRepository.saveAndFlush(createUserEntityWithId());
-        List<NoteEntity> notes = noteRepository.saveAllAndFlush(createNoteEntities(10, user));
-
+        UserEntity user = createUserEntityWithId();
+        List<NoteEntity> list = createNoteEntities(user);
         Pageable pageable = PageRequest.of(
                 0,
                 17,
                 Sort.by(Sort.Direction.ASC, "id")
         );
+
+        when(userService.validateIdAndGetUser(user.getId()))
+                .thenReturn(user);
+        when(noteRepository.findByUser(user, pageable))
+                .thenReturn(new PageImpl<>(list));
+
         // Act
         List<PublicNoteDTO> publicNotes = noteService.getPage(pageable, user.getId());
 
         // Assert
-        assertThat(publicNotes).hasSize(notes.size());
+        assertThat(publicNotes).hasSize(list.size());
 
-    }
-
-    Set<NoteEntity> createNoteEntities(int size, UserEntity user) {
-        Set<NoteEntity> notes = new HashSet<>();
-        for (int i = 0; i < size; i++) {
-            notes.add(NoteEntity.builder()
-                    .title("title" + i)
-                    .content("content" + i)
-                    .user(user)
-                    .build());
+        for (int i = 0; i < list.size(); i++) {
+            assertThat(publicNotes.get(i))
+                    .hasFieldOrPropertyWithValue("id", list.get(i).getId())
+                    .hasFieldOrPropertyWithValue("title", list.get(i).getTitle())
+                    .hasFieldOrPropertyWithValue("content", list.get(i).getContent())
+                    .hasFieldOrPropertyWithValue("updatedAt", list.get(i).getUpdatedAt());
         }
-        return notes;
+
     }
+
+
 
 
     UserEntity createUserEntityWithId() {
@@ -223,19 +230,23 @@ public class NoteServiceImplTest {
     }
 
 
-    Set<NoteEntity> createNoteEntities() {
-        Set<NoteEntity> notes = new HashSet<>();
+
+    List<NoteEntity> createNoteEntities(UserEntity user) {
+        List<NoteEntity> notes = new ArrayList<>(2);
         notes.add(NoteEntity.builder()
                 .title("title1")
                 .content("content1")
+                .user(user)
                 .build());
         notes.add(NoteEntity.builder()
                 .title("title2")
                 .content("content2")
+                .user(user)
                 .build());
 
         return notes;
     }
+
     NoteEntity createNoteEntityWithId(UserEntity user) {
         return NoteEntity.builder()
                 .id(1L)

@@ -12,6 +12,9 @@ import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -26,29 +29,11 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@SpringBootTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+//@SpringBootTest
+//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+@ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private UserServiceImpl userService;
-    @Autowired
-    private NoteRepository noteRepository;
-
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-        roleRepository.deleteAll();
-
-        userRepository.flush();
-        roleRepository.flush();
-    }
 
     @Test
     @Tag("create")
