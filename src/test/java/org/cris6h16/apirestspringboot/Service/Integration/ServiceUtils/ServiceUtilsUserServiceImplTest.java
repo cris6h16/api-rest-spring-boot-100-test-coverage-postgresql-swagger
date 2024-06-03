@@ -8,6 +8,7 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
+import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
@@ -31,12 +32,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 
 /**
+ * // todo: doc: the difficult of mock the database exceptions & its messages, due that the exception  handled work if has the exact exception with the exact message otherwise the response should be a generic thats the reason why i decided not mock the database
  * // todo: doc: this should be tested when all test in database layer are done
  * TODO: doc: Any service layer should be tested as Integration, due that all are wrapped by {@link ServiceUtils#createATraversalExceptionHandled(Exception, boolean)}
  */
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
-class UserServiceImplTest {
+class ServiceUtilsUserServiceImplTest {
 
     @Autowired
     private UserRepository userRepository;
@@ -46,6 +48,8 @@ class UserServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private UserServiceImpl userService;
+    @Autowired
+    private NoteRepository noteRepository;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +67,7 @@ class UserServiceImplTest {
     @Test
     @Tag("create")
     @Tag("UserServiceTransversalException")
-    void UserService_create_ThrowsPasswordIsTooShortException() {
+    void ServiceUtils_create_ThrowsPasswordIsTooShortException() {
         CreateUpdateUserDTO dto = CreateUpdateUserDTO.builder()
                 .username("cris6h16")
                 .password("1234567")
@@ -80,7 +84,7 @@ class UserServiceImplTest {
     @Test
     @Tag("UserServiceTransversalException")
     @Tag("create")
-    void UserService_create_paramNull() {
+    void ServiceUtils_create_paramNull() {
         // Arrange
         CreateUpdateUserDTO dto = null;
 
@@ -95,7 +99,7 @@ class UserServiceImplTest {
     @Test
     @Tag("UnhandledException")
     @Tag("create")
-    void UserService_create_ThrowsUnhandledException_ThenGenericResponse() {
+    void ServiceUtils_create_ThrowsUnhandledException_ThenGenericResponse() {
         // Arrange
         CreateUpdateUserDTO dto = new CreateUpdateUserDTO() {
             @Override
@@ -114,52 +118,57 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
     @Test
-    @Tag("create")
-    void UserService_create_RoleNonexistentInDB() { // default
+    @Tag("get")
+    void ServiceUtils_get_UserNotFound() {
         // Arrange
-        CreateUpdateUserDTO dto = createValidDTO();
+        Long id = 1L;
 
-        // Act
-        Long id = userService.create(dto);
-
-        // Assert
-        UserEntity user = userRepository.findById(id).orElse(null);
-        RoleEntity role = user.getRoles().iterator().next();
-
-        assertThat(user)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("username", dto.getUsername())
-                .hasFieldOrPropertyWithValue("email", dto.getEmail());
-        assertThat(passwordEncoder.matches(dto.getPassword(), user.getPassword()))
-                .isTrue();
-
-        assertThat(role)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("name", ERole.ROLE_USER)
-                .hasNoNullFieldsOrPropertiesExcept("id");
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(id))
+                .isInstanceOf(UserServiceTransversalException.class)
+                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
 
 
     @Test
-    @Tag("create")
-    void UserService_create_RoleExistentInDB() {
+    @Tag("get")
+    void ServiceUtils_get_UserIdInvalid_Negative() {
         // Arrange
-        CreateUpdateUserDTO dto = createValidDTO();
-        RoleEntity r = roleRepository.saveAndFlush(RoleEntity.builder().name(ERole.ROLE_USER).build());
+        Long id = -1L;
 
-        // Act
-        Long id = userService.create(dto);
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(id))
+                .isInstanceOf(UserServiceTransversalException.class)
+                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
 
-        // Assert
-        UserEntity user = userRepository.findById(id).orElse(null);
-        assertThat(user)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("roles", Set.of(r))
-                .hasFieldOrPropertyWithValue("username", dto.getUsername())
-                .hasFieldOrPropertyWithValue("email", dto.getEmail());
-        assertThat(passwordEncoder.matches(dto.getPassword(), user.getPassword())).isTrue();
+    @Test
+    @Tag("get")
+    void ServiceUtils_get_UserIdInvalid_Zero() {
+        // Arrange
+        Long id = 0L;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(id))
+                .isInstanceOf(UserServiceTransversalException.class)
+                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    @Tag("get")
+    void ServiceUtils_get_UserIdInvalid_Null() {
+        // Arrange
+        Long id = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.get(id))
+                .isInstanceOf(UserServiceTransversalException.class)
+                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
 
@@ -171,153 +180,9 @@ class UserServiceImplTest {
                 .build();
     }
 
-
-    @Test
-    @Tag("get")
-    void UserService_get_UserNotFound() {
-        // Arrange
-        Long id = 1L;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
-    }
-
-
-    @Test
-    @Tag("get")
-    void UserService_get_UserIdInvalid_Negative() {
-        // Arrange
-        Long id = -1L;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @Tag("get")
-    void UserService_get_UserIdInvalid_Zero() {
-        // Arrange
-        Long id = 0L;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @Tag("get")
-    void UserService_get_UserIdInvalid_Null() {
-        // Arrange
-        Long id = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-
-    @Test
-    @Tag("get")
-    void UserService_get_RolesNull() {
-        // Arrange
-        UserEntity usr = UserEntity.builder()
-                .username("cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(null)
-                .build();
-        userRepository.saveAndFlush(usr);
-
-        // Act
-        PublicUserDTO user = userService.get(usr.getId());
-
-        // Assert
-        assertThat(user)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("id", usr.getId())
-                .hasFieldOrPropertyWithValue("username", usr.getUsername())
-                .hasFieldOrPropertyWithValue("email", usr.getEmail())
-                .hasFieldOrPropertyWithValue("roles", new HashSet<>());
-    }
-
-    @Test
-    @Tag("get")
-    @Tag("correct")
-    void UserService_get_UserFoundWithRoles() {
-        // Arrange
-        Long userId = 1L;
-        RoleEntity role = roleRepository.saveAndFlush(RoleEntity.builder()
-                .id(10L)
-                .name(ERole.ROLE_USER)
-                .build());
-        UserEntity createdEntity = userRepository.saveAndFlush(UserEntity.builder()
-                .id(userId)
-                .username("cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(Set.of(role))
-                .build());
-
-        // Act
-        PublicUserDTO dto = userService.get(userId);
-
-        // Assert
-        assertThat(dto)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("id", userId)
-                .hasFieldOrPropertyWithValue("username", createdEntity.getUsername())
-                .hasFieldOrPropertyWithValue("email", createdEntity.getEmail());
-
-        RoleDTO rDTO = dto.getRoles().iterator().next();
-        assertThat(rDTO.getName()).isEqualTo(role.getName());
-    }
-
-
-    @Test
-    @Tag("get")
-    void UserService_get_UserFoundWithRolesNull() {
-        // Arrange
-        UserEntity createdEntity = userRepository.saveAndFlush(UserEntity.builder()
-                .username("cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(null)
-                .build());
-
-        // Act
-        PublicUserDTO dto = userService.get(createdEntity.getId());
-
-        // Assert
-        assertThat(dto)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("id", createdEntity.getId())
-                .hasFieldOrPropertyWithValue("username", createdEntity.getUsername())
-                .hasFieldOrPropertyWithValue("email", createdEntity.getEmail())
-                .hasFieldOrPropertyWithValue("roles", new HashSet<>());
-
-    }
-
-//    @Test
-//    @Tag("get")
-//    @Disabled
-//    void UserService_get_ThrowsUnhandledException() {
-        // I couldn't implement this, but has the same handling for all methods;
-        // in 'create' al could implement
-//    }
-
     @Test
     @Tag("update")
-    void UserService_update_UserNotFound() {
+    void ServiceUtils_update_UserNotFound() {
         // Arrange
         Long id = 1L;
         CreateUpdateUserDTO dto = createValidDTO();
@@ -329,10 +194,9 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
 
-
     @Test
     @Tag("update")
-    void UserService_update_UserIdInvalid_Negative() {
+    void ServiceUtils_update_UserIdInvalid_Negative() {
         // Arrange
         Long id = -1L;
         CreateUpdateUserDTO dto = createValidDTO();
@@ -346,7 +210,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("update")
-    void UserService_update_UserIdInvalid_Zero() {
+    void ServiceUtils_update_UserIdInvalid_Zero() {
         // Arrange
         Long id = 0L;
         CreateUpdateUserDTO dto = createValidDTO();
@@ -360,7 +224,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("update")
-    void UserService_update_UserIdInvalid_Null() {
+    void ServiceUtils_update_UserIdInvalid_Null() {
         // Arrange
         Long id = null;
         CreateUpdateUserDTO dto = createValidDTO();
@@ -374,7 +238,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("update")
-    void UserService_update_DTO_Null() {
+    void ServiceUtils_update_DTO_Null() {
         // Arrange
         Long id = userService.create(CreateUpdateUserDTO.builder()
                 .username("cris6h16")
@@ -389,68 +253,19 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    @Tag("update")
-    void UserService_update_DTO_WantUpdateUsername() {
-        // Arrange
-        UserEntity original = UserEntity.builder()
-                .username("github.com/cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().name(ERole.ROLE_USER).build())))
-                .build();
-        userRepository.saveAndFlush(original);
 
-        CreateUpdateUserDTO updateUsernameDTO = CreateUpdateUserDTO.builder()
-                .username("cris6h16")
-                .build();
-
-        // Act
-        userService.update(original.getId(), updateUsernameDTO);
-        original = userRepository.findById(original.getId()).orElse(null);
-
-        // Assert
-        assertThat(original)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("username", updateUsernameDTO.getUsername())
-                .hasFieldOrPropertyWithValue("email", original.getEmail())
-                .hasFieldOrPropertyWithValue("password", original.getPassword())
-                .hasFieldOrPropertyWithValue("roles", original.getRoles());
-    }
-
-    @Test
-    @Tag("update")
-    void UserService_update_DTO_WantUpdateEmail() {
-        // Arrange
-        UserEntity original = UserEntity.builder()
-                .username("github.com/cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().name(ERole.ROLE_USER).build())))
-                .build();
-        userRepository.saveAndFlush(original);
-
-        CreateUpdateUserDTO updateEmailDTO = CreateUpdateUserDTO.builder()
-                .email("cris6h16@example.com")
-                .build();
-
-        // Act
-        userService.update(original.getId(), updateEmailDTO);
-        original = userRepository.findById(original.getId()).orElse(null);
-
-        // Assert
-        assertThat(original)
-                .isNotNull()
-                .hasFieldOrPropertyWithValue("username", original.getUsername())
-                .hasFieldOrPropertyWithValue("email", updateEmailDTO.getEmail())
-                .hasFieldOrPropertyWithValue("password", original.getPassword())
-                .hasFieldOrPropertyWithValue("roles", original.getRoles());
-    }
+//    @Test
+//    @Tag("get")
+//    @Disabled
+//    void ServiceUtils_get_ThrowsUnhandledException() {
+    // I couldn't implement this, but has the same handling for all methods;
+    // in 'create' al could implement
+//    }
 
 
     @Test
     @Tag("update")
-    void UserService_update_DTO_WantUpdatePasswordInvalid() {
+    void ServiceUtils_update_DTO_WantUpdatePasswordInvalid() {
         // Arrange
         UserEntity original = UserEntity.builder()
                 .username("github.com/cris6h16")
@@ -473,36 +288,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("update")
-    void UserService_update_DTO_WantUpdatePassword() {
-        // Arrange
-        CreateUpdateUserDTO toCReate = CreateUpdateUserDTO.builder()
-                .username("cris6h16")
-                .password("12345678")
-                .email("cristianmherrera21@gmail.com")
-                .build();
-        Long id = userService.create(toCReate);
-
-        CreateUpdateUserDTO updatePasswordDTO = CreateUpdateUserDTO.builder()
-                .password("cris6h16's password")
-                .build();
-
-        // Act
-        userService.update(id, updatePasswordDTO);
-
-
-    }
-//        // Assert
-//        UserEntity updated = userRepository.findById(id).orElse(null);
-//        assertThat(updated)
-//                .isNotNull()
-//                .hasFieldOrPropertyWithValue("username", toCReate.getUsername())
-//                .hasFieldOrPropertyWithValue("email", toCReate.getEmail())
-//                .hasFieldOrPropertyWithValue("password", updatePasswordDTO.getPassword());
-//        assertThat(updated.getRoles()).hasSize(1);
-
-    @Test
-    @Tag("update")
-    void UserService_update_ThrowsUnhandledException_ThenGenericResponse() {
+    void ServiceUtils_update_ThrowsUnhandledException_ThenGenericResponse() {
         // Arrange
         UserEntity original = UserEntity.builder()
                 .username("github.com/cris6h16")
@@ -528,7 +314,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("delete")
-    void UserService_delete_UserIdInvalid_Negative() {
+    void ServiceUtils_delete_UserIdInvalid_Negative() {
         // Arrange
         Long id = -1L;
 
@@ -541,7 +327,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("delete")
-    void UserService_delete_UserIdInvalid_Zero() {
+    void ServiceUtils_delete_UserIdInvalid_Zero() {
         // Arrange
         Long id = 0L;
 
@@ -554,7 +340,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("delete")
-    void UserService_delete_UserIdInvalid_Null() {
+    void ServiceUtils_delete_UserIdInvalid_Null() {
         // Arrange
         Long id = null;
 
@@ -567,7 +353,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("delete")
-    void UserService_delete_UserNotFound() {
+    void ServiceUtils_delete_UserNotFound() {
         // Arrange
         Long id = 1L;
 
@@ -581,14 +367,14 @@ class UserServiceImplTest {
 //    @Test
 //    @Tag("delete")
 //    @Disabled()
-//    void UserService_delete_ThrowsUnhandledException() {
+//    void ServiceUtils_delete_ThrowsUnhandledException() {
 //        // I couldn't implement this
 //  }
 
     @Test
     @Tag("get(pageable)")
         // todo: correct sintaxis "()"
-    void UserService_get_PageableNull_ThenGenericResponse() {
+    void ServiceUtils_get_PageableNull_ThenGenericResponse() {
         // Arrange
         Pageable pageable = null;
 
@@ -601,7 +387,7 @@ class UserServiceImplTest {
 
     @Test
     @Tag("get(pageable)")
-    void UserService_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail() {
+    void ServiceUtils_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail() {
         // Arrange
         int pageNum = 0;
         int pageSize = 10;
@@ -619,13 +405,16 @@ class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+
+}
+
+
 //    @Test
 //    @Tag("get(pageable)")
 //    @Disabled
-//    void UserService_get_Pageable_UnhandledException() {
-        // I couldn't implement this, but has the same handling for all methods;
-        // in 'create' al could implement
-    }
+//    void ServiceUtils_get_Pageable_UnhandledException() {
+// I couldn't implement this, but has the same handling for all methods;
+// in 'create' al could implement
 
 
 //

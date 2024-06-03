@@ -5,11 +5,9 @@ import lombok.*;
 import java.util.Date;
 import java.util.Set;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Getter
-@Setter
 @Builder
 public class PublicUserDTO {
     private Long id;

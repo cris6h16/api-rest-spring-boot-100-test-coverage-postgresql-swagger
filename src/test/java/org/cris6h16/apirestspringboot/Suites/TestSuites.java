@@ -17,7 +17,8 @@ public class TestSuites {
             "org.cris6h16.apirestspringboot.Entities",
             "org.cris6h16.apirestspringboot.Entities.Integration",
             "org.cris6h16.apirestspringboot.Repository",
-            "org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils",
+            "org.cris6h16.apirestspringboot.Service",
+            "org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils"
     })
     public static class AllTests {
     }

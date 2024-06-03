@@ -7,9 +7,7 @@ import lombok.*;
 @Table(name = "roles")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Getter
-@Setter
 @EqualsAndHashCode
 @Builder
 public class RoleEntity {

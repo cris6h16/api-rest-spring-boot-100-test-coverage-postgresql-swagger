@@ -10,7 +10,6 @@ import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
 //@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
-public class NoteServiceImplTest {
+public class ServiceUtilsNoteServiceImplTest {
     @Autowired
     private NoteService noteService;
     @Autowired
@@ -51,7 +50,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_idInvalid_Negative() {
+    void ServiceUtilsNoteServiceImplTest_create_idInvalid_Negative() {
         // Arrange
         Long userId = -1L;
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -65,7 +64,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_idInvalid_Zero() {
+    void ServiceUtilsNoteServiceImplTest_create_idInvalid_Zero() {
         // Arrange
         Long userId = 0L;
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -79,7 +78,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_idInvalid_Null() {
+    void ServiceUtilsNoteServiceImplTest_create_idInvalid_Null() {
         // Arrange
         Long userId = null;
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -93,7 +92,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_User_NotFound() {
+    void ServiceUtilsNoteServiceImplTest_create_User_NotFound() {
         // Arrange
         Long userId = 1L;
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -107,7 +106,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_DTO_Title_Null() {
+    void ServiceUtilsNoteServiceImplTest_create_DTO_Title_Null() {
         // --------- Arrange --------- \\
         // create entity & save
         UserEntity user = createUserEntity();
@@ -124,7 +123,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_DTO_Title_Blank() {
+    void ServiceUtilsNoteServiceImplTest_create_DTO_Title_Blank() {
         // --------- Arrange --------- \\
         // create entity & save
         UserEntity user = createUserEntity();
@@ -139,55 +138,9 @@ public class NoteServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    //todo: add more description like:
-    // NoteService_create_DTO_Content_Null --> NoteService_create_DTO_Content_Null_ShouldSave
     @Test
     @Tag("create")
-    void NoteService_create_DTO_Content_Null() {
-        // --------- Arrange --------- \\
-        // create entity & save
-        UserEntity user = createUserEntity();
-        userRepository.saveAndFlush(user);
-
-        CreateNoteDTO toCreate = new CreateNoteDTO("title", null);
-
-        // Act
-        Long savedNoteId = noteService.create(toCreate, user.getId());
-
-        // Assert
-        assertThat(savedNoteId).isNotNull();
-        NoteEntity noteRetrieved = noteRepository.findByIdAndUser(savedNoteId, user).orElse(null);
-        assertThat(noteRetrieved).isNotNull();
-        assertThat(noteRetrieved)
-                .hasFieldOrPropertyWithValue("title", toCreate.getTitle())
-                .hasFieldOrPropertyWithValue("content", toCreate.getContent());
-    }
-
-    @Test
-    @Tag("create")
-    void NoteService_create_DTO_Content_Blank() {
-        // --------- Arrange --------- \\
-        // create entity & save
-        UserEntity user = createUserEntity();
-        userRepository.saveAndFlush(user);
-
-        CreateNoteDTO toCreate = new CreateNoteDTO("title", " ");
-
-        // Act
-        Long savedNoteId = noteService.create(toCreate, user.getId());
-
-        // Assert
-        assertThat(savedNoteId).isNotNull();
-        NoteEntity noteRetrieved = noteRepository.findByIdAndUser(savedNoteId, user).orElse(null);
-        assertThat(noteRetrieved).isNotNull();
-        assertThat(noteRetrieved)
-                .hasFieldOrPropertyWithValue("title", toCreate.getTitle())
-                .hasFieldOrPropertyWithValue("content", toCreate.getContent());
-    }
-
-    @Test
-    @Tag("create")
-    void NoteService_create_DTO_Null() {
+    void ServiceUtilsNoteServiceImplTest_create_DTO_Null() {
         // --------- Arrange --------- \\
         // create entity & save
         UserEntity user = createUserEntity();
@@ -203,7 +156,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("create")
-    void NoteService_create_UnhandledException() {
+    void ServiceUtilsNoteServiceImplTest_create_UnhandledException() {
         // --------- Arrange --------- \\
         // create entity & save
         UserEntity user = createUserEntity();
@@ -225,7 +178,7 @@ public class NoteServiceImplTest {
     @Tag("get")
     @ParameterizedTest// todo: refactor others testing to parameterized to avoid boilerplate
     @ValueSource(longs = {0, -1})
-    void NoteService_get_idInvalidUserId(Long userId) {
+    void ServiceUtilsNoteServiceImplTest_get_idInvalidUserId(Long userId) {
         // Arrange
         Long noteId = 1L;
 
@@ -238,7 +191,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("get")
-    void NoteService_get_UserNotFound() {
+    void ServiceUtilsNoteServiceImplTest_get_UserNotFound() {
         // Arrange
         Long userId = 1L; // checked first
         Long noteId = 1L;
@@ -253,7 +206,7 @@ public class NoteServiceImplTest {
     @Tag("get")
     @ParameterizedTest
     @ValueSource(longs = {0, -1})
-    void NoteService_get_idInvalidNoteId(Long noteId) {
+    void ServiceUtilsNoteServiceImplTest_get_idInvalidNoteId(Long noteId) {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
 
@@ -266,7 +219,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("get")
-    void NoteService_get_NoteNotFound() {
+    void ServiceUtilsNoteServiceImplTest_get_NoteNotFound() {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         Long noteId = 1L; // checked 2nd
@@ -278,39 +231,20 @@ public class NoteServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
 
-    @Test
-    @Tag("get")
-    void NoteService_get_Success() {
-        // Arrange
-        UserEntity user = createUserEntity();
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
-
-        // Act
-        PublicNoteDTO publicNote = noteService.get(firstNoteEntity.getId(), user.getId());
-
-        // Assert
-        assertThat(publicNote)
-                .hasFieldOrPropertyWithValue("id", firstNoteEntity.getId())
-                .hasFieldOrPropertyWithValue("title", firstNoteEntity.getTitle())
-                .hasFieldOrPropertyWithValue("content", firstNoteEntity.getContent())
-                .hasFieldOrPropertyWithValue("updatedAt", firstNoteEntity.getUpdatedAt());
-    }
 //
 //    @Test
 //    @Tag("get")
 //    @Disabled
-//    void NoteService_get_UnhandledException() {
+//    void ServiceUtilsNoteServiceImplTest_get_UnhandledException() {
 //        // I couldn't find a way to throw an unhandled exception in the get method
-//        // but with `NoteService_create_UnhandledException` is enough
+//        // but with `ServiceUtilsNoteServiceImplTest_create_UnhandledException` is enough
 //    }
 
 
     @ParameterizedTest
     @ValueSource(longs = {0, -1})
     @Tag("put")
-    void NoteService_put_idInvalidUserId(Long userId) {
+    void ServiceUtilsNoteServiceImplTest_put_idInvalidUserId(Long userId) {
         // Arrange
         Long noteId = 1L;
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -325,7 +259,7 @@ public class NoteServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {0, -1})
     @Tag("put")
-    void NoteService_put_idInvalidNoteId(Long noteId) {
+    void ServiceUtilsNoteServiceImplTest_put_idInvalidNoteId(Long noteId) {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         CreateNoteDTO note = new CreateNoteDTO("title", "content");
@@ -340,7 +274,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("put")
-    void NoteService_put_UserNotFound() {
+    void ServiceUtilsNoteServiceImplTest_put_UserNotFound() {
         // Arrange
         Long userId = 1L;
         Long noteId = 1L;
@@ -356,7 +290,7 @@ public class NoteServiceImplTest {
     @ParameterizedTest
     @ValueSource(strings = {"", "     ", "null"})
     @Tag("put")
-    void NoteService_put_DTO_TitleInvalid(String title) {
+    void ServiceUtilsNoteServiceImplTest_put_DTO_TitleInvalid(String title) {
         title = title.equals("null") ? null : title;
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
@@ -371,28 +305,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("put")
-    void NoteService_put_ValidDTO_Replaces() {
-        // Arrange
-        UserEntity user = createUserEntity();
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
-
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
-        CreateNoteDTO putDTO = new CreateNoteDTO("new title", "new content");
-
-        // Act
-        noteService.put(firstNoteEntity.getId(), putDTO, user.getId());
-
-        // Assert
-        NoteEntity updatedNote = noteRepository.findByIdAndUser(firstNoteEntity.getId(), user).orElse(null);
-        assertThat(updatedNote)
-                .hasFieldOrPropertyWithValue("title", putDTO.getTitle())
-                .hasFieldOrPropertyWithValue("content", putDTO.getContent());
-    }
-
-    @Test
-    @Tag("put")
-    void NoteService_put_UnhandledException() {
+    void ServiceUtilsNoteServiceImplTest_put_UnhandledException() {
         // Arrange
         UserEntity user = createUserEntity();
         user.setNotes(createNoteEntities());
@@ -415,7 +328,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("delete")
-    void NoteService_delete_idInvalidUserId() {
+    void ServiceUtilsNoteServiceImplTest_delete_idInvalidUserId() {
         // Arrange
         Long userId = -1L;
         Long noteId = 1L;
@@ -428,7 +341,7 @@ public class NoteServiceImplTest {
     }
     @Test
     @Tag("delete")
-    void NoteService_delete_UserNotFound() {
+    void ServiceUtilsNoteServiceImplTest_delete_UserNotFound() {
         // Arrange
         Long userId = 1L;
         Long noteId = 1L;
@@ -442,7 +355,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("delete")
-    void NoteService_delete_idInvalidNoteId() {
+    void ServiceUtilsNoteServiceImplTest_delete_idInvalidNoteId() {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         Long noteId = 0L;
@@ -456,7 +369,7 @@ public class NoteServiceImplTest {
 
     @Test
     @Tag("delete")
-    void NoteService_delete_NoteNotFound() {
+    void ServiceUtilsNoteServiceImplTest_delete_NoteNotFound() {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         Long noteId = 1L;
@@ -469,25 +382,6 @@ public class NoteServiceImplTest {
     }
 
 
-    @Test
-    @Tag("delete")
-    void NoteService_delete_Success() {
-        // Arrange
-        UserEntity user = createUserEntity();
-        user.setNotes(createNoteEntities());
-        userRepository.saveAndFlush(user);
-
-        int notesSize = noteRepository.findByUser(user).size();
-        NoteEntity firstNoteEntity = user.getNotes().iterator().next();
-
-        // Act
-        noteService.delete(firstNoteEntity.getId(), user.getId());
-
-        // Assert
-        int sizeNow = noteRepository.findByUser(user).size();
-        assertThat(sizeNow).isEqualTo(notesSize - 1);
-        assertThat(noteRepository.findById(firstNoteEntity.getId())).isEmpty();
-    }
 
 
     UserEntity createUserEntity() {

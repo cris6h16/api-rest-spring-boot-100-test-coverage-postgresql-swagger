@@ -15,7 +15,6 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @Table(name = "notes")
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @Getter
 @Setter
 @Builder

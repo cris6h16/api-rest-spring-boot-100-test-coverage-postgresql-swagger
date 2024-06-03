@@ -53,13 +53,13 @@ public class NoteServiceImpl implements NoteService {
             validateDTONotNull(note);
 
             NoteEntity noteEntity = NoteEntity.builder()
-                    .title(note.getTitle())
-                    .content(note.getContent())
+                    .title(note.getTitle()) // If blank || null db will throw
+                    .content(note.getContent() == null ? "" : note.getContent())
                     .updatedAt(new Date())
                     .build();
 
             noteEntity.setUser(user);
-            noteRepository.saveAndFlush(noteEntity); // Changed from `.save()` to one with flush, due to testing with H2
+            noteEntity = noteRepository.saveAndFlush(noteEntity); // Changed from `.save()` to one with flush, due to testing with H2
 
             return noteEntity.getId();
 

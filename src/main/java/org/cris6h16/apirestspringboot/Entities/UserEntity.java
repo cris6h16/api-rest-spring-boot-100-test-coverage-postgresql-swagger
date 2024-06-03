@@ -27,13 +27,10 @@ indexes = {
 )
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"notes"})
 @Getter
 @Setter
-//@EqualsAndHashCode(exclude = {"notes"})  // doesn't work, I spent a lot of time trying to make it work, even I excluded all, just works including only the `id`
 @Builder
 public class UserEntity {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "default")
@@ -84,32 +81,35 @@ public class UserEntity {
             referencedColumnName = "id")
     private Set<NoteEntity> notes = new HashSet<>();
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        UserEntity that = (UserEntity) obj;
-        boolean isEquals = false;
-        {
-            boolean idEquals = Objects.equals(id, that.id);
-            boolean usernameEquals = Objects.equals(username, that.username);
-            boolean passwordEquals = Objects.equals(password, that.password);
-            boolean emailEquals = Objects.equals(email, that.email);
-            boolean createdAtEquals = Objects.equals(createdAt, that.createdAt);
-            boolean updatedAtEquals = Objects.equals(updatedAt, that.updatedAt);
-            boolean rolesEquals = Objects.equals(roles, that.roles);
-            boolean notesEquals = Objects.equals(notes, that.notes);
-
-            isEquals = idEquals &&
-                    usernameEquals &&
-                    emailEquals &&
-                    rolesEquals &&
-                    notesEquals &&
-                    passwordEquals &&
-                    createdAtEquals &&
-                    updatedAtEquals;
-        }
-
-        return isEquals;
-    }
 }
+
+
+//@EqualsAndHashCode(exclude = {"notes"})  // doesn't work, I spent a lot of time trying to make it work, even I excluded all, just works including only the `id`
+//    @Override
+//    public boolean equals(Object obj) {
+//        if (this == obj) return true;
+//        if (obj == null || getClass() != obj.getClass()) return false;
+//        UserEntity that = (UserEntity) obj;
+//        boolean isEquals = false;
+//        {
+//            boolean idEquals = Objects.equals(id, that.id);
+//            boolean usernameEquals = Objects.equals(username, that.username);
+//            boolean passwordEquals = Objects.equals(password, that.password);
+//            boolean emailEquals = Objects.equals(email, that.email);
+//            boolean createdAtEquals = Objects.equals(createdAt, that.createdAt);
+//            boolean updatedAtEquals = Objects.equals(updatedAt, that.updatedAt);
+//            boolean rolesEquals = Objects.equals(roles, that.roles);
+//            boolean notesEquals = Objects.equals(notes, that.notes);
+//
+//            isEquals = idEquals &&
+//                    usernameEquals &&
+//                    emailEquals &&
+//                    rolesEquals &&
+//                    notesEquals &&
+//                    passwordEquals &&
+//                    createdAtEquals &&
+//                    updatedAtEquals;
+//        }
+//
+//        return isEquals;
+//    }

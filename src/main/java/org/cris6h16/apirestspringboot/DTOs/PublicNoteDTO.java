@@ -6,11 +6,9 @@ import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
 
-@NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Getter
-@Setter
 @Builder
 public class PublicNoteDTO {
     private Long id;

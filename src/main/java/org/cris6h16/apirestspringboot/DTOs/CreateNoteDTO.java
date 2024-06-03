@@ -8,8 +8,6 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode
-@Builder
 public class CreateNoteDTO {
     private String title;
     private String content;
