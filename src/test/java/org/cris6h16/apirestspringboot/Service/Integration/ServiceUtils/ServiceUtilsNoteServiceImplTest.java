@@ -18,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 
 import java.util.HashSet;
@@ -339,6 +342,7 @@ public class ServiceUtilsNoteServiceImplTest {
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
+
     @Test
     @Tag("delete")
     void ServiceUtilsNoteServiceImplTest_delete_UserNotFound() {
@@ -382,6 +386,80 @@ public class ServiceUtilsNoteServiceImplTest {
     }
 
 
+    @Test
+    @Tag("getPage")
+    void ServiceUtilsNoteServiceImplTest_getPage_idInvalidUserId() {
+        // Arrange
+        Long userId = -1L;
+        int page = 0;
+        int size = 10;
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "id"));
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
+                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .hasMessage(Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+
+    @Test
+    @Tag("getPage")
+    void ServiceUtilsNoteServiceImplTest_getPage_UserNotFound() {
+        // Arrange
+        Long userId = 1L;
+        int page = 0;
+        int size = 10;
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "id"));
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
+                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .hasMessage(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @Tag("getPage")
+    void ServiceUtilsNoteServiceImplTest_getPage_nullPageRequest() {
+        // Arrange
+        Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
+        int page = 0;
+        int size = 10;
+        PageRequest pageRequest = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "cris6h16"));
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
+                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .hasMessageStartingWith("No property ") // No property 'cris6h16' found
+                .hasMessageEndingWith(" found")
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+
+    @Test
+    @Tag("getPage")
+    void ServiceUtilsNoteServiceImplTest_getPage_NonexistentAttribute(){
+        // Arrange
+
+        Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
+        PageRequest pageRequest = null;
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
+                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
 
 
     UserEntity createUserEntity() {

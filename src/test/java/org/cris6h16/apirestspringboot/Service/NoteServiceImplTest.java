@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 
 
 //@SpringBootTest
-//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
+//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency // todo: doc my trouble with enviroment variables
 //@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
 @ExtendWith(MockitoExtension.class)
 public class NoteServiceImplTest {

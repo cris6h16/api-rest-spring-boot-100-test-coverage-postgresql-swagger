@@ -44,12 +44,6 @@ public class ServiceUtils {
                 forClient = e.getMessage();
             }
 
-            // pageable fails like passed a negative page, size, etc
-            if (e instanceof IllegalArgumentException && forClient.isBlank()) {
-                recommendedStatus = HttpStatus.BAD_REQUEST;
-                boolean pageableFail = this.thisContains(e.getMessage(), "Page");
-                if (pageableFail) forClient = e.getMessage();
-            }
 
             if (e instanceof NullPointerException && forClient.isBlank()) {
                 boolean pageablePassedNull = this.thisContains(e.getMessage(), "because \"pageable\" is null");
