@@ -15,21 +15,29 @@ import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * // todo: doc: the difficult of mock the database exceptions & its messages, due that the exception  handled work if has the exact exception with the exact message otherwise the response should be a generic thats the reason why i decided not mock the database
@@ -403,6 +411,33 @@ class ServiceUtilsUserServiceImplTest {
                 .hasMessageStartingWith("No property") // No property 'ttt' found for type 'UserEntity'
                 .hasMessageEndingWith("found")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
+    }
+
+
+    @Test
+    @Tag(" DataIntegrityViolationException")
+    void AdviceUserControllerTest_createUser_DataIntegrityViolationException_Then409() throws Exception {
+
+        // Arrange
+        CreateUpdateUserDTO dto = CreateUpdateUserDTO.builder()
+                .username("cris6h16")
+                .password("12345678")
+                .email("cristianmherrera21@gmail.com")
+                .build();
+        userService.create(dto);
+
+        dto = CreateUpdateUserDTO.builder()
+                .username("cris6h16") // same username
+                .password("12345678")
+                .email("cris6h16@ingithub.com")
+                .build();
+
+        // Act & Assert
+        CreateUpdateUserDTO finalDto = dto;
+        assertThatThrownBy(() -> userService.create(finalDto))
+                .isInstanceOf(UserServiceTransversalException.class)
+//                .hasMessage(Cons.User.Constrains.USERNAME_UNIQUE_MSG) // the passed message is based on exception.message.contains("<unique constrain name>"), but with H2 (testing) in its exception doesn't pass the constraint name of the violated
+                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.CONFLICT);
     }
 
 

@@ -9,6 +9,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWit
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
@@ -26,63 +27,63 @@ public class ServiceUtils {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
 
-        try {
+//        try {
 
-            // ------------ commons in both entities --------------------\\
-            // data integrity violations { not blank, invalid email, max length, etc }
-            if (e instanceof ConstraintViolationException && forClient.isBlank()) {
-                recommendedStatus = HttpStatus.BAD_REQUEST;
-                Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) e).getConstraintViolations();
+        // ------------ commons in both entities --------------------\\
+        // data integrity violations { not blank, invalid email, max length, etc }
+        if (e instanceof ConstraintViolationException && forClient.isBlank()) {
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+            Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) e).getConstraintViolations();
 
-                if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
-            }
-
-            // Note Service: { user not found, invalid id }
-            // UserService:  { user not found, invalid id, password too short }
-            if (e instanceof AbstractExceptionWithStatus && forClient.isBlank()) {
-                recommendedStatus = ((AbstractExceptionWithStatus) e).getRecommendedStatus();
-                forClient = e.getMessage();
-            }
-
-
-            if (e instanceof NullPointerException && forClient.isBlank()) {
-                boolean pageablePassedNull = this.thisContains(e.getMessage(), "because \"pageable\" is null");
-                if (pageablePassedNull) {
-                    recommendedStatus = HttpStatus.BAD_REQUEST;
-                    // forClient => empty isn't necessary more info
-                }
-            }
-
-
-            if (e instanceof PropertyReferenceException && forClient.isBlank()) {
-                recommendedStatus = HttpStatus.BAD_REQUEST;
-                boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
-                if (propertyNonexistent) {
-                    forClient = e.getMessage().split("for type")[0].trim(); // No property 'ttt' found for type 'UserEntity'
-                }
-            }
-
-
-            // ------------ response regard to the entity ------------- \\
-            if (isUserService) {
-                // unique violations { primary key, unique constraints }
-                if (e instanceof DuplicateKeyException && forClient.isBlank()) {
-                    recommendedStatus = HttpStatus.CONFLICT;
-                    boolean inUsername = thisContains(e.getMessage(), USERNAME_UNIQUE_NAME);
-                    boolean inEmail = thisContains(e.getMessage(), EMAIL_UNIQUE_NAME);
-                    boolean isHandledUniqueViolation = inUsername || inEmail;
-
-                    if (isHandledUniqueViolation) forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
-                }
-
-            } else { // ------- is Note Service ------- \\
-                // now for note service I don't have custom exceptions
-            }
-
-
-        } catch (Exception s) { // if it doesn't reach to the handling for generics(the last) due to some unexpected exception
-            log.error("Unexpected exception in ServiceUtils: {}", e.toString());
+            if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
         }
+
+        // Note Service: { user not found, invalid id }
+        // UserService:  { user not found, invalid id, password too short }
+        if (e instanceof AbstractExceptionWithStatus && forClient.isBlank()) {
+            recommendedStatus = ((AbstractExceptionWithStatus) e).getRecommendedStatus();
+            forClient = e.getMessage();
+        }
+
+
+        if (e instanceof NullPointerException && forClient.isBlank()) {
+            boolean pageablePassedNull = this.thisContains(e.getMessage(), "because \"pageable\" is null");
+            if (pageablePassedNull) {
+                recommendedStatus = HttpStatus.BAD_REQUEST;
+                // forClient => empty isn't necessary more info
+            }
+        }
+
+
+        if (e instanceof PropertyReferenceException && forClient.isBlank()) {
+            recommendedStatus = HttpStatus.BAD_REQUEST;
+            boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
+            if (propertyNonexistent) {
+                forClient = e.getMessage().split("for type")[0].trim(); // No property 'ttt' found for type 'UserEntity'
+            }
+        }
+
+
+        // ------------ response regard to the entity ------------- \\
+        if (isUserService) {
+            // unique violations { primary key, unique constraints }
+            if (e instanceof DataIntegrityViolationException && forClient.isBlank()) {
+                recommendedStatus = HttpStatus.CONFLICT;
+                boolean inUsername = thisContains(e.getMessage(), USERNAME_UNIQUE_NAME);
+                boolean inEmail = thisContains(e.getMessage(), EMAIL_UNIQUE_NAME);
+                boolean isHandledUniqueViolation = inUsername || inEmail;
+
+                if (isHandledUniqueViolation) forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
+            }
+
+        } else { // ------- is Note Service ------- \\
+            // now for note service I don't have custom exceptions
+        }
+
+
+//        } catch (Exception s) { // if it doesn't reach to the handling for generics(the last) due to some unexpected exception
+//            log.error("Unexpected exception in ServiceUtils: {}", e.toString());
+//        }
 
         // unhandled exceptions -> generic error
         if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;

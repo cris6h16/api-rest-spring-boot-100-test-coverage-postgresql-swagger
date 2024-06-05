@@ -9,21 +9,26 @@ import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.net.URI;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -68,5 +73,55 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
     }
 
+    @Test
+    @Tag("Exception")
+    @WithMockUserWithId(id = 1)
+    void OtherExceptionsCaughtByAdviceTest_Exception() throws Exception {
 
-}
+        doThrow(new NullPointerException()).when(userService).delete(any());
+
+        mvc.perform(delete("/api/users/1")
+                        .with(csrf()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+
+    }
+
+    /**
+     * This test is impossible to pass because the `objectMapper` is an internal class.
+     * If we mock it, the app is going to crash, but the behavior is very predictable,
+     * the method untested is the following ( it can provoke that the test coverage doesn't reach to 100% :'\ ):
+     *
+     * <pre>
+     * {@code
+     * String getMapInJson(Map map) {
+     *     try {
+     *         return objectMapper.writeValueAsString(map);
+     *     } catch (Exception e) {
+     *         log.error("ERROR PARSING TO JSON: {}", e.getMessage());
+     *         return "ERROR PARSING TO JSON";
+     *     }
+     * }}
+     * </pre>
+     *
+     * @throws Exception
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera</a>
+     */
+
+    @Test
+    @Tag("Exception")
+    @WithMockUserWithId(id = 1)
+    @Disabled("IMPOSSIBLE test")
+    void OtherExceptionsCaughtByAdviceTest_FailParsingToJson() throws Exception {
+
+            doThrow(new NullPointerException()).when(objectMapper).writeValueAsString(any());
+
+            mvc.perform(delete("/api/users/1")
+                            .with(csrf()))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+
+        }
+
+
+    }
