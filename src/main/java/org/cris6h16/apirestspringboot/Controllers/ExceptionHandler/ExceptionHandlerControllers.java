@@ -21,11 +21,6 @@ import java.util.Map;
 @RestControllerAdvice // global exception handler for REST controllers
 @Slf4j
 public class ExceptionHandlerControllers {
-    ObjectMapper objectMapper;
-
-    public ExceptionHandlerControllers(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     // handle my traversals exceptions
     @ExceptionHandler(value = {AbstractExceptionWithStatus.class})
@@ -35,14 +30,15 @@ public class ExceptionHandlerControllers {
 
 
     // when a resource is not found ( the typical 404 NOT FOUND )
-    @ExceptionHandler(value = NoResourceFoundException.class) // added thanks to the logs (ERROR)  todo: doc about the importance of a right & relevant logging
+    @ExceptionHandler(value = NoResourceFoundException.class)
+    // added thanks to the logs (ERROR)  todo: doc about the importance of a right & relevant logging
     public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, Cons.Response.ForClient.NO_RESOURCE_FOUND);
     }
 
     @ExceptionHandler(value = AccessDeniedException.class) // added thanks to the logs (ERROR)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN,Cons.Auth.Fails.ACCESS_DENIED);
+        return buildResponse(HttpStatus.FORBIDDEN, Cons.Auth.Fails.ACCESS_DENIED);
     }
 
     // when is e.g. `api/users/1` but was passed `api/users/string`
@@ -60,28 +56,31 @@ public class ExceptionHandlerControllers {
         return buildResponse(status, Cons.Response.ForClient.GENERIC_ERROR);
     }
 
-    String getMapInJson(Map map) {
-        try {
-            return objectMapper.writeValueAsString(map);
-        } catch (Exception e) {
-            log.error("ERROR PARSING TO JSON: {}", e.getMessage());
-            return "ERROR PARSING TO JSON";
-        }
+    String buildFailJsonBody(String message, HttpStatus status, long timestamp) {
+        String pre_body = """
+                {
+                    "message": "%s",
+                    "status": "%s",
+                    "timestamp": "%s"
+                }
+                """;
+        if (message == null) message = "";
+        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
+        // long primitive type is not nullable
+
+        return String.format(pre_body, message, status.toString(), timestamp);
     }
 
 
     // todo : make custom response fail with a class
     private ResponseEntity<String> buildResponse(HttpStatus status, String message) {
 
-        Map<String, String> bodyMap = new HashMap<>();
-        bodyMap.put("message", message); // todo: improve consumes && produces ()
-        bodyMap.put("status", status.toString());
-        bodyMap.put("timestamp", String.valueOf(System.currentTimeMillis()));
+        String body = buildFailJsonBody(message, status, System.currentTimeMillis());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        return new ResponseEntity<>(getMapInJson(bodyMap), headers, status);
+        return new ResponseEntity<>(body, headers, status);
     }
 
 }
