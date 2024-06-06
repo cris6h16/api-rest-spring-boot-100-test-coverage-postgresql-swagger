@@ -13,6 +13,7 @@ public class TestSuites {
     @Suite
     @SelectPackages({
             "org.cris6h16.apirestspringboot.Controllers",
+            "org.cris6h16.apirestspringboot.Config.Security.UserDetailsService",
             "org.cris6h16.apirestspringboot.Controllers.Integration.Advice",
             "org.cris6h16.apirestspringboot.Entities",
             "org.cris6h16.apirestspringboot.Entities.Integration",

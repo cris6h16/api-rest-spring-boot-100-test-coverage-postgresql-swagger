@@ -114,7 +114,7 @@ public class OtherExceptionsCaughtByAdviceTest {
     @Disabled("IMPOSSIBLE test")
     void OtherExceptionsCaughtByAdviceTest_FailParsingToJson() throws Exception {
 
-            doThrow(new NullPointerException()).when(objectMapper).writeValueAsString(any());
+//            doThrow(new NullPointerException()).when(objectMapper).writeValueAsString(any());
 
             mvc.perform(delete("/api/users/1")
                             .with(csrf()))

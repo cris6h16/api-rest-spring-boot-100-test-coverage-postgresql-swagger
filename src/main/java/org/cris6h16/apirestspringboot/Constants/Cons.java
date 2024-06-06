@@ -29,6 +29,10 @@ public class Cons {
             public static final String NOT_FOUND = "User not found";
         }
 
+        public static class UserDetailsServiceImpl{
+            public static final String USER_HAS_NOT_ROLES = "User retrieved from database hasn't roles";
+        }
+
         /**
          * {@link CreateUpdateUserDTO}
          */
@@ -55,6 +59,12 @@ public class Cons {
             public static final String NULL = "Note to update/create cannot be null";
         }
 
+    }
+
+    public class Role {
+        public class Validations {
+            public static final String NAME_IS_BLANK = "Name mustn't be blank";
+        }
     }
 
     public class CommonInEntity {
