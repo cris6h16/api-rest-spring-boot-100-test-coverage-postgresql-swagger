@@ -30,8 +30,7 @@ public class ExceptionHandlerControllers {
 
 
     // when a resource is not found ( the typical 404 NOT FOUND )
-    @ExceptionHandler(value = NoResourceFoundException.class)
-    // added thanks to the logs (ERROR)  todo: doc about the importance of a right & relevant logging
+    @ExceptionHandler(value = NoResourceFoundException.class) // added thanks to the logs (ERROR)  todo: doc about the importance of a right & relevant logging
     public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
         return buildResponse(HttpStatus.NOT_FOUND, Cons.Response.ForClient.NO_RESOURCE_FOUND);
     }
