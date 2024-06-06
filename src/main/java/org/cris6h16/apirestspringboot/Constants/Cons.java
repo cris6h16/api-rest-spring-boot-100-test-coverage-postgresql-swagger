@@ -86,4 +86,11 @@ public class Cons {
         }
     }
 
+
+    public static class TESTING {
+        // This is for testing purposes, using:
+        //      !e.getMessage().contains( NOT_PRINT_STACK_TRACE_PATTERN )
+        public static final String NOT_PRINT_STACK_TRACE_PATTERN = "cris6h16's random exception";
+    }
+
 }

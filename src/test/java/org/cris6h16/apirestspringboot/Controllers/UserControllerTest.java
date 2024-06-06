@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
@@ -8,13 +7,12 @@ import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -22,10 +20,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.awt.print.Pageable;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -35,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest// charge the context due my use of `@MyId` which use behind: `authentication.name.equalsIgnoreCase('anonymousUser') ? -1 : authentication.principal.id`
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 class UserControllerTest {
 
 

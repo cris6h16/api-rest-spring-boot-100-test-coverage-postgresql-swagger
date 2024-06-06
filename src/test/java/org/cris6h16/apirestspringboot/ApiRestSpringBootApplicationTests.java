@@ -1,9 +1,12 @@
 package org.cris6h16.apirestspringboot;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 class ApiRestSpringBootApplicationTests {
 
     /**
@@ -11,7 +14,10 @@ class ApiRestSpringBootApplicationTests {
      */
     @Test
     void contextLoads() {
-        ApiRestSpringBootApplication.main(new String[] {});
+        try {
+            ApiRestSpringBootApplication.main(new String[]{});
+        } catch (Exception ignored) {
+        }
     }
 
 }

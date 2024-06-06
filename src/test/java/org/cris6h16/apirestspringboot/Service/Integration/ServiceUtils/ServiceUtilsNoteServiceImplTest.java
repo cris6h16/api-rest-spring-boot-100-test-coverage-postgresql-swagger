@@ -450,7 +450,6 @@ public class ServiceUtilsNoteServiceImplTest {
     @Tag("getPage")
     void ServiceUtilsNoteServiceImplTest_getPage_NonexistentAttribute(){
         // Arrange
-
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         PageRequest pageRequest = null;
 

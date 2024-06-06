@@ -10,7 +10,6 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.Inval
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -26,8 +25,6 @@ public class ServiceUtils {
     public AbstractExceptionWithStatus createATraversalExceptionHandled(@NotNull Exception e, boolean isUserService) {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
-
-//        try {
 
         // ------------ commons in both entities --------------------\\
         // data integrity violations { not blank, invalid email, max length, etc }
@@ -80,15 +77,16 @@ public class ServiceUtils {
             // now for note service I don't have custom exceptions
         }
 
-
-//        } catch (Exception s) { // if it doesn't reach to the handling for generics(the last) due to some unexpected exception
-//            log.error("Unexpected exception in ServiceUtils: {}", e.toString());
-//        }
-
-        // unhandled exceptions -> generic error
-        if (recommendedStatus == null) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-        if (forClient.isBlank()) forClient = Cons.Response.ForClient.GENERIC_ERROR;
-        logError(e);
+        // -------------- default handling ----------------- \\
+        {
+            boolean recommendedStatusIsNull = recommendedStatus == null;
+            boolean forClientIsBlank = forClient.isBlank();
+            if (recommendedStatusIsNull) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            if (forClientIsBlank) forClient = Cons.Response.ForClient.GENERIC_ERROR;
+            // something I just want to tell to the client about the error(BAD_REQUEST, CONFLICT, etc) but not give more info, it can be considered as handled
+            if (recommendedStatusIsNull) logUnhandledException(e);
+            else logDebug(e);
+        }
 
 
         return isUserService ?
@@ -104,9 +102,22 @@ public class ServiceUtils {
         return contains;
     }
 
-    private void logError(Exception e) {
+    private void logUnhandledException(Exception e) {
         log.error("Unhandled exception: {}", e.toString());
-        e.printStackTrace();
+        if (!ignoreStackTrace(e))
+            e.printStackTrace(); // todo: replace the printing of stackTrace with a log file or like that
+    }
+
+    private void logDebug(Exception e) {
+        log.debug("Handled exception: {}", e.toString());
+    }
+
+    private boolean ignoreStackTrace(Exception e) {
+        boolean randomExceptionForTesting = e != null &&
+                e.getMessage() != null &&
+                e.getMessage().toLowerCase().contains(Cons.TESTING.NOT_PRINT_STACK_TRACE_PATTERN.toLowerCase());
+//        boolean exceptionHandledButDueToUseH2ForTestingTheException
+        return randomExceptionForTesting;
     }
 
     /**
