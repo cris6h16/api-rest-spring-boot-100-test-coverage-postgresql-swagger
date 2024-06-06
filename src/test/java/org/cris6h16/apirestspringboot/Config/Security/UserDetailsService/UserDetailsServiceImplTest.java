@@ -25,17 +25,30 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetailsService.UserHasNotRolesException;
 
+/**
+ * Test class for {@link UserDetailsServiceImpl}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a> where
+ * @see UserDetailsServiceImpl
+ */
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
-    @Mock
-    private PasswordEncoder passwordEncoder;
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
 
+    /**
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}
+     * when the user is not found then It should throw a {@link UsernameNotFoundException}
+     * with the message {@link Cons.User.Fails#NOT_FOUND} and the status {@link HttpStatus#NOT_FOUND}
+     *
+     * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @see UserDetailsServiceImpl#loadUserByUsername(String)
+     */
     @Test
     void UserDetailsServiceImplTest_loadUserByUsername_UsernameNotFoundException() {
         // Arrange
@@ -47,6 +60,16 @@ class UserDetailsServiceImplTest {
                 .hasMessage(Cons.User.Fails.NOT_FOUND);
     }
 
+    /**
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
+     * but the roles are null then It should throw an exception extended of
+     * {@link AbstractExceptionWithStatus}, in this case it'll be {@link UserHasNotRolesException}<br>
+     * I want to emphasize that this fail will occur if a user was created externally to the application
+     *
+     * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @see UserDetailsServiceImpl#loadUserByUsername(String)
+     * @see UserHasNotRolesException
+     */
     @Test
     void UserDetailsServiceImplTest_UserFoundWithRolesNull() {
         // Arrange
@@ -63,11 +86,19 @@ class UserDetailsServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("username"))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
-                .hasMessage(Cons.User.UserDetailsServiceImpl.USER_HAS_NOT_ROLES)//todo: fix hardcoded message
+                .isInstanceOf(UserHasNotRolesException.class)
+                .hasMessage(Cons.User.UserDetailsServiceImpl.USER_HAS_NOT_ROLES)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.FORBIDDEN);
     }
 
+    /**
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
+     * but the roles are empty then It should return a {@link UserDetails} with the roles empty
+     *
+     * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @see UserDetailsServiceImpl#loadUserByUsername(String)
+     * @see UserDetails
+     */
     @Test
     void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() {
         // Arrange
@@ -92,6 +123,14 @@ class UserDetailsServiceImplTest {
         assertThat(userDetails.getAuthorities()).isEmpty();
     }
 
+    /**
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
+     * and the roles are not empty then It should return a {@link UserDetails} with the roles
+     *
+     * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @see UserDetailsServiceImpl#loadUserByUsername(String)
+     * @see UserDetails
+     */
     @Test
     void UserDetailsServiceImplTest_UserFound_Successful() {
         // Arrange
