@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-//@RestController
-@Controller
-@ResponseBody
+@RestController
 @RequestMapping(UserController.path)
 public class UserController {
     public static final String path = "/api/users";

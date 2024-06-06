@@ -25,6 +25,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetailsService.UserHasNotRolesException;
 
 /**
@@ -32,6 +33,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetails
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a> where
  * @see UserDetailsServiceImpl
+ * @since 1.0
  */
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
@@ -48,6 +50,7 @@ class UserDetailsServiceImplTest {
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @see UserDetailsServiceImpl#loadUserByUsername(String)
+     * @since 1.0
      */
     @Test
     void UserDetailsServiceImplTest_loadUserByUsername_UsernameNotFoundException() {
@@ -69,6 +72,7 @@ class UserDetailsServiceImplTest {
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @see UserDetailsServiceImpl#loadUserByUsername(String)
      * @see UserHasNotRolesException
+     * @since 1.0
      */
     @Test
     void UserDetailsServiceImplTest_UserFoundWithRolesNull() {
@@ -98,6 +102,7 @@ class UserDetailsServiceImplTest {
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @see UserDetailsServiceImpl#loadUserByUsername(String)
      * @see UserDetails
+     * @since 1.0
      */
     @Test
     void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() {
@@ -130,6 +135,7 @@ class UserDetailsServiceImplTest {
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @see UserDetailsServiceImpl#loadUserByUsername(String)
      * @see UserDetails
+     * @since 1.0
      */
     @Test
     void UserDetailsServiceImplTest_UserFound_Successful() {

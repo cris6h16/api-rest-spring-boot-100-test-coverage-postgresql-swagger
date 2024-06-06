@@ -1,6 +1,11 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
+import org.cris6h16.apirestspringboot.Config.Security.SecurityConfig;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
+import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
+import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
@@ -10,14 +15,23 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
@@ -29,17 +43,44 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest// charge the context due my use of `@MyId` which use behind: `authentication.name.equalsIgnoreCase('anonymousUser') ? -1 : authentication.principal.id`
-@AutoConfigureMockMvc
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-class UserControllerTest {
+import org.springframework.security.core.userdetails.User;
 
+/**
+ * test class for {@link UserController}, here I test the endpoints of the controller
+ * <b>just</b> when the operation is <strong>successful</strong>.<br>
+ * This due that any exception in the controller layer or any layer below
+ * will be handled by the {@link ExceptionHandlerControllers} which should be tested
+ * as integration test with the controller layer.<br>
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+ * @implNote Here I load all the context of the application, just for avoid the failures
+ * on the {@link UserController#create(CreateUpdateUserDTO)} which isn't necessary be authenticated
+ * for invoke it (in my security configuration is {@code permitAll()});<br>
+ * when we only use {@link WebMvcTest} annotation, the spring security configuration
+ * will be the default one, it means that any request will be unauthorized(default behavior)...<br>
+ * then if we're an {@code AnonymousUser}( unauthenticated principal default ) any request will be unauthorized...<br>
+ * Ok, ok, ok, ok, but the solution ?
+ * <ul>
+ *     <li>1. Load the context, then the security configuration will be our custom one</li>
+ *     <li>2. Create an empty security context, with an instance of {@link User} ( can be extended instances ), the point here is not be the {@code AnonymousUser} you can achieve this with the well known <strong>MockUsers</strong></li>
+ *     <li>3. Can exist more solutions, but the mentioned are those that I know</li>
+ * </ul>
+ * @see NoteController
+ * @see ExceptionHandlerControllers
+ * @since 1.0
+ */
+@SpringBootTest
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)/* we won't use it, but it's necessary for load the context with H2 as DB, then run the tests isolated from the real database*/
+@AutoConfigureMockMvc
+class UserControllerTest {
 
     @Autowired
     private MockMvc mvc;
 
     @MockBean
     private UserServiceImpl userService;
+
+    String path = UserController.path;
 
     UserEntity user;
 
@@ -61,11 +102,19 @@ class UserControllerTest {
 
     }
 
+
+    /**
+     * Test the successful behavior of {@link UserController#create(CreateUpdateUserDTO)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
+     */
     @Test
     void UserControllerTest_create_Successful_Then201AndReturnLocation() throws Exception {
         when(userService.create(any(CreateUpdateUserDTO.class))).thenReturn(1L);
 
         String location = mvc.perform(post("/api/users")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -73,13 +122,20 @@ class UserControllerTest {
                                     "password": "12345678",
                                     "email": "cristianmherrera21@gmail.com"                                    
                                 }
-                                """)
-                        .with(csrf())) // todo: test security like csrf
+                                """)) // todo: test security like csrf
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andReturn().getResponse().getHeader("Location");
     }
 
+    /**
+     * Test the successful behavior of {@link UserController#get(Long, Long)},
+     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
+     * ({@link WithMockUserWithId}).
+     *
+     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     */
     @Test
 //    @WithMockUser
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
@@ -107,6 +163,14 @@ class UserControllerTest {
     }
 
 
+    /**
+     * Test the successful behavior of {@link UserController#update(Long, CreateUpdateUserDTO, Long)},
+     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
+     * ({@link WithMockUserWithId}).
+     *
+     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
     void UserControllerTest_update_Successful_Then204NoContent() throws Exception {
@@ -122,7 +186,6 @@ class UserControllerTest {
                                 """)) // any content
                 .andExpect(status().isNoContent());
     }
-
 
 
     @Test
@@ -149,7 +212,7 @@ class UserControllerTest {
                 .build());
         when(userService.get(any(PageRequest.class))).thenReturn(users);
 
-        mvc.perform(get("/api/users"))
+        mvc.perform(get(path))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
