@@ -29,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -188,6 +189,13 @@ class UserControllerTest {
     }
 
 
+    /**
+     * Test the successful behavior of {@link UserController#delete(Long, Long)} ,
+     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId} ({@link WithMockUserWithId}).
+     *
+     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
     void UserControllerTest_delete_Successful_Then204NoContent() throws Exception {
@@ -198,8 +206,14 @@ class UserControllerTest {
                 .andExpect(status().isNoContent());
     }
 
+    /**
+     * Test the successful behavior of {@link UserController#getUsers(Pageable)},
+     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId} ({@link WithMockUserWithId}),
+     * this set user has the role: {@link  ERole#ROLE_ADMIN}.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     */
     @Test
-//    @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_ADMIN"})
     void UserControllerTest_getUsers_Successful_Then200OkAndList() throws Exception {
         List<PublicUserDTO> users = new ArrayList<>();

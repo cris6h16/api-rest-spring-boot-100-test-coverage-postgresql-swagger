@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers.Integration.Advice;
 
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
@@ -25,9 +26,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest// charge the context due my use of `@MyId` which use behind: `authentication.name.equalsIgnoreCase('anonymousUser') ? -1 : authentication.principal.id`
+import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
+
+/**
+ * Test the integration of the {@link NoteController} with the {@link ExceptionHandlerControllers} ( {@code Advice} ), here I wrote the test for the
+ * {@link NoteServiceTransversalException} which is the unique exception that can pass transversely through the layers.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+ * @implNote here I load the context due that in all methods on {@link NoteController} I inject the {@code  Principal.id } though the {@link MyId } annotation
+ * @since 1.0
+ */
+@SpringBootTest
 @AutoConfigureMockMvc
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) /* we won't use it, but it's necessary for load the context with H2 as DB, then run the tests isolated from the real database*/
 public class AdviceNoteControllerTest {
 
     @Autowired
@@ -36,8 +47,19 @@ public class AdviceNoteControllerTest {
     @MockBean
     private NoteServiceImpl noteService;
 
+
     String path = NoteController.path;
 
+    /**
+     * Test the {@link NoteServiceTransversalException}, this is the unique exception which will be thrown
+     * from the {@link NoteServiceImpl} to {@link NoteController} or any other transversal layer.<br>
+     *
+     * @implNote the method here of the controller is {@link NoteController#create(CreateNoteDTO, Long)} which
+     * has an annotated parameter with {@link MyId} to inject the {@code Principal.id} to the method.
+     * that the reason why I use the {@link WithMockUserWithId} annotation to mock the {@code Principal}
+     * @auther <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
+     */
     @Test
     @WithMockUserWithId(id = 1L, username = "cris6h16", password = "12345678", roles = {"ROLE_USER"})
     void AdviceNoteControllerTest_ExceptionFromService_AbstractExceptionWithStatus() throws Exception {
