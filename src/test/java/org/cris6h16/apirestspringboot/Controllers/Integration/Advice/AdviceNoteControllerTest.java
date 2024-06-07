@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers.Integration.Advice;
 
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.Controllers.NoteController;
@@ -56,7 +57,7 @@ public class AdviceNoteControllerTest {
      *
      * @implNote the method here of the controller is {@link NoteController#create(CreateNoteDTO, Long)} which
      * has an annotated parameter with {@link MyId} to inject the {@code Principal.id} to the method.
-     * that the reason why I use the {@link WithMockUserWithId} annotation to mock the {@code Principal}
+     * that the reason why I use the {@link WithMockUserWithId} annotation to mock the {@code Principal} with an Instance of {@link UserWithId }
      * @auther <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
