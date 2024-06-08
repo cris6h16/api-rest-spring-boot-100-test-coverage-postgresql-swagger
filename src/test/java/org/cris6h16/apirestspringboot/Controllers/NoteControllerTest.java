@@ -62,11 +62,9 @@ public class NoteControllerTest {
     String path = NoteController.path;
 
     /**
-     * Test the successful behavior of {@link NoteController#create(CreateNoteDTO, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link NoteController#create(CreateNoteDTO, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -88,11 +86,9 @@ public class NoteControllerTest {
 
 
     /**
-     * Test the successful behavior of {@link NoteController#getPage(Pageable, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link NoteController#getPage(Pageable, Long)}.
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -113,11 +109,9 @@ public class NoteControllerTest {
     }
 
     /**
-     * Test the successful behavior of {@link NoteController#get(Long, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link NoteController#get(Long, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -135,11 +129,9 @@ public class NoteControllerTest {
     }
 
     /**
-     * Test the successful behavior of {@link NoteController#update(Long, CreateNoteDTO, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link NoteController#update(Long, CreateNoteDTO, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @implNote I'm using {@link MyId} to inject the {@code principal.id}  in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -156,11 +148,9 @@ public class NoteControllerTest {
     }
 
     /**
-     * Test the successful behavior of {@link NoteController#delete(Long, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link NoteController#delete(Long, Long)}.
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
+     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */

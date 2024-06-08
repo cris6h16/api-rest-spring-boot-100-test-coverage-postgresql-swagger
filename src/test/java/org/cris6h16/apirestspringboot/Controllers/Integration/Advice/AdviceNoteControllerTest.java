@@ -1,15 +1,15 @@
 package org.cris6h16.apirestspringboot.Controllers.Integration.Advice;
 
-import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.Controllers.NoteController;
+import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
+import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -23,18 +23,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
-
 /**
- * Test the integration of the {@link NoteController} with the {@link ExceptionHandlerControllers} ( {@code Advice} ), here I wrote the test for the
- * {@link NoteServiceTransversalException} which is the unique exception that can pass transversely through the layers.
+ * Test the integration of the {@link NoteController} with the {@link ExceptionHandlerControllers}.
+ * here I wrote the test for the {@link NoteServiceTransversalException}
+ * which is the unique exception that can pass transversely through the layers.
+ * <p>
+ * here I load the context due that in all methods on {@link NoteController}
+ * I inject the {@code  Principal.id } though the {@link MyId } annotation
+ * </p>
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
- * @implNote here I load the context due that in all methods on {@link NoteController} I inject the {@code  Principal.id } though the {@link MyId } annotation
  * @since 1.0
  */
 @SpringBootTest
@@ -52,12 +53,14 @@ public class AdviceNoteControllerTest {
     String path = NoteController.path;
 
     /**
-     * Test the {@link NoteServiceTransversalException}, this is the unique exception which will be thrown
-     * from the {@link NoteServiceImpl} to {@link NoteController} or any other transversal layer.<br>
+     * we threw a {@link NoteServiceTransversalException} from {@link UserServiceImpl}
+     * then passed through the {@link UserController} and finally handled in the {@link ExceptionHandlerControllers}
+     * <p>
+     * Random used Method: {@link NoteController#create(CreateNoteDTO, Long)}
+     * this depends on {@link MyId} to inject {@code Principal.id}.
+     * that the reason why I use the {@link WithMockUserWithId} annotation.
+     * </p>
      *
-     * @implNote the method here of the controller is {@link NoteController#create(CreateNoteDTO, Long)} which
-     * has an annotated parameter with {@link MyId} to inject the {@code Principal.id} to the method.
-     * that the reason why I use the {@link WithMockUserWithId} annotation to mock the {@code Principal} with an Instance of {@link UserWithId }
      * @auther <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */

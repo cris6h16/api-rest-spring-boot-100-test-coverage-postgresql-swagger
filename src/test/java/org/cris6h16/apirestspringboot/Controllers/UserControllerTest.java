@@ -1,11 +1,9 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
-import org.cris6h16.apirestspringboot.Config.Security.SecurityConfig;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
-import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
@@ -15,24 +13,18 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
@@ -43,8 +35,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.springframework.security.core.userdetails.User;
 
 /**
  * test class for {@link UserController}, here I test the endpoints of the controller
@@ -62,8 +52,8 @@ import org.springframework.security.core.userdetails.User;
  * then if we're an {@code AnonymousUser}( unauthenticated principal default ) any request will be unauthorized...<br>
  * Ok, ok, ok, ok, but the solution ?
  * <ul>
- *     <li>1. Load the context, then the security configuration will be our custom one</li>
- *     <li>2. Create an empty security context, with an instance of {@link User} ( can be extended instances ), the point here is not be the {@code AnonymousUser} you can achieve this with the well known <strong>MockUsers</strong></li>
+ *     <li>1. Load the context, then the security configuration will be our custom one ( enough if our method is {@code permitAll()} )</li>
+ *     <li>2. Load the context && Create an empty security context, with an instance of {@link UserWithId} ( extended class of {@link User} ), achieved by <strong>MockingUsers</strong></li>
  *     <li>3. Can exist more solutions, but the mentioned are those that I know</li>
  * </ul>
  * @see NoteController
@@ -130,12 +120,11 @@ class UserControllerTest {
     }
 
     /**
-     * Test the successful behavior of {@link UserController#get(Long, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link UserController#get(Long, Long)}
      *
      * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
      */
     @Test
 //    @WithMockUser
@@ -165,9 +154,7 @@ class UserControllerTest {
 
 
     /**
-     * Test the successful behavior of {@link UserController#update(Long, CreateUpdateUserDTO, Long)},
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId}
-     * ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link UserController#update(Long, CreateUpdateUserDTO, Long)}.
      *
      * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -190,8 +177,7 @@ class UserControllerTest {
 
 
     /**
-     * Test the successful behavior of {@link UserController#delete(Long, Long)} ,
-     * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId} ({@link WithMockUserWithId}).
+     * Test the successful behavior of {@link UserController#delete(Long, Long)}
      *
      * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -211,6 +197,9 @@ class UserControllerTest {
      * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId} ({@link WithMockUserWithId}),
      * this set user has the role: {@link  ERole#ROLE_ADMIN}.
      *
+     * @implNote this tested method is <br>
+     * {@code  @PreAuthorize("hasRole(T(org.cris6h16.apirestspringboot.Entities.ERole).ROLE_ADMIN)")}<br>
+     * then I mock the principal with the role {@link ERole#ROLE_ADMIN}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      */
     @Test
