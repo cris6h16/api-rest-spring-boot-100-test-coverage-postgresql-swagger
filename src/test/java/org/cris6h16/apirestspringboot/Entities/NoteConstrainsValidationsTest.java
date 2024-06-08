@@ -36,6 +36,13 @@ public class NoteConstrainsValidationsTest {
     private UserEntity usr;
     private NoteEntity note;
 
+    /**
+     * Before each test, delete all data from the repositories and
+     * call {@link #_initializeAndPrepare()};
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -48,9 +55,18 @@ public class NoteConstrainsValidationsTest {
         noteRepository.flush();
 
         //
-        initializeAndPrepare();
+        _initializeAndPrepare();
     }
 
+    /**
+     * Test for correct insertion in the database, this
+     * should be the first test to run, since it doesn't
+     * violate any constraint/validations. We can continue
+     * with the other tests if this one green.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(1)
     @Tag("correct")
@@ -66,6 +82,14 @@ public class NoteConstrainsValidationsTest {
         assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> {@code title} is blank.
+     * <br>
+     * it violates {@code @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(2)
     @Tag("ConstraintViolationException")
@@ -78,6 +102,14 @@ public class NoteConstrainsValidationsTest {
         assertThrows(ConstraintViolationException.class, () -> noteRepository.saveAndFlush(note));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> {@code title} is null.
+     * <br>
+     * it violates {@code @NotBlank(message = <>)}
+     *
+     * @since 1.0
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     */
     @Test
     @Order(3)
     @Tag("ConstraintViolationException")
@@ -90,6 +122,14 @@ public class NoteConstrainsValidationsTest {
         assertThrows(ConstraintViolationException.class, () -> noteRepository.saveAndFlush(note));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> {@code title} is too long.
+     * <br>
+     * it violates {@code @Length(max = <>, message = <>)}
+     *
+     * @since 1.0
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     */
     @Test
     @Order(4)
     @Tag("ConstraintViolationException")
@@ -103,7 +143,15 @@ public class NoteConstrainsValidationsTest {
     }
 
 
-    void initializeAndPrepare() {
+    /**
+     * Initialize the {@code usr} and {@code note} attributes,
+     * it'll use to avoid code repetition of initialization
+     * of this in each method.
+     *
+     * @since 1.0
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     */
+    private void _initializeAndPrepare() {
         RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_USER).build();
         usr = UserEntity.builder()
                 .id(null)

@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Test class for {@link UserEntity} validations and constraints<br>
  *
- * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
 @DataJpaTest
@@ -37,7 +37,11 @@ public class UserConstrainsValidationsTest {
     private UserEntity usr;
 
     /**
+     * Before each test, delete all data from the repositories and
+     * call {@link #_initializeAndPrepare()};
      *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @BeforeEach
     void setUp() {
@@ -49,9 +53,18 @@ public class UserConstrainsValidationsTest {
         roleRepository.flush();
 
         // `usr`
-        initializeAndPrepare();
+        _initializeAndPrepare();
     }
 
+    /**
+     * Test for correct insertion in the database, this
+     * should be the first test to run, since it doesn't
+     * violate any constraint/validations. We can continue
+     * with the other tests if this one green.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(1)
     @Tag(value = "correct")
@@ -65,6 +78,14 @@ public class UserConstrainsValidationsTest {
         assertThat(i.next().equals(usr)).isTrue();
     }
 
+    /**
+     * Test for {@link DataIntegrityViolationException} -> Unique constraint violation
+     * <br>
+     * Username already exists in the database then we try one with the same username
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(2)
     @Tag(value = "DataIntegrityViolationException")
@@ -81,6 +102,14 @@ public class UserConstrainsValidationsTest {
         assertThrows(DataIntegrityViolationException.class, () -> userRepository.saveAndFlush(usr2));
     }
 
+    /**
+     * Test for {@link DataIntegrityViolationException} -> Unique constraint violation
+     * <br>
+     * Email already exists in the database then we try one with the same email
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(3)
     @Tag(value = "DataIntegrityViolationException")
@@ -98,6 +127,14 @@ public class UserConstrainsValidationsTest {
     }
 
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Username too long
+     * <br>
+     * Username is too long, it violates {@code  @Length(max = <>, message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(4)
     @Tag(value = "ConstraintViolationException")
@@ -109,20 +146,36 @@ public class UserConstrainsValidationsTest {
     }
 
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Username is blank
+     * <br>
+     * Username is blank, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(5)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsBlank(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsBlank() {
         // Arrange
         usr.setUsername("             ");
         // Act & Assert
         assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Username is null
+     * <br>
+     * Username is null, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(6)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsNull(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsNull() {
         // Arrange
         usr.setUsername(null);
         // Act & Assert
@@ -130,40 +183,72 @@ public class UserConstrainsValidationsTest {
     }
 
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Password is blank
+     * <br>
+     * Password is blank, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(7)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsBlank(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsBlank() {
         // Arrange
         usr.setPassword("             ");
         // Act & Assert
         assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Password is null
+     * <br>
+     * Password is null, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(8)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsNull(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsNull() {
         // Arrange
         usr.setPassword(null);
         // Act & Assert
         assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Email is invalid
+     * <br>
+     * Email is invalid, it violates {@code  @Email(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(9)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailInvalid(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_emailInvalid() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
         assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
     }
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Email is null
+     * <br>
+     * Email is null, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(10)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsNull(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsNull() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
@@ -171,10 +256,18 @@ public class UserConstrainsValidationsTest {
     }
 
 
+    /**
+     * Test for {@link ConstraintViolationException} -> Email is blank
+     * <br>
+     * Email is blank, it violates {@code  @NotBlank(message = <>)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(11)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsBlank(){
+    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsBlank() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
@@ -182,7 +275,14 @@ public class UserConstrainsValidationsTest {
     }
 
 
-    void initializeAndPrepare(){
+    /**
+     * Initialize and prepare the {@code usr} attribute. it's used
+     * in the tests, to avoid boilerplate initializations on each method.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private void _initializeAndPrepare() {
         RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_USER).build();
         usr = UserEntity.builder()
                 .id(null)

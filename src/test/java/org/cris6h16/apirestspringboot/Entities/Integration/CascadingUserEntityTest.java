@@ -22,9 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Test the right behavior of cascading on {@link UserEntity} to the contained Entities
  *
- * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
- **/
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @Transactional(rollbackFor = Exception.class)
@@ -42,9 +42,15 @@ public class CascadingUserEntityTest {
     private NoteRepository noteRepository;
 
 
+    /**
+     * Before each test, delete all data from the repositories and
+     * call {@link #initializeAndPrepare()};
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @BeforeEach
     void setUp() {
-        initializeAndPrepare();
 
         userRepository.deleteAll();
         roleRepository.deleteAll();
@@ -53,9 +59,17 @@ public class CascadingUserEntityTest {
         userRepository.flush();
         roleRepository.flush();
         noteRepository.flush();
+
+        initializeAndPrepare();
     }
 
-
+    /**
+     * Initialize the {@code notes}, {@code role} and {@code usr} attributes,
+     * It'll be used to avoid code repetition in the tests for initializations.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private void initializeAndPrepare() {
         notes = new HashSet<>(10);
 
@@ -83,6 +97,17 @@ public class CascadingUserEntityTest {
     }
 
 
+    /**
+     * Test the right behavior of cascading on {@link UserEntity} to the contained {@link RoleEntity}
+     * <br>
+     * If we have a not persisted {@link RoleEntity} in a {@link UserEntity} attribute, both
+     * are not persisted ( both id = null )
+     * <br>
+     * When we persist the {@link UserEntity}, the {@link RoleEntity} is persisted too.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(1)
     @Tag("RoleEntity")
@@ -103,6 +128,16 @@ public class CascadingUserEntityTest {
         assertThat(roleRepository.count()).isEqualTo(1);
     }
 
+    /**
+     * Test the right behavior of cascading on {@link UserEntity} to
+     * the contained {@link RoleEntity}
+     * <br>
+     * If we have a persisted {@link RoleEntity} in a {@link UserEntity} attribute (both
+     * are persisted ).
+     * <br>
+     * When we remove a {@link UserEntity}, the {@link RoleEntity} wouldn't
+     * be removed, just the {@link UserEntity}.
+     */
     @Test
     @Order(3)
     @Tag("RoleEntity")
@@ -122,6 +157,18 @@ public class CascadingUserEntityTest {
     }
 
 
+    /**
+     * Test the right behavior of cascading on {@link UserEntity}
+     * to the contained {@link NoteEntity}
+     * <br>
+     * If we have a not persisted {@link NoteEntity} in a {@link UserEntity} attribute
+     * (both are not persisted).
+     * <br>
+     * When we persist the {@link UserEntity}, the {@link NoteEntity} is persisted too.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(2)
     @Tag("NoteEntity")
@@ -139,6 +186,18 @@ public class CascadingUserEntityTest {
                 .containsAll(notes);
     }
 
+    /**
+     * Test the right behavior of cascading on {@link UserEntity}
+     * to the contained {@link NoteEntity}
+     * <br>
+     * If we have a list of persisted {@link NoteEntity} in a {@link UserEntity} attribute
+     * (both are persisted).
+     * <br>
+     * When we remove a {@link UserEntity}, all the {@link NoteEntity} would be removed too.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(4)
     @Tag("NoteEntity")
