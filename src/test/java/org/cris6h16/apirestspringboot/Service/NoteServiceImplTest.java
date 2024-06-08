@@ -1,9 +1,13 @@
 package org.cris6h16.apirestspringboot.Service;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
@@ -22,18 +26,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-
-//@SpringBootTest
-//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency // todo: doc my trouble with enviroment variables
-//@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
+/**
+ * Test class for {@link NoteServiceImpl}, here I just test when
+ * the test is successful, due to all methods in the mentioned
+ * service are wrapped in a try-catch block, in the catch
+ * we delegate a creation of {@link NoteServiceTransversalException}
+ * to {@link ServiceUtils}, then any exception threw in the methods of
+ * {@link NoteServiceImpl} should be tested as integration with {@link ServiceUtils}.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @implNote {@link NoteServiceImpl} are tested in isolation, mocking the dependencies.
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
 public class NoteServiceImplTest {
-//    @Autowired
-//    private NoteService noteService;
-//    @Autowired
-//    private NoteRepository noteRepository;
-//    @Autowired
-//    private UserRepository userRepository;
 
     @Mock
     NoteRepository noteRepository;
@@ -45,7 +51,15 @@ public class NoteServiceImplTest {
     @InjectMocks
     NoteServiceImpl noteService;
 
-
+    /**
+     * Test for {@link NoteServiceImpl#create(CreateNoteDTO, Long)}  when is successful.
+     * <br>
+     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a null content
+     * then the {@link NoteEntity} passed to DB for be saved should have an empty content, not a null.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void NoteServiceImplTest_create_DTO_ContentNull_Successful() {
@@ -74,6 +88,15 @@ public class NoteServiceImplTest {
         ));
     }
 
+    /**
+     * Test for {@link NoteServiceImpl#create(CreateNoteDTO, Long)}  when is successful.
+     * <br>
+     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a blank content
+     * then the {@link NoteEntity} passed to DB for be saved should have a blank content, not a null.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void NoteServiceImplTest_create_DTO_ContentBlank_Successful() {
@@ -104,6 +127,15 @@ public class NoteServiceImplTest {
     }
 
 
+    /**
+     * Test for {@link NoteServiceImpl#get(Long, Long)} when is successful.
+     * <br>
+     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a null content
+     * then the {@link NoteEntity} passed to DB for be saved should have an empty content, not a null.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("get")
     void NoteServiceImplTest_get_Successful() {
@@ -129,6 +161,14 @@ public class NoteServiceImplTest {
     }
 
 
+    /**
+     * Test for {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)}  when is successful.
+     * <br>
+     * Test: Replace a note based on the id.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("put")
     void NoteServiceImplTest_put_ValidDTO_Replaces_Successful() {
@@ -160,6 +200,14 @@ public class NoteServiceImplTest {
     }
 
 
+    /**
+     * Test for {@link NoteServiceImpl#delete(Long, Long)} when is successful.
+     * <br>
+     * Test: Delete a note based on the id.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("delete")
     void NoteServiceImplTest_delete_Successful() {
@@ -184,6 +232,15 @@ public class NoteServiceImplTest {
         verify(noteRepository).delete(note);
     }
 
+
+    /**
+     * Test for {@link NoteServiceImpl#getPage(Pageable, Long)} when is successful.
+     * <br>
+     * Test: Get a page of notes based on the user id.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("get(pageable)")
     void NoteServiceImplTest_getPageable_Successful() {
@@ -218,8 +275,13 @@ public class NoteServiceImplTest {
     }
 
 
-
-
+    /**
+     * Create a {@link UserEntity} with id {@code 1}.
+     *
+     * @return the created one.
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     UserEntity createUserEntityWithId() {
         return UserEntity.builder()
                 .id(1L)
@@ -230,7 +292,14 @@ public class NoteServiceImplTest {
     }
 
 
-
+    /**
+     * Create a list of {@link NoteEntity} with 2 elements.
+     *
+     * @param user the user to set in the notes.
+     * @return the created list of notes.
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     List<NoteEntity> createNoteEntities(UserEntity user) {
         List<NoteEntity> notes = new ArrayList<>(2);
         notes.add(NoteEntity.builder()
@@ -247,6 +316,15 @@ public class NoteServiceImplTest {
         return notes;
     }
 
+    /**
+     * Create a {@link NoteEntity} with id {@code 1}.
+     *
+     * @param user the user to set in the note.
+     * @return the created one.
+     * @implNote The id is set to {@code 1}.
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     NoteEntity createNoteEntityWithId(UserEntity user) {
         return NoteEntity.builder()
                 .id(1L)

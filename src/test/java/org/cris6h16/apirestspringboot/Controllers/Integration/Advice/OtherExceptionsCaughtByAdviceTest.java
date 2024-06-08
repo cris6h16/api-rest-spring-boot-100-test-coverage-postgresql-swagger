@@ -75,7 +75,7 @@ public class OtherExceptionsCaughtByAdviceTest {
      * Test: when is request an nonexistent endpoint then {@link NoResourceFoundException}
      * then response with {@link HttpStatus#NOT_FOUND} && {@link Cons.Response.ForClient#NO_RESOURCE_FOUND}
      *
-     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @Test
@@ -91,7 +91,7 @@ public class OtherExceptionsCaughtByAdviceTest {
      * then {@link AccessDeniedException} then response with
      * {@link HttpStatus#FORBIDDEN} && {@link Cons.Auth.Fails#ACCESS_DENIED}
      *
-     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @Test
@@ -115,7 +115,7 @@ public class OtherExceptionsCaughtByAdviceTest {
      * then {@link MethodArgumentTypeMismatchException}
      * then response with {@link HttpStatus#BAD_REQUEST} && {@link Cons.Response.ForClient#GENERIC_ERROR}
      *
-     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @Test
@@ -130,7 +130,7 @@ public class OtherExceptionsCaughtByAdviceTest {
      * Unhandled Exception (unexpected), then simply generic error (all unexpected exceptions are logged
      * if we want make a specific response && code to this fail)
      *
-     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @Test

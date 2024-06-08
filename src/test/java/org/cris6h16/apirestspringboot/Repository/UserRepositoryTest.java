@@ -37,7 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>Manual cleanup: Changes in the database structure may require manual cleanup, complicating test maintenance.</li>
  * </ul>
  *
- * @author <a href="https://github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
@@ -45,7 +46,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserRepositoryTest {
 
-    //TODO: DOC MY TROUBLE WITH save() instead of saveAndFlush() in H2
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -53,8 +53,13 @@ public class UserRepositoryTest {
     private UserEntity usr;
 
     /**
-     * Deletes all from the {@link UserRepository} & {@link RoleRepository}
-     * and prepares a new entity to be created as {@code usr} (id==null)
+     * <ol>
+     *     <li>Deletes all from the {@link UserRepository} & {@link RoleRepository}</li>
+     *     <li>call to {@link #initializeAndPrepare()} </li>
+     * </ol>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @BeforeEach
     void setUp() {
@@ -70,7 +75,10 @@ public class UserRepositoryTest {
     }
 
     /**
-     * Tests the {@link UserRepository#findByUsername(String)} method.<br>
+     * Test {@link UserRepository#findByUsername(String)}.<br>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     @Order(1)
@@ -88,7 +96,10 @@ public class UserRepositoryTest {
     }
 
     /**
-     * Tests the {@link UserRepository#findByEmail(String)} method.<br>
+     * Test {@link UserRepository#findByEmail(String)}.<br>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     @Order(2)
@@ -106,7 +117,10 @@ public class UserRepositoryTest {
     }
 
     /**
-     * Tests the {@link UserRepository#executeInTransaction(Runnable)} method.<br>
+     * Test {@link UserRepository#executeInTransaction(Runnable)}.<br>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     @Order(3)
@@ -133,8 +147,13 @@ public class UserRepositoryTest {
     }
 
 
-
-    void initializeAndPrepare(){
+    /**
+     * Initializes the {@link #usr} with {@link ERole#ROLE_USER}, for the tests.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    void initializeAndPrepare() {
         RoleEntity roles = RoleEntity.builder().name(ERole.ROLE_USER).build();
         usr = UserEntity.builder()
                 .id(null)

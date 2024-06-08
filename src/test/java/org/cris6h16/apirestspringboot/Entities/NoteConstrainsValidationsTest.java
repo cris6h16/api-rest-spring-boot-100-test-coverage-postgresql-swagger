@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Test class for {@link NoteEntity} validations and constraints<br>
  *
- * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)

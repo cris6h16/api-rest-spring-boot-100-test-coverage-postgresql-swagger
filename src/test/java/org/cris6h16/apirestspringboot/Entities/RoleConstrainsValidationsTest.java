@@ -16,7 +16,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Test class for {@link RoleEntity} validations and constraints<br>
  *
- * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)

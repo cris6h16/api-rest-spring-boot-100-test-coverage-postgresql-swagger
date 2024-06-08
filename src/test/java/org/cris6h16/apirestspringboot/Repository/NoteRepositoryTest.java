@@ -39,10 +39,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>Manual cleanup: Changes in the database structure may require manual cleanup, complicating test maintenance.</li>
  * </ul>
  *
- * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@DataJpaTest
+@DataJpaTest // Annotation for a JPA test that focuses only on JPA components
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -58,6 +58,7 @@ public class NoteRepositoryTest {
     /**
      * <ol>
      *     <li>Deletes all from {@link UserRepository } & {@link NoteRepositoryTest}</li>
+     *     <li>call to {@link #initializeAndPrepare()}</li>
      *     <li>Saves all the users and notes from {@code userNotes} map</li>
      * </ol>
      */
@@ -79,9 +80,12 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUser(UserEntity)} method.<br>
+     * Test {@link  NoteRepository#findByUser(UserEntity)} method.<br>
      * The method should return a list of notes(size=5) of each user.
-     */
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     **/
     @Test
     void NoteRepository_findByUser_returnAListOfHisNotes() {
         // Arrange
@@ -100,10 +104,13 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@link NoteRepository#findByIdAndUser(Long, UserEntity)} method.<br>
+     * Test {@link NoteRepository#findByIdAndUser(Long, UserEntity)}.<br>
      * Try to fetch each note(10) with each user(2), if the user is the owner of the note
      * then the method should return a non-empty {@code Optional} with the note, otherwise
      * it should return an empty {@code Optional}.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     void NoteRepository_findByIdAndUser_returnANonemptyOptionalIfIsHisNote() {
@@ -128,10 +135,13 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUser(UserEntity, Pageable)} )} method <br>
+     * Test {@link  NoteRepository#findByUser(UserEntity, Pageable)}.<br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@link NoteEntity#getTitle()} field in ascending order.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     void NoteRepository_FindByUserPageable_returnPagesASC() {
@@ -170,10 +180,13 @@ public class NoteRepositoryTest {
     }
 
     /**
-     * Tests the {@link  NoteRepository#findByUser(UserEntity, Pageable)} )} method <br>
+     * Test {@link  NoteRepository#findByUser(UserEntity, Pageable)}<br>
      * The method should return the notes of the user in pages of 2 elements each.<br>
      * Here I get all the existent pages of notes of each user, the pages are sorted by
      * the {@code title} field in descending order.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     void NoteRepository_FindByUserPageable_returnPagesDES() {
@@ -214,7 +227,11 @@ public class NoteRepositoryTest {
 
 
     /**
-     * Creates two users with 5 notes each and assigns them to the {@code userNotes} map.
+     * Initializes the {@code userNotes} map and prepares it for testing.<br>
+     * Creates 2 users with 5 notes each one and assigns them to {@code userNotes} map.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     void initializeAndPrepare() {
         userNotes = new HashMap<>();
@@ -225,6 +242,14 @@ public class NoteRepositoryTest {
     }
 
 
+    /**
+     * Creates a new {@link UserEntity}.
+     *
+     * @param username the username of the user
+     * @return the created
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private UserEntity createUser(String username) {
         return UserEntity.builder()
                 .username(username)
@@ -234,6 +259,15 @@ public class NoteRepositoryTest {
                 .build();
     }
 
+    /**
+     * Creates a set of {@link NoteEntity} with the specified range of suffixes.
+     *
+     * @param startSuffix for the title and content
+     * @param endSuffix   for the title and content
+     * @return a set of notes
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private Set<NoteEntity> createNotes(int startSuffix, int endSuffix) {
         Set<NoteEntity> notes = new HashSet<>();
         for (int i = startSuffix; i <= endSuffix; i++) {
@@ -243,6 +277,15 @@ public class NoteRepositoryTest {
     }
 
 
+    /**
+     * Assigns the specified user to each note in the set.
+     *
+     * @param notes the set of notes
+     * @param user  the user to assign
+     * @return the set of notes with the user assigned
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private Set<NoteEntity> setUser(Set<NoteEntity> notes, UserEntity user) {
         for (NoteEntity note : notes) note.setUser(user);
         return notes;

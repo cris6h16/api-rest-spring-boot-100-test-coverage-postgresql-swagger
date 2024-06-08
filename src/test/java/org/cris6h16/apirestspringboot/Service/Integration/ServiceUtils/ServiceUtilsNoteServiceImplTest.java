@@ -6,9 +6,13 @@ import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
+import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,13 +34,41 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-
+/**
+ * Test class for {@link NoteServiceImpl} and {@link ServiceUtils} integration.
+ * <br>
+ * the mentioned Service will delegate an {@link NoteServiceTransversalException}
+ * to {@link ServiceUtils} when any exception occurs in any method on the service,
+ * remember that all methods in the service are wrapped in a try-catch block,
+ * and into the catch block, the service will delegate the creation of the
+ * exception {@link NoteServiceTransversalException} to {@link ServiceUtils},
+ * {@link ServiceUtils} will create the exception with the message && status...
+ * <br>
+ * Here we will test the behavior of the fails in the service ( exceptions
+ * raised into the service methods or any other layer below ) and make I sure that the exception
+ * raised is handled properly.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @implNote I should test mocking the database exceptions, but when {@link ServiceUtils}
+ * create an {@link NoteServiceTransversalException} with message && status
+ * depends on the exception type and its message,
+ * For mock database exceptions I need to find the exception type && the exact message
+ * of that specific failure through debugging, logs, souts, etc. I consider it
+ * tedious also it can trigger fails due the manual process,
+ * then I decided don't mock the database exceptions... Just once before test
+ * this class {@link ServiceUtilsNoteServiceImplTest} I must test and pass
+ * the test of the database layer, entity layer(constrains && validations);
+ * once I have passed those tests I'll be sure that this tests won't fail
+ * due to the database layer or entity layer.<br>
+ * once the mentioned tests were green then I can test this class.
+ * @since 1.0
+ */
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
-//@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // todo: docs my trouble with a transactional here which make fail to the transaction on @Service
+//@Transactional(rollbackFor = Exception.class, isolation = Isolation.READ_UNCOMMITTED) // In each service method I'll use @Transactional, unable here to avoid conflicts
 public class ServiceUtilsNoteServiceImplTest {
     @Autowired
-    private NoteService noteService;
+    private NoteServiceImpl noteService;
     @Autowired
     private NoteRepository noteRepository;
     @Autowired
@@ -51,6 +83,20 @@ public class ServiceUtilsNoteServiceImplTest {
         userRepository.flush();
     }
 
+    /**
+     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
+     * {@link NoteService#create(CreateNoteDTO, Long)} is called with an invalid user id (negative).
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_idInvalid_Negative() {
@@ -60,11 +106,25 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
+     * {@link NoteService#create(CreateNoteDTO, Long)} is called with an invalid user id (zero).
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_idInvalid_Zero() {
@@ -74,11 +134,25 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
+     * {@link NoteService#create(CreateNoteDTO, Long)} is called with an invalid user id (null).
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_idInvalid_Null() {
@@ -88,11 +162,21 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * Test the exception raised in {@link UserServiceImpl#validateIdAndGetUser(Long)}
+     * when {@link NoteService#create(CreateNoteDTO, Long)} is called with a user id that doesn't exist.
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.Fails#NOT_FOUND},{@code recommendedStatus}={@link HttpStatus#NOT_FOUND}]
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_User_NotFound() {
@@ -102,11 +186,23 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * test the exception raised in {@link NoteRepository#saveAndFlush(Object)}
+     * when {@link NoteService#create(CreateNoteDTO, Long)} is called
+     * with a {@link CreateNoteDTO} with a null title.
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Note.Validations#TITLE_IS_BLANK_MSG},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_DTO_Title_Null() {
@@ -119,11 +215,23 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, user.getId()))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * test the exception raised in {@link NoteRepository#saveAndFlush(Object)}
+     * when {@link NoteService#create(CreateNoteDTO, Long)} is called
+     * with a {@link CreateNoteDTO} with a blank title.
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Note.Validations#TITLE_IS_BLANK_MSG},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_DTO_Title_Blank() {
@@ -136,11 +244,26 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(note, user.getId()))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * test the exception raised in {@link NoteService#create(CreateNoteDTO, Long)}
+     * when it's called with a {@link CreateNoteDTO} null.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Note.DTO#NULL},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_DTO_Null() {
@@ -152,11 +275,26 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(toCreate, user.getId()))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Note.DTO.NULL)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * test the exception raised in {@link NoteService#create(CreateNoteDTO, Long)}
+     * when it throws an unexpected exception
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Response.ForClient#GENERIC_ERROR},{@code recommendedStatus}={@link HttpStatus#INTERNAL_SERVER_ERROR}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("create")
     void ServiceUtilsNoteServiceImplTest_create_UnhandledException() {
@@ -173,11 +311,27 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.create(toCreate, user.getId()))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
+     * {@link NoteService#get(Long, Long)} is called with an invalid user id (negative).
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link NoteServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @param userId invalid user ids
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Tag("get")
     @ParameterizedTest// todo: refactor others testing to parameterized to avoid boilerplate
     @ValueSource(longs = {0, -1})
@@ -187,11 +341,14 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     *
+     */
     @Test
     @Tag("get")
     void ServiceUtilsNoteServiceImplTest_get_UserNotFound() {
@@ -201,7 +358,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -215,7 +372,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -229,7 +386,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.get(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -254,7 +411,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -269,7 +426,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -285,7 +442,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(noteId, note, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -301,7 +458,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(1L, putDTO, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -324,7 +481,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.put(firstNoteEntity.getId(), putDTO, user.getId()))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -338,7 +495,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -352,7 +509,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -366,7 +523,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -380,7 +537,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.delete(noteId, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -400,7 +557,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
@@ -420,7 +577,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.User.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
@@ -439,7 +596,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessageStartingWith("No property ") // No property 'cris6h16' found
                 .hasMessageEndingWith(" found")
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -448,14 +605,14 @@ public class ServiceUtilsNoteServiceImplTest {
 
     @Test
     @Tag("getPage")
-    void ServiceUtilsNoteServiceImplTest_getPage_NonexistentAttribute(){
+    void ServiceUtilsNoteServiceImplTest_getPage_NonexistentAttribute() {
         // Arrange
         Long userId = userRepository.saveAndFlush(createUserEntity()).getId();
         PageRequest pageRequest = null;
 
         // Act && Assert
         assertThatThrownBy(() -> noteService.getPage(pageRequest, userId))
-                .isInstanceOf(AbstractExceptionWithStatus.class)
+                .isInstanceOf(NoteServiceTransversalException.class)
                 .hasMessage(Cons.Response.ForClient.GENERIC_ERROR)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }

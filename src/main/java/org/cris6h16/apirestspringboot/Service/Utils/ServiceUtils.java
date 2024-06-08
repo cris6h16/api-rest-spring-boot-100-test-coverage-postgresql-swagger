@@ -18,9 +18,11 @@ import java.util.Set;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 
+// Immutability and local variables ensure thread safety without requiring synchronization.
 @Slf4j
 @Component
 public class ServiceUtils {
+
 
     public AbstractExceptionWithStatus createATraversalExceptionHandled(@NotNull Exception e, boolean isUserService) {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here

@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(
-            isolation = Isolation.READ_UNCOMMITTED, // read uncommitted to avoid locks
+            isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
     public PublicUserDTO get(Long id) {

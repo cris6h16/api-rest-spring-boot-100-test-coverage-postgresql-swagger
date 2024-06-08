@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   <li>Manual cleanup: Changes in the database structure may require manual cleanup, complicating test maintenance.</li>
  * </ul>
  *
- * @author <a href="https://github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
 @DataJpaTest
@@ -50,9 +50,12 @@ public class RoleRepositoryTest {
     /**
      * <ol>
      *     <li>Deletes all roles from the repository</li>
-     *     <li>Reassign a list of roles for creation to {@code roles}</li>
+     *     <li>call to {@link #initializeAndPrepare()}</li>
      *     <li>Saves all roles to the repository</li>
      * </ol>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @BeforeEach
     void setUp() {
@@ -64,6 +67,9 @@ public class RoleRepositoryTest {
 
     /**
      * Tests for the {@link RoleRepository#findByName(ERole)} method
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     void findByName() {
@@ -80,7 +86,13 @@ public class RoleRepositoryTest {
         });
     }
 
-    void initializeAndPrepare(){
+    /**
+     * Initializes and prepares the roles list
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    void initializeAndPrepare() {
         roles = List.of(
                 RoleEntity.builder().name(ERole.ROLE_USER).build(),
                 RoleEntity.builder().name(ERole.ROLE_ADMIN).build()
