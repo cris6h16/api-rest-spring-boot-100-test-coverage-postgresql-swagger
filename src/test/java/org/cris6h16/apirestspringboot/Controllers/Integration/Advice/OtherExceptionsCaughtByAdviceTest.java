@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
@@ -70,6 +71,13 @@ public class OtherExceptionsCaughtByAdviceTest {
     @MockBean
     private UserServiceImpl userService;
 
+    /**
+     * Test: when is request an nonexistent endpoint then {@link NoResourceFoundException}
+     * then response with {@link HttpStatus#NOT_FOUND} && {@link Cons.Response.ForClient#NO_RESOURCE_FOUND}
+     *
+     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("NoResourceFoundException")
     void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException() throws Exception {
@@ -78,6 +86,14 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 
+    /**
+     * Test: when is request with not enough privileges (Unauthenticated)
+     * then {@link AccessDeniedException} then response with
+     * {@link HttpStatus#FORBIDDEN} && {@link Cons.Auth.Fails#ACCESS_DENIED}
+     *
+     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("AccessDeniedException")
     void OtherExceptionsCaughtByAdviceTest_RequiredBeAuthenticated() throws Exception {
@@ -93,6 +109,15 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
     }
 
+    /**
+     * Test: unexpected type in path
+     * (e.g. expected[ {@code GET `api/users/1`} ] but was[ {@code GET `api/users/hello`} ] )
+     * then {@link MethodArgumentTypeMismatchException}
+     * then response with {@link HttpStatus#BAD_REQUEST} && {@link Cons.Response.ForClient#GENERIC_ERROR}
+     *
+     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("MethodArgumentTypeMismatchException")
     void OtherExceptionsCaughtByAdviceTest_MethodArgumentTypeMismatchException() throws Exception {
@@ -101,6 +126,13 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
     }
 
+    /**
+     * Unhandled Exception (unexpected), then simply generic error (all unexpected exceptions are logged
+     * if we want make a specific response && code to this fail)
+     *
+     * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("Exception")
     @WithMockUserWithId(id = 1)

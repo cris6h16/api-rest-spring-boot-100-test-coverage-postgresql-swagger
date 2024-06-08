@@ -17,7 +17,11 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
+/**
+ * Test class for {@link NoteEntity} validations and constraints<br>
+ *
+ * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @Transactional(rollbackFor = Exception.class)

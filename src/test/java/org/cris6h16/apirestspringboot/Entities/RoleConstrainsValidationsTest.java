@@ -12,6 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * Test class for {@link RoleEntity} validations and constraints<br>
+ *
+ * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @Transactional(rollbackFor = Exception.class)
@@ -28,7 +33,7 @@ public class RoleConstrainsValidationsTest {
         // Act & Assert
         assertThatThrownBy(() -> roleRepository.saveAndFlush(role))
                 .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining( Cons.Role.Validations.NAME_IS_BLANK);  // Update this line
+                .hasMessageContaining( Cons.Role.Validations.NAME_IS_BLANK);
     }
 
 }

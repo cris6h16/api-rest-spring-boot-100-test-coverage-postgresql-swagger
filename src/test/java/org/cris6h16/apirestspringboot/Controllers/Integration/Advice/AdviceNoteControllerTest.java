@@ -61,7 +61,7 @@ public class AdviceNoteControllerTest {
      * that the reason why I use the {@link WithMockUserWithId} annotation.
      * </p>
      *
-     * @auther <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
     @Test

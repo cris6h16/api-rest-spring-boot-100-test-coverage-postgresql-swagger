@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * </ul>
  *
  * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency

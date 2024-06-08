@@ -158,6 +158,7 @@ class UserControllerTest {
      *
      * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
      */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
@@ -181,6 +182,7 @@ class UserControllerTest {
      *
      * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
      */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
@@ -201,6 +203,7 @@ class UserControllerTest {
      * {@code  @PreAuthorize("hasRole(T(org.cris6h16.apirestspringboot.Entities.ERole).ROLE_ADMIN)")}<br>
      * then I mock the principal with the role {@link ERole#ROLE_ADMIN}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
      */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_ADMIN"})

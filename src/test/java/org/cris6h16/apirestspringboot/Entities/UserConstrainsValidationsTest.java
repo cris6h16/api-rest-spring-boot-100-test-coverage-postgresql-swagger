@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Entities;
 
-import jakarta.validation.Constraint;
 import jakarta.validation.ConstraintViolationException;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
@@ -19,6 +18,12 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Test class for {@link UserEntity} validations and constraints<br>
+ *
+ * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @Transactional(rollbackFor = Exception.class)
@@ -31,6 +36,9 @@ public class UserConstrainsValidationsTest {
     private RoleRepository roleRepository;
     private UserEntity usr;
 
+    /**
+     *
+     */
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();

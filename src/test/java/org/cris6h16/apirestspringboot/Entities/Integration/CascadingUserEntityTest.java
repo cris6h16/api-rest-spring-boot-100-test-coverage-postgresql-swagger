@@ -19,11 +19,17 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Test the right behavior of cascading on {@link UserEntity} to the contained Entities
+ *
+ * @author <a href="github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ **/
 @DataJpaTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class CascadingUserEntity {
+public class CascadingUserEntityTest {
 
     @Autowired
     private UserRepository userRepository;
