@@ -182,7 +182,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     // todo: doc this
-    private NoteEntity validateIdAndGetNote(Long noteId, UserEntity userInDB) {
+    public NoteEntity validateIdAndGetNote(Long noteId, UserEntity userInDB) {
         this.serviceUtils.validateId(noteId);
         return noteRepository
                 .findByIdAndUser(noteId, userInDB)
