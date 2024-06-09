@@ -257,3 +257,6 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 |                                        |                                                                                                                     |                    |
 | - _ANY other exception(unhandled)_     | _any of defaults([Cons.ExceptionHandler.defMsg](src/main/java/org/cris6h16/apirestspringboot/Constants/Cons.java))_ | `400 Bad Request`  |      
 
+[//]: # (todo: docs the 100% of coverage reached)
+[//]: # (![img.png]&#40;img.png&#41; )
+[//]: # (![img_1.png]&#40;img_1.png&#41; )

@@ -40,14 +40,6 @@ public class TestSuites {
     }
 
 
-    @Suite
-    @IncludeTags({"correct"}) // insertion of a entity correctly ( doesn't violate any constraint )
-    @SelectClasses({
-            UserConstrainsValidationsTest.class,
-            NoteConstrainsValidationsTest.class
-    })
-    public static class CorrectTaggedTests {
-    }
 
     @Suite
     @SelectClasses({

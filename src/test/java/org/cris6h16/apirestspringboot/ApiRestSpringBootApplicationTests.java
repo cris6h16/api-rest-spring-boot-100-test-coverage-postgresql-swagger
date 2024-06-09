@@ -11,6 +11,9 @@ class ApiRestSpringBootApplicationTests {
 
     /**
      * Test added just for reach the 100% of coverage
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     void contextLoads() {

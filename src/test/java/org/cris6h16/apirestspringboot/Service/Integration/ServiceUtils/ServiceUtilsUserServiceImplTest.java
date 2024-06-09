@@ -1,16 +1,21 @@
 package org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.hibernate.LazyInitializationException;
@@ -18,6 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -40,9 +47,34 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * // todo: doc: the difficult of mock the database exceptions & its messages, due that the exception  handled work if has the exact exception with the exact message otherwise the response should be a generic thats the reason why i decided not mock the database
- * // todo: doc: this should be tested when all test in database layer are done
- * TODO: doc: Any service layer should be tested as Integration, due that all are wrapped by {@link ServiceUtils#createATraversalExceptionHandled(Exception, boolean)}
+ * Test class for {@link UserServiceImpl} and {@link ServiceUtils} integration.
+ * <br>
+ * the mentioned Service will delegate an {@link UserServiceTransversalException}
+ * to {@link ServiceUtils} when any exception occurs in any method on the service,
+ * remember that all methods in the service are wrapped in a try-catch block,
+ * and into the catch block, the service will delegate the creation of the
+ * exception {@link UserServiceTransversalException} to {@link ServiceUtils},
+ * {@link ServiceUtils} will create the exception with the message && status...
+ * <br>
+ * Here we will test the behavior of the fails in the service ( exceptions
+ * raised into the service methods or any other layer below ) and make I sure that the exception
+ * raised is handled properly.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @implNote I should test mocking the database exceptions, but when {@link ServiceUtils}
+ * create an {@link UserServiceTransversalException} with message && status
+ * depends on the exception type and its message,
+ * For mock database exceptions I need to find the exception type && the exact message
+ * of that specific failure through debugging, logs, souts, etc. I consider it
+ * tedious also it can trigger fails due to the manual process like not pass the exact message
+ * in the mocked exception which will cause a generic response.
+ * due to that I decided don't mock the database exceptions... Just once before test
+ * this class {@link ServiceUtilsUserServiceImplTest} I must test and pass
+ * the test of the database layer, entity layer(constrains && validations);
+ * once I have passed those tests I'll be sure that this tests won't fail
+ * due to the database layer or entity layer.<br>
+ * once the mentioned tests were green then I can test this class.
+ * @since 1.0
  */
 @SpringBootTest
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2) // remember add the dependency
@@ -53,12 +85,14 @@ class ServiceUtilsUserServiceImplTest {
     @Autowired
     private RoleRepository roleRepository;
     @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
     private UserServiceImpl userService;
-    @Autowired
-    private NoteRepository noteRepository;
 
+    /**
+     * Clean the database before each test
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -69,8 +103,13 @@ class ServiceUtilsUserServiceImplTest {
     }
 
     /**
+     * Test the creation of a user with password less than 8 characters<br>
      * The unique verification on the service layer, due to I cannot verify
-     * It in the entity layer, because the password is passed encrypted.
+     * It in the entity layer, because the password is passed encrypted which
+     * makes it always a length greater than 8.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     @Test
     @Tag("create")
@@ -88,7 +127,22 @@ class ServiceUtilsUserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    // todo: make a diagram of Traversal exceptions and how they are used to pass by the layers
+
+    /**
+     * test the exception raised in {@link UserServiceImpl#create(CreateUpdateUserDTO)}
+     * when it's called with a {@link CreateUpdateUserDTO} null.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.DTO#NULL},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("UserServiceTransversalException")
     @Tag("create")
@@ -104,6 +158,20 @@ class ServiceUtilsUserServiceImplTest {
     }
 
 
+    /**
+     * test the unexpected exception raised in {@link UserServiceImpl#create(CreateUpdateUserDTO)}
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Response.ForClient#GENERIC_ERROR},{@code recommendedStatus}={@link HttpStatus#INTERNAL_SERVER_ERROR}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("UnhandledException")
     @Tag("create")
@@ -126,6 +194,21 @@ class ServiceUtilsUserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * test the exception raised in {@link UserServiceImpl#get(Long)}
+     * when it's called with a user id that doesn't exist in the database.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.Fails#NOT_FOUND},{@code recommendedStatus}={@link HttpStatus#NOT_FOUND}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("get")
     void ServiceUtils_get_UserNotFound() {
@@ -140,54 +223,68 @@ class ServiceUtilsUserServiceImplTest {
     }
 
 
-    @Test
+    /**
+     * test the exception raised in {@link UserServiceImpl#get(Long)}
+     * when it's called with an invalid user id
+     * (negative, zero, null).
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -99}) // -99 == null
     @Tag("get")
-    void ServiceUtils_get_UserIdInvalid_Negative() {
+    void ServiceUtils_get_UserIdInvalid_Negative(Long id) {
         // Arrange
-        Long id = -1L;
+        id = (id == -99) ? null : id;
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
+        Long finalId = id;
+        assertThatThrownBy(() -> userService.get(finalId))
                 .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    @Tag("get")
-    void ServiceUtils_get_UserIdInvalid_Zero() {
-        // Arrange
-        Long id = 0L;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @Tag("get")
-    void ServiceUtils_get_UserIdInvalid_Null() {
-        // Arrange
-        Long id = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.get(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-
+    /**
+     * create a valid {@link CreateUpdateUserDTO} <br>
+     *
+     * @return the created one
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private CreateUpdateUserDTO createValidDTO() {
         return CreateUpdateUserDTO.builder()
                 .username("cris6h16")
                 .password("12345678")
-                .email("cris6h16@gmail.com")
+                .email("cris6h16@example.com")
                 .build();
     }
 
+    /**
+     * test the exception raised in {@link UserServiceImpl#validateIdAndGetUser(Long)}
+     * when {@link UserServiceImpl#update(Long, CreateUpdateUserDTO)} is called
+     * with a user id that doesn't exist in the database.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.Fails#NOT_FOUND},{@code recommendedStatus}={@link HttpStatus#NOT_FOUND}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("update")
     void ServiceUtils_update_UserNotFound() {
@@ -202,48 +299,54 @@ class ServiceUtilsUserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
     }
 
-    @Test
+    /**
+     * test the exception raised in {@link ServiceUtils#validateId(Long)}
+     * when {@link UserServiceImpl#update(Long, CreateUpdateUserDTO)} is called
+     * with an invalid user id (negative, zero, null).
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -99}) // -99 == null
     @Tag("update")
-    void ServiceUtils_update_UserIdInvalid_Negative() {
+    void ServiceUtils_update_UserIdInvalid(Long id) {
         // Arrange
-        Long id = -1L;
+        id = (id == -99) ? null : id;
         CreateUpdateUserDTO dto = createValidDTO();
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.update(id, dto))
+        Long finalId = id;
+        assertThatThrownBy(() -> userService.update(finalId, dto))
                 .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    @Tag("update")
-    void ServiceUtils_update_UserIdInvalid_Zero() {
-        // Arrange
-        Long id = 0L;
-        CreateUpdateUserDTO dto = createValidDTO();
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @Tag("update")
-    void ServiceUtils_update_UserIdInvalid_Null() {
-        // Arrange
-        Long id = null;
-        CreateUpdateUserDTO dto = createValidDTO();
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.update(id, dto))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
+    /**
+     * test the exception raised in {@link UserServiceImpl#update(Long, CreateUpdateUserDTO)}
+     * when it's called with a {@link CreateUpdateUserDTO} null.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.DTO#NULL},{@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("update")
     void ServiceUtils_update_DTO_Null() {
@@ -271,6 +374,22 @@ class ServiceUtilsUserServiceImplTest {
 //    }
 
 
+    /**
+     * test the exception raised in {@link UserServiceImpl#update(Long, CreateUpdateUserDTO)}
+     * when it's called with a {@link CreateUpdateUserDTO#getPassword()} less than 8 characters.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.Validations.InService#PASS_IS_TOO_SHORT_MSG},
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("update")
     void ServiceUtils_update_DTO_WantUpdatePasswordInvalid() {
@@ -287,13 +406,28 @@ class ServiceUtilsUserServiceImplTest {
                 .password("1234567")
                 .build();
 
-        // Act
+        // Act & Assert
         assertThatThrownBy(() -> userService.update(original.getId(), updatePasswordDTO))
                 .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * test an unexpected exception raised in {@link UserServiceImpl#update(Long, CreateUpdateUserDTO)}
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Response.ForClient#GENERIC_ERROR},
+     * {@code recommendedStatus}={@link HttpStatus#INTERNAL_SERVER_ERROR}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("update")
     void ServiceUtils_update_ThrowsUnhandledException_ThenGenericResponse() {
@@ -320,45 +454,54 @@ class ServiceUtilsUserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @Test
+    /**
+     * test the exception raised in {@link ServiceUtils#validateId(Long)}
+     * when {@link UserServiceImpl#delete(Long)} is called with an invalid user id
+     * (negative, zero, null).
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.CommonInEntity#ID_INVALID},
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -99}) // -99 == null
     @Tag("delete")
-    void ServiceUtils_delete_UserIdInvalid_Negative() {
+    void ServiceUtils_delete_UserIdInvalid_Negative(Long id) {
         // Arrange
-        Long id = -1L;
+        id = (id == -99) ? null : id;
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.delete(id))
+        Long finalId = id;
+        assertThatThrownBy(() -> userService.delete(finalId))
                 .isInstanceOf(UserServiceTransversalException.class)
                 .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
-    @Test
-    @Tag("delete")
-    void ServiceUtils_delete_UserIdInvalid_Zero() {
-        // Arrange
-        Long id = 0L;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
-    @Tag("delete")
-    void ServiceUtils_delete_UserIdInvalid_Null() {
-        // Arrange
-        Long id = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.delete(id))
-                .isInstanceOf(UserServiceTransversalException.class)
-                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
-    }
-
+    /**
+     * test the exception raised in {@link UserServiceImpl#validateIdAndGetUser(Long)}
+     * when {@link UserServiceImpl#delete(Long)} is called with a user id that doesn't exist in the database.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.User.Fails#NOT_FOUND},
+     * {@code recommendedStatus}={@link HttpStatus#NOT_FOUND}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Tag("delete")
     void ServiceUtils_delete_UserNotFound() {
@@ -379,9 +522,25 @@ class ServiceUtilsUserServiceImplTest {
 //        // I couldn't implement this
 //  }
 
+    /**
+     * test an unexpected exception raised in {@link UserServiceImpl#get(Pageable)}
+     * when it's called with a {@link Pageable} null.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}={@link Cons.Response.ForClient#GENERIC_ERROR},
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
-    @Tag("get(pageable)")
-        // todo: correct sintaxis "()"
+    @Tag("getPage")
+    // todo: correct sintaxis "()"
     void ServiceUtils_get_PageableNull_ThenGenericResponse() {
         // Arrange
         Pageable pageable = null;
@@ -393,9 +552,26 @@ class ServiceUtilsUserServiceImplTest {
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
     }
 
+    /**
+     * test an exception raised in {@link UserRepository#findAll(Pageable)}
+     * when it's called with a {@link PageRequest} containing a non-existent attribute
+     * to sort the results.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [{@code message}="No property '<>' found",
+     * {@code recommendedStatus}={@link HttpStatus#BAD_REQUEST}]
+     * </p>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
-    @Tag("get(pageable)")
-    void ServiceUtils_get_Pageable_SortByInvalid_NonexistentAttribute_thenGenericFail() {
+    @Tag("getPage")
+    void ServiceUtils_get_Pageable_SortByInvalid_NonexistentAttribute_then400() {
         // Arrange
         int pageNum = 0;
         int pageSize = 10;
@@ -414,22 +590,35 @@ class ServiceUtilsUserServiceImplTest {
     }
 
 
+    /**
+     * test an exception raised in {@link UserRepository#saveAndFlush(Object)}
+     * when {@link UserServiceImpl#create(CreateUpdateUserDTO)} is called violating
+     * the unique constraint of the username.
+     *
+     * <p>
+     * then the exception threw should be:
+     * <br>
+     * {@link UserServiceTransversalException}
+     * <br>
+     * [<s>{@code message}={@link Cons.User.Constrains#USERNAME_UNIQUE_MSG}</s>,
+     * {@code recommendedStatus}={@link HttpStatus#CONFLICT}]
+     *
+     * @implNote the response message isn't verified due to It'll have a different message
+     * in H2(used for test) and PostgreSQL (used in production).
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
-    @Tag(" DataIntegrityViolationException")
+    @Tag("DataIntegrityViolationException")
     void AdviceUserControllerTest_createUser_DataIntegrityViolationException_Then409() throws Exception {
 
         // Arrange
-        CreateUpdateUserDTO dto = CreateUpdateUserDTO.builder()
-                .username("cris6h16")
-                .password("12345678")
-                .email("cristianmherrera21@gmail.com")
-                .build();
+        CreateUpdateUserDTO dto = createValidDTO();
         userService.create(dto);
-
         dto = CreateUpdateUserDTO.builder()
-                .username("cris6h16") // same username
-                .password("12345678")
-                .email("cris6h16@ingithub.com")
+                .username(dto.getUsername()) // same username
+                .password("cris6h16" + dto.getPassword())
+                .email("cris6h16" + dto.getEmail())
                 .build();
 
         // Act & Assert
@@ -445,7 +634,7 @@ class ServiceUtilsUserServiceImplTest {
 
 
 //    @Test
-//    @Tag("get(pageable)")
+//    @Tag("getPage")
 //    @Disabled
 //    void ServiceUtils_get_Pageable_UnhandledException() {
 // I couldn't implement this, but has the same handling for all methods;

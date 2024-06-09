@@ -191,7 +191,7 @@ public class UserServiceImpl implements UserService {
      * @param dto the user to verify its password
      * @throws AbstractExceptionWithStatus If dto is null || password in dto is invalid
      */
-    void verifyDTONotNullAndPassword(CreateUpdateUserDTO dto) {
+    private void verifyDTONotNullAndPassword(CreateUpdateUserDTO dto) {
         if (dto == null) throw new CreateUpdateDTOIsNullException();
         boolean passInvalid = (dto.getPassword() == null || dto.getPassword().length() < 8);
         if (passInvalid) throw new PasswordTooShortException();

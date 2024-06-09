@@ -52,8 +52,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * depends on the exception type and its message,
  * For mock database exceptions I need to find the exception type && the exact message
  * of that specific failure through debugging, logs, souts, etc. I consider it
- * tedious also it can trigger fails due the manual process,
- * then I decided don't mock the database exceptions... Just once before test
+ * tedious also it can trigger fails due to the manual process like not pass the exact message
+ * in the mocked exception which will cause a generic response,
+ * due that I decided don't mock the database exceptions... Just once before test
  * this class {@link ServiceUtilsNoteServiceImplTest} I must test and pass
  * the test of the database layer, entity layer(constrains && validations);
  * once I have passed those tests I'll be sure that this tests won't fail
@@ -83,7 +84,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#create(CreateNoteDTO, Long)} is called with invalids user id .
+     * {@link NoteServiceImpl#create(CreateNoteDTO, Long)} is called with invalids user id .
      * <p>
      * then the exception threw should be:
      * <br>
@@ -113,7 +114,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in {@link UserServiceImpl#validateIdAndGetUser(Long)}
-     * when {@link NoteService#create(CreateNoteDTO, Long)} is called with a user id that doesn't exist.
+     * when {@link NoteServiceImpl#create(CreateNoteDTO, Long)} is called with a user id that doesn't exist.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -137,7 +138,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * test the exception raised in {@link NoteRepository#saveAndFlush(Object)}
-     * when {@link NoteService#create(CreateNoteDTO, Long)} is called
+     * when {@link NoteServiceImpl#create(CreateNoteDTO, Long)} is called
      * with a {@link CreateNoteDTO} with a invalid {@code title}.
      * <p>
      * then the exception threw should be:
@@ -169,7 +170,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
 
     /**
-     * test the exception raised in {@link NoteService#create(CreateNoteDTO, Long)}
+     * test the exception raised in {@link NoteServiceImpl#create(CreateNoteDTO, Long)}
      * when it's called with a {@link CreateNoteDTO} null.
      *
      * <p>
@@ -200,7 +201,7 @@ public class ServiceUtilsNoteServiceImplTest {
     }
 
     /**
-     * test the exception raised in {@link NoteService#create(CreateNoteDTO, Long)}
+     * test the exception raised in {@link NoteServiceImpl#create(CreateNoteDTO, Long)}
      * when it throws an unexpected exception
      *
      * <p>
@@ -237,7 +238,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#get(Long, Long)} is called with an invalid user id (negative).
+     * {@link NoteServiceImpl#get(Long, Long)} is called with an invalid user id (negative).
      *
      * <p>
      * then the exception threw should be:
@@ -270,7 +271,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-     * when {@link NoteService#get(Long, Long)} is called with a user id that doesn't exist.
+     * when {@link NoteServiceImpl#get(Long, Long)} is called with a user id that doesn't exist.
      *
      * <p>
      * then the exception threw should be:
@@ -300,7 +301,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#get(Long, Long)} is called with an invalid note id (negative).
+     * {@link NoteServiceImpl#get(Long, Long)} is called with an invalid note id (negative).
      * <p>
      * then the exception threw should be:
      * <br>
@@ -331,7 +332,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link NoteServiceImpl#validateIdAndGetNote(Long, UserEntity)} \
-     * when {@link NoteService#get(Long, Long)} is called with a note id that doesn't exist.
+     * when {@link NoteServiceImpl#get(Long, Long)} is called with a note id that doesn't exist.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -367,7 +368,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#put(Long, CreateNoteDTO, Long)} is called with invalid user ids.
+     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called with invalid user ids.
      *
      * <p>
      * then the exception threw should be:
@@ -400,7 +401,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#put(Long, CreateNoteDTO, Long)} is called with invalid note ids.
+     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called with invalid note ids.
      *
      * <p>
      * then the exception threw should be:
@@ -433,7 +434,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-     * when {@link NoteService#put(Long, CreateNoteDTO, Long)} is called
+     * when {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called
      * with a user id that doesn't exist.
      *
      * <p>
@@ -464,7 +465,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link NoteRepository#saveAndFlush(Object)}
-     * when {@link NoteService#put(Long, CreateNoteDTO, Long)} is called
+     * when {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called
      * with a {@link CreateNoteDTO} with a invalid {@code title}.
      * <p>
      * then the exception threw should be:
@@ -493,7 +494,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the unexpected exception raised in the
-     * {@link NoteService#put(Long, CreateNoteDTO, Long)} then
+     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} then
      * the exception threw should be:
      * <br>
      * {@link NoteServiceTransversalException}
@@ -525,7 +526,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#delete(Long, Long)} is called with invalid user ids.
+     * {@link NoteServiceImpl#delete(Long, Long)} is called with invalid user ids.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -554,7 +555,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-     * when {@link NoteService#delete(Long, Long)} is called with a user id that doesn't exist.
+     * when {@link NoteServiceImpl#delete(Long, Long)} is called with a user id that doesn't exist.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -579,7 +580,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * {@link NoteService#delete(Long, Long)} is called with invalid note ids.
+     * {@link NoteServiceImpl#delete(Long, Long)} is called with invalid note ids.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -608,7 +609,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link NoteServiceImpl#validateIdAndGetNote(Long, UserEntity)}
-     * when {@link NoteService#delete(Long, Long)} is called with a note id that doesn't exist.
+     * when {@link NoteServiceImpl#delete(Long, Long)} is called with a note id that doesn't exist.
      * <p>
      * then the exception threw should be:
      * <br>
@@ -634,7 +635,7 @@ public class ServiceUtilsNoteServiceImplTest {
 
     /**
      * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-     * when {@link NoteService#delete(Long, Long)} is called with invalid user ids.
+     * when {@link NoteServiceImpl#delete(Long, Long)} is called with invalid user ids.
      * <p>
      * then the exception threw should be:
      * <br>
