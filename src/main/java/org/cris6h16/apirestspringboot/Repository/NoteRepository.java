@@ -54,6 +54,8 @@ public interface NoteRepository extends
      * @param user     {@link UserEntity} owner of the notes
      * @param pageable {@link PageRequest}
      * @return {@link Page} of {@link NoteEntity} owned by the user
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     Page<NoteEntity> findByUser(UserEntity user, Pageable pageable);
 }

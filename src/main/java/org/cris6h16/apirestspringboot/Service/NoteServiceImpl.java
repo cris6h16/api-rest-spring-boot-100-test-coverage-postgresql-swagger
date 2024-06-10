@@ -25,20 +25,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * An implementation of {@link NoteService} interface
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Service
 @Slf4j
 public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
-    private final UserRepository userRepository;
     private final ServiceUtils serviceUtils;
-    private final UserServiceImpl userService;
+    private final UserServiceImpl userServiceImpl;
 
     public NoteServiceImpl(NoteRepository noteRepository,
                            UserRepository userRepository, ServiceUtils serviceUtils, UserServiceImpl userService) {
         this.noteRepository = noteRepository;
-        this.userRepository = userRepository;
         this.serviceUtils = serviceUtils;
-        this.userService = userService;
+        this.userServiceImpl = userService;
     }
 
 
@@ -167,21 +171,57 @@ public class NoteServiceImpl implements NoteService {
         }
     }
 
-    //todo: doc trhows
+    /**
+     * Wrapper for {@link UserServiceImpl#validateIdAndGetUser(Long)} to validate the user ID and retrieve the user.
+     *
+     * @param userId the ID of the user to validate and retrieve
+     * @return the {@link UserEntity} corresponding to the validated ID
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private UserEntity validateIdAndGetUser(Long userId) {
-        return this.userService.validateIdAndGetUser(userId);
+        return this.userServiceImpl.validateIdAndGetUser(userId);
     }
 
 
+    /**
+     * Wrapper for {@link ServiceUtils#createATraversalExceptionHandled(Exception, boolean)}
+     *
+     * @param e the exception, used to create above-mentioned exception
+     * @return the created {@link NoteServiceTransversalException} exception
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private NoteServiceTransversalException getTraversalException(Exception e) {
         return (NoteServiceTransversalException) this.serviceUtils.createATraversalExceptionHandled(e, false);
     }
 
+
+    /**
+     * Validates that the DTO is not null
+     *
+     * @param dto to see if it is null
+     * @throws CreateNoteDTOIsNullException if the DTO is null
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private void validateDTONotNull(CreateNoteDTO dto) {
         if (dto == null) throw new CreateNoteDTOIsNullException();
     }
 
-    // todo: doc this
+    /**
+     * Validates the note ID and retrieves the note<br>
+     * 1. Validates the passed {@code noteId} with {@link ServiceUtils#validateId(Long)}<br>
+     * 2. Retrieves the note from db where {@code (note.id = noteId) && (note.user = userInDB)}
+     * if it wasn't found, it throws.
+     *
+     * @param noteId   the ID of the note to validate and retrieve
+     * @param userInDB the user to which the note belongs
+     * @return the {@link NoteEntity} corresponding to the validated ID
+     * @throws NoteNotFoundException if the note was not found
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     public NoteEntity validateIdAndGetNote(Long noteId, UserEntity userInDB) {
         this.serviceUtils.validateId(noteId);
         return noteRepository
@@ -189,6 +229,14 @@ public class NoteServiceImpl implements NoteService {
                 .orElseThrow(NoteNotFoundException::new);
     }
 
+    /**
+     * Validates the note ID
+     *
+     * @param noteId the ID of the note to validate
+     * @throws InvalidIdException if the passed {@code id} considered invalid
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private void validateId(Long noteId) {
         if (noteId == null || noteId <= 0) throw new InvalidIdException();
     }

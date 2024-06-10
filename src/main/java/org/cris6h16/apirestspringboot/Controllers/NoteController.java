@@ -1,16 +1,14 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
-import org.cris6h16.apirestspringboot.Entities.NoteEntity;
-import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.Entities.NoteEntity;
+import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;

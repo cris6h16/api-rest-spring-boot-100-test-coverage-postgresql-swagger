@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Config.Security.UserDetailsService;
 
-import org.cris6h16.apirestspringboot.Config.Security.UserDetailsService.UserDetailsServiceImpl;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
@@ -15,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -26,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetailsService.UserHasNotRolesException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetailsService.UserHasNullRolesException;
 
 /**
  * Test class for {@link UserDetailsServiceImpl}
@@ -66,12 +64,12 @@ class UserDetailsServiceImplTest {
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
      * but the roles are null then It should throw an exception extended of
-     * {@link AbstractExceptionWithStatus}, in this case it'll be {@link UserHasNotRolesException}<br>
+     * {@link AbstractExceptionWithStatus}, in this case it'll be {@link UserHasNullRolesException}<br>
      * I want to emphasize that this fail will occur if a user was created externally to the application
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @see UserDetailsServiceImpl#loadUserByUsername(String)
-     * @see UserHasNotRolesException
+     * @see UserHasNullRolesException
      * @since 1.0
      */
     @Test
@@ -90,7 +88,7 @@ class UserDetailsServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("username"))
-                .isInstanceOf(UserHasNotRolesException.class)
+                .isInstanceOf(UserHasNullRolesException.class)
                 .hasMessage(Cons.User.UserDetailsServiceImpl.USER_HAS_NOT_ROLES)
                 .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.FORBIDDEN);
     }
