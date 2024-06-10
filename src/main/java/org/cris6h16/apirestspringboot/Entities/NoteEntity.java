@@ -11,6 +11,12 @@ import java.util.Date;
 // import static Validation responses
 import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 
+/**
+ * Entity to represent the {@code notes}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Entity
 @Table(name = "notes")
 @NoArgsConstructor
@@ -42,5 +48,4 @@ public class NoteEntity {
             optional = true,
             targetEntity = UserEntity.class)
     private UserEntity user;
-
 }

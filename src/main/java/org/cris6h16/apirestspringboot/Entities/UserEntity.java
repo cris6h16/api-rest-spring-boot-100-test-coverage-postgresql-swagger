@@ -12,18 +12,17 @@ import java.util.*;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
+/**
+ * Entity to represent the {@code users}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Entity
 @Table(name = "users",
-        uniqueConstraints = {
+        uniqueConstraints = { // for `UNIQUE CONSTRAINT` elements, the indexes are created automatically
                 @UniqueConstraint(name = USERNAME_UNIQUE_NAME, columnNames = "username"),
                 @UniqueConstraint(name = EMAIL_UNIQUE_NAME, columnNames = "email")}
-
-        // `UNIQUE CONSTRAINT` elements, the indexes are created automatically
-/*
-indexes = {
-            @Index(name = "users_username_idx", columnList = "username", unique = true),
-            @Index(name = "users_email_idx", columnList = "email", unique = true)}
-*/
 )
 @NoArgsConstructor
 @AllArgsConstructor

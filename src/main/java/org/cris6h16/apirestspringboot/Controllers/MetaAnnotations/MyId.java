@@ -17,10 +17,10 @@ import java.security.Principal;
  * <br><br>
  * Explanation:
  * {@code authentication.name.equalsIgnoreCase('anonymousUser') ? -1}
- *
+ * <p>
  * is necessary because even if you put {@code @PreAuthorize("isAuthenticated()")} before of all,
  * you will get an SpEL exception, spring first evaluates the syntax of SpEL.
- *
+ * <p>
  * I have a custom impl of {@link User} which has a
  * {@code getId()} method({@link UserWithId}). if I'm not logged in.
  * then the {@link java.security.Principal} hasn't an attribute {@code id}(by default).
@@ -29,12 +29,13 @@ import java.security.Principal;
  * So, due to the above {@code authentication.name.equalsIgnoreCase('anonymousUser')} will tell to me
  * if I'm logged in ({@link Principal} has an {@code id}) or not ({@link Principal}
  * hasn't an {@code id})....
- *<br><br>
+ * <br><br>
  * then if I use {@code @PreAuthorize("isAuthenticated()")} , Spring first evaluates the SpEL, later
  * see if is authenticated or not. it means that the {@code -1} is never reached(remember use
  * {@code @PreAuthorize("isAuthenticated()")} or any which can avoid reach to {@link MyId} if You aren;t aunthenticated).
  *
- * @author <a href="github.com/cris6h16" target="_blank"> cris6h16 </a>
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
  */
 @Target({ElementType.PARAMETER, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)

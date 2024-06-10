@@ -5,7 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-
+/**
+ * Entity to represent the {@code roles}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Entity
 @Table(name = "roles")
 @NoArgsConstructor

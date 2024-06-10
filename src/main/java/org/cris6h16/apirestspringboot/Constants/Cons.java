@@ -2,7 +2,15 @@ package org.cris6h16.apirestspringboot.Constants;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 
+/**
+ * This class contains all the constants used in the project
+ * used to avoid hardcoding strings and centralize it.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 public class Cons {
     public class User {
         public class Constrains {
@@ -29,7 +37,7 @@ public class Cons {
             public static final String NOT_FOUND = "User not found";
         }
 
-        public static class UserDetailsServiceImpl{
+        public static class UserDetailsServiceImpl {
             public static final String USER_HAS_NOT_ROLES = "User retrieved from database hasn't roles";
         }
 
@@ -68,7 +76,7 @@ public class Cons {
     }
 
     public class CommonInEntity {
-            public static final String ID_INVALID = "Invalid id";
+        public static final String ID_INVALID = "Invalid id";
     }
 
     public class Auth {
@@ -87,9 +95,20 @@ public class Cons {
     }
 
 
+    /**
+     * Constants for testing purposes
+     * <p>
+     * the {@link TESTING#NOT_PRINT_STACK_TRACE_PATTERN} is used to avoid that
+     * {@link ServiceUtils#logUnhandledException(Exception)} print the stack trace
+     * when the exception message contains this pattern.
+     * <br>
+     * This pattern will be contained in the messages on the
+     * unhandled exceptions thrown in the tests for testing purposes <br>
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     public static class TESTING {
-        // This is for testing purposes, using:
-        //      !e.getMessage().contains( NOT_PRINT_STACK_TRACE_PATTERN )
         public static final String NOT_PRINT_STACK_TRACE_PATTERN = "cris6h16's random exception";
     }
 

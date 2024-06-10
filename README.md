@@ -260,3 +260,11 @@ will use PostgresSQL (password is used encrypted for everything (store, runtime,
 [//]: # (todo: docs the 100% of coverage reached)
 [//]: # (![img.png]&#40;img.png&#41; )
 [//]: # (![img_1.png]&#40;img_1.png&#41; )
+[//]: # (doc about how we can optimize the code, for example )
+
+[//]: # (not let reach to database exceptions we can validate )
+
+[//]: # (the data before to send it to the database,)
+
+[//]: # (&#40; i.g sort by a field that doesn't exist, find by id <0, etc&#41;)
+ 

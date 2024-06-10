@@ -8,6 +8,7 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.CreateUpdateDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
@@ -27,6 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * An implementation of {@link UserService} interface
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Service
 @Slf4j
 public class UserServiceImpl implements UserService {
@@ -45,6 +53,7 @@ public class UserServiceImpl implements UserService {
         this.serviceUtils = serviceUtils;
     }
 
+
     @Override
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
@@ -61,7 +70,7 @@ public class UserServiceImpl implements UserService {
                     .username(dto.getUsername())
                     .password(passwordEncoder.encode(dto.getPassword()))
                     .email(dto.getEmail())
-                    .roles(new HashSet<>(Collections.singleton(role))) //todo: doc my troubles: Set.of() is immutable, then i won't be able to merge (e.g. retrieve the entity, change any attribute then .save(obj))
+                    .roles(new HashSet<>(Collections.singleton(role)))
                     .createdAt(new Date())
                     .build());
 
@@ -72,7 +81,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-
     @Override
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
@@ -81,24 +89,7 @@ public class UserServiceImpl implements UserService {
     public PublicUserDTO get(Long id) {
         try {
             UserEntity usr = validateIdAndGetUser(id);
-            Set<RoleDTO> roles;
-
-            // roles --> is EAGER
-            boolean rolesNull = (usr.getRoles() == null);
-            roles = rolesNull ?
-                    (new HashSet<>(0)) :
-                    (usr.getRoles().stream()
-                            .map(role -> new RoleDTO(role.getName()))
-                            .collect(Collectors.toSet()));
-
-            return PublicUserDTO.builder()
-                    .id(usr.getId())
-                    .username(usr.getUsername())
-                    .email(usr.getEmail())
-                    .createdAt(usr.getCreatedAt())
-                    .updatedAt(usr.getUpdatedAt())
-                    .roles(roles)
-                    .build();
+            return createPublicUserDTO(usr);
 
         } catch (Exception e) {
             throw createATraversalExceptionHandled(e);
@@ -113,24 +104,44 @@ public class UserServiceImpl implements UserService {
     )
     public void update(Long id, CreateUpdateUserDTO dto) {
         try {
-            UserEntity usr = validateIdAndGetUser(id);
+            UserEntity fromDB = validateIdAndGetUser(id);
             if (dto == null) throw new CreateUpdateDTOIsNullException();
 
-            boolean updateUsername = dto.getUsername() != null && !dto.getUsername().isBlank() && !dto.getUsername().equals(usr.getUsername());
-            boolean updateEmail = dto.getEmail() != null && !dto.getEmail().isBlank() && !dto.getEmail().equals(usr.getEmail());
-            boolean updatePassword = dto.getPassword() != null && !dto.getPassword().isBlank() && !passwordEncoder.matches(dto.getPassword(), usr.getPassword());
+            // get the values from dto
+            String username = dto.getUsername();
+            String email = dto.getEmail();
+            String pass = dto.getPassword();
+
+            // check which values are trying to update
+            boolean updateUsername = (username != null) &&
+                    (!username.isBlank()) &&
+                    (!username.equalsIgnoreCase(fromDB.getUsername()));
+
+            boolean updateEmail = (email != null) &&
+                    (!email.isBlank()) &&
+                    (!email.equalsIgnoreCase(fromDB.getEmail()));
+
+            boolean updatePassword = (pass != null) &&
+                    (!pass.isBlank()) &&
+                    (!passwordEncoder.matches(pass, fromDB.getPassword()));
+
             boolean wantUpdate = updateUsername || updateEmail || updatePassword;
 
+            // if no values to update the do nothing
             if (!wantUpdate) return;
 
-            if (updateUsername) usr.setUsername(dto.getUsername());
-            if (updateEmail) usr.setEmail(dto.getEmail());
+            // update the corresponding values
+            if (updateUsername) fromDB.setUsername(username);
+            if (updateEmail) fromDB.setEmail(email);
             if (updatePassword) {
                 verifyDTONotNullAndPassword(dto);
-                usr.setPassword(passwordEncoder.encode(dto.getPassword()));
+                fromDB.setPassword(passwordEncoder.encode(pass));
             }
-            usr.setUpdatedAt(new Date());
-            userRepository.saveAndFlush(usr);
+            // set the date of update
+            fromDB.setUpdatedAt(new Date());
+
+            // save the changes
+            userRepository.saveAndFlush(fromDB);
 
         } catch (Exception e) {
             throw createATraversalExceptionHandled(e);
@@ -147,6 +158,7 @@ public class UserServiceImpl implements UserService {
         try {
             UserEntity usr = validateIdAndGetUser(id);
             userRepository.delete(usr);
+
         } catch (Exception e) {
             throw createATraversalExceptionHandled(e);
         }
@@ -166,16 +178,7 @@ public class UserServiceImpl implements UserService {
             );
 
             return userRepository.findAll(pag).stream()
-                    .map(user -> PublicUserDTO.builder()
-                            .id(user.getId())
-                            .username(user.getUsername())
-                            .email(user.getEmail())
-                            .createdAt(user.getCreatedAt())
-                            .updatedAt(user.getUpdatedAt())
-                            .roles(user.getRoles().stream()
-                                    .map(role -> new RoleDTO(role.getName()))
-                                    .collect(Collectors.toSet()))
-                            .build())
+                    .map(this::createPublicUserDTO)
                     .collect(Collectors.toList());
 
         } catch (Exception e) {
@@ -185,11 +188,16 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * The unique earlier verification, this is in the service layer due that the password pass to repository encrypted
-     * then it means that the password always will have a length greater than 8
+     * The unique earlier verification, this is in the service layer
+     * due that the password pass to repository encrypted then
+     * it means that the password always will have a length
+     * greater than 8
      *
      * @param dto the user to verify its password
-     * @throws AbstractExceptionWithStatus If dto is null || password in dto is invalid
+     * @throws CreateUpdateDTOIsNullException If {@code dto} is null
+     * @throws PasswordTooShortException      if {@code dto.password} is null or too short
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     private void verifyDTONotNullAndPassword(CreateUpdateUserDTO dto) {
         if (dto == null) throw new CreateUpdateDTOIsNullException();
@@ -199,11 +207,14 @@ public class UserServiceImpl implements UserService {
 
 
     /**
-     * Validate id  and get user from repository
+     * Validate id and get user from repository
      *
      * @param userId to validate
      * @return {@link UserEntity}
-     * @throws AbstractExceptionWithStatus if user not found or id is invalid
+     * @throws UserNotFoundException if user wasn't found
+     * @throws InvalidIdException    if {@code userId} is invalid
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     public UserEntity validateIdAndGetUser(Long userId) {
         serviceUtils.validateId(userId);
@@ -211,9 +222,48 @@ public class UserServiceImpl implements UserService {
                 .findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
- //todo: write integrations test for Exceptions which weren't tested as UNIQUE CONSTRAISN or any other validation
 
+    /**
+     * delegate the creation of a {@link UserServiceTransversalException}
+     * to {@link ServiceUtils#createATraversalExceptionHandled(Exception, boolean)}
+     *
+     * @param e the exception to handle
+     * @return {@link UserServiceTransversalException} with a status code and message
+     * ready for pass to the client
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private UserServiceTransversalException createATraversalExceptionHandled(Exception e) {
         return (UserServiceTransversalException) serviceUtils.createATraversalExceptionHandled(e, true);
+    }
+
+    /**
+     * Create a {@link PublicUserDTO} from a {@link UserEntity}<br>
+     * - If {@code user == null} return {@code dto} empty.<br>
+     * - If {@code user.roles == null } return {@code dto} with roles empty.<br>
+     *
+     * @param user to create the {@link PublicUserDTO}
+     * @return {@link PublicUserDTO}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private PublicUserDTO createPublicUserDTO(UserEntity user) {
+        if (user == null) return PublicUserDTO.builder().build();
+
+        boolean rolesNull = (user.getRoles() == null); // roles --> is EAGER
+        Set<RoleDTO> roles = rolesNull ?
+                (new HashSet<>(0)) :
+                (user.getRoles().stream()
+                        .map(role -> new RoleDTO(role.getName()))
+                        .collect(Collectors.toSet()));
+
+        return PublicUserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .roles(roles)
+                .build();
     }
 }

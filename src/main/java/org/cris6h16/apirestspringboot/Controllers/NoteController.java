@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
+import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
@@ -15,9 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-//@RestController
-@Controller
-@ResponseBody
+/**
+ * Controller for {@link NoteServiceImpl}}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
+@RestController //@Controller && @ResponseBody
 @RequestMapping(path = NoteController.path)
 @PreAuthorize("isAuthenticated()")
 public class NoteController {
@@ -29,6 +34,16 @@ public class NoteController {
         this.noteService = noteService;
     }
 
+
+    /**
+     * Create a {@link NoteEntity}
+     *
+     * @param note        {@link CreateNoteDTO}
+     * @param principalId {@link Long}
+     * @return {@link ResponseEntity#created(URI)} with the location of the created note
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @PostMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE // if is successful else the defined on Advice

@@ -16,6 +16,12 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Custom implementation of {@link UserDetailsService} to load the user from the database.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     UserRepository userRepository;
@@ -27,8 +33,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Load the user from the database by the {@code username}.
+     *
+     * @param username The username of the user to load from the database.
+     * @return The user loaded from the database.
+     * @throws UsernameNotFoundException If the user is not found in the database.
+     * @throws UserHasNotRolesException  If the user hasn't roles assigned.
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException, UserHasNotRolesException {
         // Find the user
         Optional<UserEntity> user = userRepository.findByUsername(username);
         if (user.isEmpty()) throw new UsernameNotFoundException(Cons.User.Fails.NOT_FOUND);
