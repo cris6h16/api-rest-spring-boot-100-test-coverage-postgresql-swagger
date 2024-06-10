@@ -50,68 +50,63 @@ public class ServiceUtils {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
 
+        if (e == null) {
+            recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            forClient = Cons.Response.ForClient.GENERIC_ERROR;
+        }
+
         // ------------ commons in both entities --------------------\\
-        // data integrity violations { not blank, invalid email, max length, etc }
-        if (e instanceof ConstraintViolationException && forClient.isBlank()) {
+        if (e instanceof ConstraintViolationException && forClient.isBlank()) { //{ not blank, invalid email, max length, etc }
             recommendedStatus = HttpStatus.BAD_REQUEST;
             Set<ConstraintViolation<?>> violations = ((ConstraintViolationException) e).getConstraintViolations();
 
             if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
         }
 
-        // Note Service: { user not found, invalid id }
-        // UserService:  { user not found, invalid id, password too short }
-        if (e instanceof AbstractExceptionWithStatus && forClient.isBlank()) {
+        if (e instanceof AbstractExceptionWithStatus && forClient.isBlank()) { // { user not found, invalid id, password too short }
             recommendedStatus = ((AbstractExceptionWithStatus) e).getRecommendedStatus();
             forClient = e.getMessage();
         }
 
         if (e instanceof NullPointerException && forClient.isBlank()) {
             boolean pageablePassedNull = this.thisContains(e.getMessage(), "because \"pageable\" is null");
-            if (pageablePassedNull) {
-                recommendedStatus = HttpStatus.BAD_REQUEST;
-                // forClient => empty isn't necessary more info
-            }
+            if (pageablePassedNull) recommendedStatus = HttpStatus.BAD_REQUEST;
         }
 
-        if (e instanceof PropertyReferenceException && forClient.isBlank()) {
+        if (e instanceof PropertyReferenceException && forClient.isBlank()) { // { No property '<ttt>' found for type '<User>Entity' }
             recommendedStatus = HttpStatus.BAD_REQUEST;
             boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
-            if (propertyNonexistent) {
-                forClient = e.getMessage().split("for type")[0].trim(); // No property 'ttt' found for type 'UserEntity'
-            }
+            if (propertyNonexistent) forClient = e.getMessage().split("for type")[0].trim();
         }
 
-
-        // ------------ response regard to the entity ------------- \\
+        // ------------ response regarding the entity ------------- \\
         if (isUserService) {
-            // unique violations { primary key, unique constraints }
-            if (e instanceof DataIntegrityViolationException && forClient.isBlank()) {
+            if (e instanceof DataIntegrityViolationException && forClient.isBlank()) { //{ primary key, unique constraints }
                 recommendedStatus = HttpStatus.CONFLICT;
+
                 boolean inUsername = thisContains(e.getMessage(), USERNAME_UNIQUE_NAME);
                 boolean inEmail = thisContains(e.getMessage(), EMAIL_UNIQUE_NAME);
                 boolean isHandledUniqueViolation = inUsername || inEmail;
-
                 if (isHandledUniqueViolation) forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
             }
 
-        } else { // ------- is Note Service ------- \\
-            // now for note service I don't have custom exceptions, here
-            // can be added exceptions like DataIntegrityViolationException if we have unique constraints
+        } else {
+            /*
+            now for note service I don't have custom exceptions, here
+            can be added exceptions like DataIntegrityViolationException
+            if we have unique constraints
+             */
         }
 
-        // -------------- default handling ----------------- \\
+        // -------------- default handling ( UNHANDLED ) ----------------- \\
         {
-            boolean recommendedStatusIsNull = recommendedStatus == null;
+            boolean statusIsNull = recommendedStatus == null;
             boolean forClientIsBlank = forClient.isBlank();
-            if (recommendedStatusIsNull) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            if (forClientIsBlank)
-                forClient = Cons.Response.ForClient.GENERIC_ERROR; /* something I just want to tell to the client about the error(BAD_REQUEST, CONFLICT, etc) but not give more info, it can be considered as handled*/
-            if (recommendedStatusIsNull)
-                logUnhandledException(e); /* just verify `recommendedStatus`, because in all handled exceptions I set it, the `forClient` can be considered as nullable */
+            if (statusIsNull) recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            if (forClientIsBlank) forClient = Cons.Response.ForClient.GENERIC_ERROR;
+            if (statusIsNull) logUnhandledException(e);
             else logDebug(e);
         }
-
 
         return isUserService ?
                 new UserServiceTransversalException(forClient, recommendedStatus) :
@@ -130,6 +125,8 @@ public class ServiceUtils {
      * @since 1.0
      */
     public boolean thisContains(String msg, String... strings) {
+        if (msg == null || strings == null || strings.length == 0) return false;
+
         msg = msg.toLowerCase().trim();
         boolean contains = true;
         for (String s : strings) {
@@ -139,30 +136,55 @@ public class ServiceUtils {
         return contains;
     }
 
+    /**
+     * Log the {@code exception.toString()} with the level {@link org.slf4j.event.Level#ERROR}<br>
+     * also print the stackTrace if {@link #ignoreStackTrace(Exception)} return false
+     *
+     * @param e the exception to log
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     public void logUnhandledException(Exception e) {
-        log.error("Unhandled exception: {}", e.toString());
+        log.error("Unhandled exception: {}", (e == null ? null : e.toString()));
         if (!ignoreStackTrace(e))
             e.printStackTrace(); // todo: replace the printing of stackTrace with a log file or like that
     }
 
-    private void logDebug(Exception e) {
+    /**
+     * Log the exception with the level {@link org.slf4j.event.Level#DEBUG}, this
+     * should be used when the exception is handled.
+     *
+     * @param e the exception to log
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private void logDebug(@NotNull Exception e) {
         log.debug("Handled exception: {}", e.toString());
     }
 
+    /**
+     * Verify if the stackTrace should be printed or not<br>
+     * return {@code true}, basically if {@code e.message} contains
+     * {@link Cons.TESTING#NOT_PRINT_STACK_TRACE_PATTERN}
+     *
+     * @param e the exception to verify
+     * @return true if {@code e.message} contains the mentioned pattern
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     private boolean ignoreStackTrace(Exception e) {
-        boolean randomExceptionForTesting = e != null &&
+        return e != null &&
                 e.getMessage() != null &&
                 e.getMessage().toLowerCase().contains(Cons.TESTING.NOT_PRINT_STACK_TRACE_PATTERN.toLowerCase());
-//        boolean exceptionHandledButDueToUseH2ForTestingTheException
-        return randomExceptionForTesting;
     }
 
     /**
      * @param id to validate
-     * @throws InvalidIdException impl if id is null or less than 1
+     * @throws InvalidIdException if {@code id} is null or less than 1
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
      */
     public void validateId(Long id) {
-        if (id == null || id <= 0)
-            throw new InvalidIdException();
+        if (id == null || id <= 0) throw new InvalidIdException();
     }
 }

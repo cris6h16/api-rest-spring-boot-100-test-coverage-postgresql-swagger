@@ -88,6 +88,12 @@ public class Cons {
 
     public class Response {
         public static class ForClient {
+            /**
+             * Generic error message for the client, used when we don't want to provide a specific message about the failure
+             *
+             * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+             * @since 1.0
+             */
             public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
             public static final String NO_RESOURCE_FOUND = "No resource found";
 
