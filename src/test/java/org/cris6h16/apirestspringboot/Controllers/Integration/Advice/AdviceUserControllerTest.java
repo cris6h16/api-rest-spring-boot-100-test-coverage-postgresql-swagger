@@ -120,7 +120,7 @@ class AdviceUserControllerTest {
      * <p>
      * Test: try to fetch a user's account that not correspond to the principal
      * ( based on {@code principal.id == id_triedToGet ? } )<br>
-     * Method: {@link UserController#get(Long, Long)} is {@code isAuthenticated()}
+     * Method: {@link UserController#get(Long, Long)}
      * </p>
      *
      * @implNote Endpoint method depends on {@link MyId} annotation due to that
@@ -134,7 +134,7 @@ class AdviceUserControllerTest {
         mvc.perform(get("/api/users/1"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG));
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
     }
 
 
@@ -145,7 +145,7 @@ class AdviceUserControllerTest {
      * <p>
      * Test: try to update a user's account that not correspond to the principal
      * ( based on {@code principal.id == id_triedToUpdate ? } )<br>
-     * Method: {@link UserController#update(Long, CreateUpdateUserDTO, Long)} is {@code isAuthenticated()}
+     * Method: {@link UserController#update(Long, CreateUpdateUserDTO, Long)}
      * </p>
      *
      * @implNote Endpoint method depends on {@link MyId} annotation due to that I mock a user {@link WithMockUserWithId}
@@ -174,7 +174,7 @@ class AdviceUserControllerTest {
      * <p>
      * Test: try to delete a user's account that not correspond to the principal
      * ( based on {@code principal.id == id_triedToDelete ? } )<br>
-     * Method: {@link UserController#delete(Long, Long)} is {@code isAuthenticated()}
+     * Method: {@link UserController#delete(Long, Long)}
      * </p>
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -189,7 +189,7 @@ class AdviceUserControllerTest {
                         .with(csrf()))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG));
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
     }
 
     /**
@@ -197,7 +197,7 @@ class AdviceUserControllerTest {
      * then will be handled by the {@link ExceptionHandlerControllers}.
      * <p>
      * Test: try to fetch all users, but the principal is not an admin<br>
-     * Method: {@link UserController#getUsers(Pageable)} is {@code hasRole("ROLE_ADMIN")}
+     * Method: {@link UserController#getUsers(Pageable)}
      * </p>
      *
      * @implNote I mock a user with the role {@code ROLE_USER} with the annotation {@link WithMockUserWithId}

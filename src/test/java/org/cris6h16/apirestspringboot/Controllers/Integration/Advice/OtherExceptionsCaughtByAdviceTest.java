@@ -1,19 +1,13 @@
 package org.cris6h16.apirestspringboot.Controllers.Integration.Advice;
 
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.Controllers.UserController;
-import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -21,22 +15,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.net.URI;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test the exceptions caught by the `Advice` class that are not tested in the others
@@ -101,12 +92,12 @@ public class OtherExceptionsCaughtByAdviceTest {
         String pathNotes = NoteController.path;
 
         mvc.perform(get(pathUsers + "/1"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
 
         mvc.perform(get(pathNotes + "/1"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
     }
 
     /**

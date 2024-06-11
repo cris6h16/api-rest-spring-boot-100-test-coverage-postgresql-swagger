@@ -60,18 +60,14 @@ public class UserController {
      * make it through: {@link UserService#get(Long)}
      *
      * @param id          of the user to get
-     * @param principalId injected, of the principal that is asking for the data
      * @return {@link ResponseEntity} with the user data
-     * @throws UserControllerTransversalException if {@code {id} != principal.id}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @GetMapping(value = "/{id}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<PublicUserDTO> get(@PathVariable Long id,
-                                             @MyId Long principalId) {
-        verifyOwnership(id, principalId);
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
+    public ResponseEntity<PublicUserDTO> get(@PathVariable Long id) {
         PublicUserDTO u = userService.get(id);
         return ResponseEntity.ok(u);
     }
@@ -82,20 +78,16 @@ public class UserController {
      *
      * @param id          of the user to update
      * @param dto         with just the fields that we want to update not blank
-     * @param principalId injected, of the principal that is trying to update the user
      * @return {@link ResponseEntity} with no content
-     * @throws UserServiceTransversalException if {@code {id} != principal.id}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @PatchMapping(value = "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> update(@PathVariable Long id,
-                                       @RequestBody CreateUpdateUserDTO dto,
-                                       @MyId Long principalId) {//TODO: Impl boudary cases for all @CONTROLLERS
-        verifyOwnership(id, principalId);
+                                       @RequestBody CreateUpdateUserDTO dto) {//TODO: Impl boudary cases for all @CONTROLLERS
         userService.update(id, dto);
         return ResponseEntity.noContent().build();
     }
@@ -105,17 +97,13 @@ public class UserController {
      * make it through: {@link UserService#delete(Long)}
      *
      * @param id          of the user to delete
-     * @param principalId injected, of the principal that is trying to delete the user
      * @return {@link ResponseEntity} with no content
-     * @throws UserControllerTransversalException if {@code {id} != principal.id}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<Void> delete(@PathVariable Long id,
-                                       @MyId Long principalId) {
-        verifyOwnership(id, principalId);
+    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -132,15 +120,9 @@ public class UserController {
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
     public ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable) {
         List<PublicUserDTO> l = userService.get(pageable);
         return ResponseEntity.ok(l);
-    }
-
-    private void verifyOwnership(Long id, Long principalId) {
-        if (!id.equals(principalId)) {
-            throw new UserControllerTransversalException(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG, HttpStatus.FORBIDDEN);
-        }
     }
 }

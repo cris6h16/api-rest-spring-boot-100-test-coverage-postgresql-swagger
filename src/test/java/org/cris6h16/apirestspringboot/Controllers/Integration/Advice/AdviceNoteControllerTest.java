@@ -31,8 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * here I wrote the test for the {@link NoteServiceTransversalException}
  * which is the unique exception that can pass transversely through the layers.
  * <p>
- * here I load the context due that in all methods on {@link NoteController}
- * I inject the {@code  Principal.id } though the {@link MyId } annotation
+ * here I load the context due that I need the {@code  Principal.id }
  * </p>
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -54,11 +53,11 @@ public class AdviceNoteControllerTest {
 
     /**
      * we threw a {@link NoteServiceTransversalException} from {@link UserServiceImpl}
-     * then passed through the {@link UserController} and finally handled in the {@link ExceptionHandlerControllers}
+     * then passed through the {@link UserController} and finally handled
+     * in the {@link ExceptionHandlerControllers}
      * <p>
      * Random used Method: {@link NoteController#create(CreateNoteDTO, Long)}
-     * this depends on {@link MyId} to inject {@code Principal.id}.
-     * that the reason why I use the {@link WithMockUserWithId} annotation.
+     * this depends on {@code principal.id} then I used {@link WithMockUserWithId} annotation.
      * </p>
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>

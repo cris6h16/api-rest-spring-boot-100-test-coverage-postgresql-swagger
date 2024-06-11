@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
@@ -38,13 +40,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * as integration test with the controller layer.
  * <p>
  * Here I load all the context of the application, if I don't make this and instead
- * when we only use {@link WebMvcTest} annotation, the spring security configuration
+ * when I only use {@link WebMvcTest} annotation, the spring security configuration
  * will be the default one, it means that any of your custom security config won't be applied...<br>
  * then if I want to use my custom security configuration for the tests I need to load the whole context...<br>
  * Here <strong>I WON'T LOAD THE WHOLE CONTEXT THEN MY CUSTOM SECURITY CONFIGURATION WILL BE LOST</strong>
  * (I only will use {@code @WebMvcTest}) because in the {@link NoteController}
- * I only have 1 security verification, and it's the {@code @PreAuthorize("isAuthenticated()")} then
+ * I only have 1 security verification, and it's the {@code @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER')")} then
  * doesn't matter if I use the default security configuration, It just cares if I have a {@link Authentication} loaded
+ * being an instance of {@link UserDetails} or any subclass of it.
  * </p>
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -64,7 +67,6 @@ public class NoteControllerTest {
     /**
      * Test the successful behavior of {@link NoteController#create(CreateNoteDTO, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -88,7 +90,6 @@ public class NoteControllerTest {
     /**
      * Test the successful behavior of {@link NoteController#getPage(Pageable, Long)}.
      *
-     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -111,7 +112,6 @@ public class NoteControllerTest {
     /**
      * Test the successful behavior of {@link NoteController#get(Long, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -131,7 +131,6 @@ public class NoteControllerTest {
     /**
      * Test the successful behavior of {@link NoteController#update(Long, CreateNoteDTO, Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code principal.id}  in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -150,7 +149,6 @@ public class NoteControllerTest {
     /**
      * Test the successful behavior of {@link NoteController#delete(Long, Long)}.
      *
-     * @implNote I'm using {@link MyId} to inject the {@code principal.id} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */

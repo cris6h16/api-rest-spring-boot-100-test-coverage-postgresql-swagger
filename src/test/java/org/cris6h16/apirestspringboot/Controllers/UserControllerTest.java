@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
@@ -120,9 +121,8 @@ class UserControllerTest {
     }
 
     /**
-     * Test the successful behavior of {@link UserController#get(Long, Long)}
+     * Test the successful behavior of {@link UserController#get(Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -154,9 +154,8 @@ class UserControllerTest {
 
 
     /**
-     * Test the successful behavior of {@link UserController#update(Long, CreateUpdateUserDTO, Long)}.
+     * Test the successful behavior of {@link UserController#update(Long, CreateUpdateUserDTO)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -178,9 +177,8 @@ class UserControllerTest {
 
 
     /**
-     * Test the successful behavior of {@link UserController#delete(Long, Long)}
+     * Test the successful behavior of {@link UserController#delete(Long)}
      *
-     * @implNote I'm using {@link MyId} to inject the {@code id} of the {@code principal} in the controller method, that is why I'm using {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -197,11 +195,8 @@ class UserControllerTest {
     /**
      * Test the successful behavior of {@link UserController#getUsers(Pageable)},
      * here is tested adding an {@link Authentication} in an empty security context with a {@link UserWithId} ({@link WithMockUserWithId}),
-     * this set user has the role: {@link  ERole#ROLE_ADMIN}.
+     * set {@code user.role}: {@link  ERole#ROLE_ADMIN}.
      *
-     * @implNote this tested method is <br>
-     * {@code  @PreAuthorize("hasRole(T(org.cris6h16.apirestspringboot.Entities.ERole).ROLE_ADMIN)")}<br>
-     * then I mock the principal with the role {@link ERole#ROLE_ADMIN}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */

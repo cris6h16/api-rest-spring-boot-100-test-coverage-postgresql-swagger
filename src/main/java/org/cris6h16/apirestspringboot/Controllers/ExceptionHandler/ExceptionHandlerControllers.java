@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
@@ -9,10 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.security.Principal;
 
 /**
  * Handling of exception in the application and give a custom response
@@ -60,12 +65,25 @@ public class ExceptionHandlerControllers {
      * @return A {@link ResponseEntity} with status {@link HttpStatus#FORBIDDEN}
      * and message {@link  Cons.Auth.Fails#ACCESS_DENIED}
      * @apiNote Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
+     * @implNote the response is diff if is authenticated or not, this is verified seeing
+     * if the {@link Principal} is an instance of {@link UserWithId}, that means that my
+     * custom {@link UserDetails} was loaded ( authenticated correctly )
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @ExceptionHandler(value = AccessDeniedException.class) // added thanks to the logs (ERROR)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        return buildAFailResponse(HttpStatus.FORBIDDEN, Cons.Auth.Fails.ACCESS_DENIED);
+        boolean IsAuthenticated = (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
+//todo: log the exceptions in the handler
+        HttpStatus status = HttpStatus.UNAUTHORIZED; //todo: docs about why dont give more info if is not authenticated
+        String msg = Cons.Auth.Fails.UNAUTHORIZED;
+
+        if (IsAuthenticated) {
+            status = HttpStatus.FORBIDDEN;
+            msg = Cons.Auth.Fails.ACCESS_DENIED;
+        }
+
+        return buildAFailResponse(status, msg);
     }
 
     /**
