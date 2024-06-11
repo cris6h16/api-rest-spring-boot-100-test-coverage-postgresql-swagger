@@ -22,7 +22,7 @@ import java.util.List;
  */
 @RestController //@Controller && @ResponseBody
 @RequestMapping(path = NoteController.path)
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("hasAnyRole('ADMIN', 'USER')")
 public class NoteController {
 
     public static final String path = "/api/notes";

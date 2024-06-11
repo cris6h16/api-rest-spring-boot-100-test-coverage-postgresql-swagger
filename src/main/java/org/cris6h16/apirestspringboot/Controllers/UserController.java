@@ -41,7 +41,7 @@ public class UserController {
 
     @GetMapping(value = "/{id}",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<PublicUserDTO> get(@PathVariable Long id,
                                              @MyId Long principalId) {
         verifyOwnership(id, principalId);
@@ -52,7 +52,7 @@ public class UserController {
     @PatchMapping(value = "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<Void> update(@PathVariable Long id,
                                        @RequestBody CreateUpdateUserDTO dto,
                                        @MyId Long principalId) {//TODO: Impl boudary cases for all @CONTROLLERS
@@ -62,7 +62,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<Void> delete(@PathVariable Long id,
                                        @MyId Long principalId) {
         verifyOwnership(id, principalId);
@@ -73,7 +73,7 @@ public class UserController {
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("hasRole(T(org.cris6h16.apirestspringboot.Entities.ERole).ROLE_ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable) {
         List<PublicUserDTO> l = userService.get(pageable);
         return ResponseEntity.ok(l);

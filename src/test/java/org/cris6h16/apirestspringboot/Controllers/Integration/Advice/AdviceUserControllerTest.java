@@ -113,7 +113,6 @@ class AdviceUserControllerTest {
                 .andExpect(jsonPath("$.message").value(Cons.User.DTO.NULL));
     }
 
-
     /**
      * Test the handling of {@link UserControllerTransversalException}
      * raised on {@link UserController} and handled by the
@@ -130,7 +129,7 @@ class AdviceUserControllerTest {
      * @since 1.0
      */
     @Test
-    @WithMockUserWithId(id = 2, username = "cris6h16", roles = {"ROLE_HELLOWORD"})
+    @WithMockUserWithId(id = 2, username = "cris6h16", roles = {"ROLE_USER"})
     void AdviceUserControllerTest_get_OtherUserAccount_Then403AndFailMsg() throws Exception {
         mvc.perform(get("/api/users/1"))
                 .andExpect(status().isForbidden())

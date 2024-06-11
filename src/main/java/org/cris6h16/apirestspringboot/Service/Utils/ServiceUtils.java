@@ -50,11 +50,6 @@ public class ServiceUtils {
         String forClient = ""; // PD: verification based on: .isBlank(), dont add generic message here
         HttpStatus recommendedStatus = null; // also here, but with null
 
-        if (e == null) {
-            recommendedStatus = HttpStatus.INTERNAL_SERVER_ERROR;
-            forClient = Cons.Response.ForClient.GENERIC_ERROR;
-        }
-
         // ------------ commons in both entities --------------------\\
         if (e instanceof ConstraintViolationException && forClient.isBlank()) { //{ not blank, invalid email, max length, etc }
             recommendedStatus = HttpStatus.BAD_REQUEST;

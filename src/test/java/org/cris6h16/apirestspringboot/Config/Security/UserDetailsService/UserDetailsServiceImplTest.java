@@ -1,10 +1,10 @@
 package org.cris6h16.apirestspringboot.Config.Security.UserDetailsService;
 
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,8 +23,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.Security.UserDetailsService.UserHasNullRolesException;
 
 /**
  * Test class for {@link UserDetailsServiceImpl}
@@ -63,13 +61,10 @@ class UserDetailsServiceImplTest {
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * but the roles are null then It should throw an exception extended of
-     * {@link AbstractExceptionWithStatus}, in this case it'll be {@link UserHasNullRolesException}<br>
+     * but the roles are null then a default role should be assigned {@link ERole#ROLE_INVITED}<br>
      * I want to emphasize that this fail will occur if a user was created externally to the application
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
-     * @see UserDetailsServiceImpl#loadUserByUsername(String)
-     * @see UserHasNullRolesException
      * @since 1.0
      */
     @Test
@@ -86,24 +81,29 @@ class UserDetailsServiceImplTest {
         when(userRepository.findByUsername("username"))
                 .thenReturn(Optional.of(usr));
 
-        // Act & Assert
-        assertThatThrownBy(() -> userDetailsService.loadUserByUsername("username"))
-                .isInstanceOf(UserHasNullRolesException.class)
-                .hasMessage(Cons.User.UserDetailsServiceImpl.USER_HAS_NOT_ROLES)
-                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.FORBIDDEN);
+        // Act
+        UserDetails userDetails = userDetailsService.loadUserByUsername("username");
+
+        // Assert
+        assertThat(userDetails)
+                .isNotNull()
+                .isInstanceOf(UserWithId.class)
+                .hasFieldOrPropertyWithValue("username", usr.getUsername())
+                .hasFieldOrPropertyWithValue("password", usr.getPassword())
+                .hasFieldOrPropertyWithValue("id", usr.getId());
+        assertThat(userDetails.getAuthorities().iterator().next().getAuthority()).isEqualTo(ERole.ROLE_INVITED.name());
     }
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * but the roles are empty then It should return a {@link UserDetails} with the roles empty
+     * but the roles are empty then It should return a {@link UserDetails} with
+     * a default role {@link ERole#ROLE_INVITED}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
-     * @see UserDetailsServiceImpl#loadUserByUsername(String)
-     * @see UserDetails
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() {
+    void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() { // todo: rename tests all
         // Arrange
         UserEntity usr = UserEntity.builder()
                 .id(1L)
@@ -123,7 +123,12 @@ class UserDetailsServiceImplTest {
                 .isInstanceOf(UserDetails.class)
                 .hasFieldOrPropertyWithValue("username", usr.getUsername())
                 .hasFieldOrPropertyWithValue("password", usr.getPassword());
-        assertThat(userDetails.getAuthorities()).isEmpty();
+        assertThat(userDetails
+                .getAuthorities()
+                .iterator()
+                .next()
+                .getAuthority()
+        ).isEqualTo(ERole.ROLE_INVITED.name());
     }
 
     /**
