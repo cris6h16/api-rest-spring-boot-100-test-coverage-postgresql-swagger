@@ -1,12 +1,20 @@
 package org.cris6h16.apirestspringboot.Exceptions.WithStatus.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 
-// todo:
+/**
+ * Exception exclusively designed to be thrown an exception
+ * which will leave the {@link UserController} layer and
+ * pass to be caught by the {@link ExceptionHandlerControllers} to be handled.
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @Slf4j
 public class UserControllerTransversalException extends AbstractExceptionWithStatus {
     public UserControllerTransversalException(String message, HttpStatus recommendedStatus) {

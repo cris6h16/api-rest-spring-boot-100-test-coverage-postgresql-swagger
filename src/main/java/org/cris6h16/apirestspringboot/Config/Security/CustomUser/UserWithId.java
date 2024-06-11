@@ -3,11 +3,12 @@ package org.cris6h16.apirestspringboot.Config.Security.CustomUser;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
 /**
- * Custom class that extends {@link User} to add an {@code id} field to the user.
+ * Custom class that extends {@link User} for add an {@code id} field to the {@link UserDetails}.
  * {@code id} should be used to identify the user in the database.
  * <br>
  * It'll also be used for verifications like:

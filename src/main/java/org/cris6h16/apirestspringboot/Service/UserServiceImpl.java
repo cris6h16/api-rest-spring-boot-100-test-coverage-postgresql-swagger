@@ -3,11 +3,10 @@ package org.cris6h16.apirestspringboot.Service;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.CreateUpdateDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
@@ -251,10 +250,10 @@ public class UserServiceImpl implements UserService {
         if (user == null) return PublicUserDTO.builder().build();
 
         boolean rolesNull = (user.getRoles() == null); // roles --> is EAGER
-        Set<RoleDTO> roles = rolesNull ?
+        Set<PublicRoleDTO> roles = rolesNull ?
                 (new HashSet<>(0)) :
                 (user.getRoles().stream()
-                        .map(role -> new RoleDTO(role.getName()))
+                        .map(role -> new PublicRoleDTO(role.getName()))
                         .collect(Collectors.toSet()));
 
         return PublicUserDTO.builder()

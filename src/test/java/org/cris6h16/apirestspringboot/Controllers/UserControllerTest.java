@@ -6,7 +6,7 @@ import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHand
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
@@ -130,7 +130,7 @@ class UserControllerTest {
 //    @WithMockUser
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
     void UserControllerTest_get_Successful_Then200AndReturnPublicUserDTOInJson() throws Exception {
-        RoleDTO roleDTO = RoleDTO.builder()
+        PublicRoleDTO roleDTO = PublicRoleDTO.builder()
                 .name(user.getRoles().iterator().next().getName())
                 .build();
         PublicUserDTO publicUserDTO = PublicUserDTO.builder()
@@ -214,7 +214,7 @@ class UserControllerTest {
                 .username("cris6h16")
                 .email("cristianmherrera21@gmail.com")
                 .createdAt(new Date())
-                .roles(Set.of(RoleDTO.builder().name(ERole.ROLE_USER).build()))
+                .roles(Set.of(PublicRoleDTO.builder().name(ERole.ROLE_USER).build()))
                 .build());
         when(userService.get(any(PageRequest.class))).thenReturn(users);
 

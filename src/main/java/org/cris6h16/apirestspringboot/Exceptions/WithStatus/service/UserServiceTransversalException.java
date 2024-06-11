@@ -11,6 +11,11 @@ import org.springframework.http.HttpStatus;
  * which will leave the {@link UserServiceImpl} layer and
  * pass transversally through the next layer ({@link UserController}),
  * this must be the unique exception that can be thrown to the next layer.
+ * <p>
+ *     This exception as extends from {@link AbstractExceptionWithStatus}
+ *     will contain a proper message and a recommended status ready
+ *     for show to the client directly.
+ * </p>
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0

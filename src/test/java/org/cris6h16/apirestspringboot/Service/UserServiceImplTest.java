@@ -2,7 +2,7 @@ package org.cris6h16.apirestspringboot.Service;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.RoleDTO;
+import org.cris6h16.apirestspringboot.DTOs.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
@@ -234,7 +234,7 @@ public class UserServiceImplTest {
                 .hasFieldOrPropertyWithValue("email", entity.getEmail())
                 .hasFieldOrPropertyWithValue("createdAt", entity.getCreatedAt())
                 .hasFieldOrPropertyWithValue("updatedAt", entity.getUpdatedAt())
-                .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new RoleDTO(ERole.ROLE_USER))));
+                .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
 
     }
 
@@ -414,7 +414,7 @@ public class UserServiceImplTest {
                     .hasFieldOrPropertyWithValue("email", entities.get(i).getEmail())
                     .hasFieldOrPropertyWithValue("createdAt", entities.get(i).getCreatedAt())
                     .hasFieldOrPropertyWithValue("updatedAt", entities.get(i).getUpdatedAt())
-                    .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new RoleDTO(ERole.ROLE_USER))));
+                    .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
         }
 
     }
