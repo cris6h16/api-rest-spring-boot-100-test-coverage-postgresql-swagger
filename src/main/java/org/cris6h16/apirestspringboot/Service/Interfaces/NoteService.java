@@ -2,9 +2,7 @@ package org.cris6h16.apirestspringboot.Service.Interfaces;
 
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.springframework.data.domain.Pageable;
 

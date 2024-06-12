@@ -2,11 +2,8 @@ package org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService
 
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 /**
  * Custom exception thrown when the {@link CreateNoteDTO} is null.

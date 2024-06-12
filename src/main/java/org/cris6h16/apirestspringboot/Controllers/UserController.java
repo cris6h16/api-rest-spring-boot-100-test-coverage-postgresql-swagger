@@ -1,15 +1,10 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.controller.UserControllerTransversalException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
+import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,7 +35,7 @@ public class UserController {
      * make it through: {@link UserService#create(CreateUpdateUserDTO)}
      *
      * @param user {@link CreateUpdateUserDTO} with the data of the new user
-     * @return {@link ResponseEntity} with the location of the new user
+     * @return {@link ResponseEntity#created(URI)} with the location of the new user
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */

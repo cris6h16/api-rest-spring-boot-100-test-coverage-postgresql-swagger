@@ -2,7 +2,6 @@ package org.cris6h16.apirestspringboot.DTOs;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 

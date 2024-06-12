@@ -6,10 +6,12 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
-// import static VALUES of VALIDATIONS and CONSTRAINTS
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.EMAIL_UNIQUE_NAME;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.USERNAME_UNIQUE_NAME;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
 /**

@@ -20,7 +20,7 @@ import java.util.List;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@RestController //@Controller && @ResponseBody
+@RestController
 @RequestMapping(path = NoteController.path)
 @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER')")
 public class NoteController {
@@ -34,10 +34,11 @@ public class NoteController {
 
 
     /**
-     * Create a {@link NoteEntity}
+     * Create a {@link NoteEntity}<br>
+     * make it through: {@link NoteServiceImpl#create(CreateNoteDTO, Long)}
      *
-     * @param note        {@link CreateNoteDTO}
-     * @param principalId {@link Long}
+     * @param note        {@link CreateNoteDTO} with the data of the new note
+     * @param principalId injected, the id of the principal; the user that is creating the note
      * @return {@link ResponseEntity#created(URI)} with the location of the created note
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -53,6 +54,16 @@ public class NoteController {
         return ResponseEntity.created(uri).build();
     }
 
+    /**
+     * Get a page of {@link NoteEntity}<br>
+     * make it through: {@link NoteServiceImpl#getPage(Pageable, Long)}
+     *
+     * @param pageable    the page request
+     * @param principalId injected, the id of the principal; the user that is getting the notes
+     * @return {@link ResponseEntity} with the page of notes
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -61,6 +72,16 @@ public class NoteController {
         return ResponseEntity.ok(list);
     }
 
+    /**
+     * Get a {@link NoteEntity} by id<br>
+     * make it through: {@link NoteServiceImpl#get(Long, Long)}
+     *
+     * @param noteId      of the note to get
+     * @param principalId injected, the id of the principal; the user that is getting the note
+     * @return {@link ResponseEntity} with the note data
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @GetMapping(
             value = "/{noteId}",
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -70,6 +91,17 @@ public class NoteController {
         return ResponseEntity.ok(en);
     }
 
+    /**
+     * Update a {@link NoteEntity}<br>
+     * make it through: {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)}
+     *
+     * @param noteId      of the note to update
+     * @param note        to be PUT
+     * @param principalId the principal id; the user that is updating the note
+     * @return {@link ResponseEntity#noContent()} if successful
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @PutMapping(
             value = "/{noteId}",
             consumes = MediaType.APPLICATION_JSON_VALUE
@@ -81,7 +113,16 @@ public class NoteController {
         return ResponseEntity.noContent().build();
     }
 
-    // content type is not set because it's not necessary
+    /**
+     * Delete a {@link NoteEntity}<br>
+     * make it through: {@link NoteServiceImpl#delete(Long, Long)}
+     *
+     * @param noteId      of the note to delete
+     * @param principalId the principal id; the user that is deleting the note
+     * @return {@link ResponseEntity#noContent()} if successful
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @DeleteMapping(value = "/{noteId}")
     public ResponseEntity<Void> delete(@PathVariable Long noteId, @MyId Long principalId) {
         noteService.delete(noteId, principalId);

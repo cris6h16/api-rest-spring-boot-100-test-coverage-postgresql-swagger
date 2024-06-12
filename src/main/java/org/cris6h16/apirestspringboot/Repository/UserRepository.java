@@ -2,14 +2,10 @@ package org.cris6h16.apirestspringboot.Repository;
 
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.lang.NonNullApi;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 

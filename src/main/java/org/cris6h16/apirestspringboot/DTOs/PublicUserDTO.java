@@ -1,6 +1,9 @@
 package org.cris6h16.apirestspringboot.DTOs;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.ToString;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 
 import java.util.Date;

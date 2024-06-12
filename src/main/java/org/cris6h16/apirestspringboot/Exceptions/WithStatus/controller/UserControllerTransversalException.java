@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.http.HttpStatus;
 
 /**

@@ -4,7 +4,6 @@ import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
-import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
@@ -118,13 +117,11 @@ class AdviceUserControllerTest {
      * raised on {@link UserController} and handled by the
      * {@link ExceptionHandlerControllers}.
      * <p>
-     * Test: try to fetch a user's account that not correspond to the principal
-     * ( based on {@code principal.id == id_triedToGet ? } )<br>
-     * Method: {@link UserController#get(Long, Long)}
+     * Test: try to fetch a user's account that not correspond to the principal<br>
+     * Method: {@link UserController#get(Long)}
      * </p>
      *
-     * @implNote Endpoint method depends on {@link MyId} annotation due to that
-     * I mock a user {@link WithMockUserWithId}
+     * @implNote Endpoint method depends {@code principal.id} then {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
@@ -143,15 +140,15 @@ class AdviceUserControllerTest {
      * {@link UserController} then will be handled by the {@link ExceptionHandlerControllers}.
      *
      * <p>
-     * Test: try to update a user's account that not correspond to the principal
-     * ( based on {@code principal.id == id_triedToUpdate ? } )<br>
-     * Method: {@link UserController#update(Long, CreateUpdateUserDTO, Long)}
+     * Test: try to update a user's account that not correspond to the principal<br>
+     * Method: {@link UserController#update(Long, CreateUpdateUserDTO)}
      * </p>
      *
-     * @implNote Endpoint method depends on {@link MyId} annotation due to that I mock a user {@link WithMockUserWithId}
+     * @implNote Endpoint method depends {@code principal.id} then {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      **/
+    @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
     void AdviceUserControllerTest_update_OtherUserAccount_Then403AndFailMsg() throws Exception {
         mvc.perform(patch("/api/users/2") // id is diff
@@ -164,7 +161,7 @@ class AdviceUserControllerTest {
                                 """)) // any content
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.IS_NOT_YOUR_ID_MSG));
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
     }
 
     /**
@@ -172,13 +169,12 @@ class AdviceUserControllerTest {
      * then will be handled by the {@link ExceptionHandlerControllers}.
      *
      * <p>
-     * Test: try to delete a user's account that not correspond to the principal
-     * ( based on {@code principal.id == id_triedToDelete ? } )<br>
-     * Method: {@link UserController#delete(Long, Long)}
+     * Test: try to delete a user's account that not correspond to the principal<br>
+     * Method: {@link UserController#delete(Long)}
      * </p>
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
-     * @implNote Endpoint method depends on {@link MyId} annotation due to that I mock a user {@link WithMockUserWithId}
+     * @implNote Endpoint method depends {@code principal.id} then {@link WithMockUserWithId}
      * @since 1.0
      **/
 
@@ -200,7 +196,7 @@ class AdviceUserControllerTest {
      * Method: {@link UserController#getUsers(Pageable)}
      * </p>
      *
-     * @implNote I mock a user with the role {@code ROLE_USER} with the annotation {@link WithMockUserWithId}
+     * @implNote I mock the role {@code ROLE_USER} with {@link WithMockUserWithId}
      * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */

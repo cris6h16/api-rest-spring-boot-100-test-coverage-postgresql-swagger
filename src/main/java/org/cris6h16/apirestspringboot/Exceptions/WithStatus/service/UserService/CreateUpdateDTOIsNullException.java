@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.springframework.http.HttpStatus;
 /**
  * Custom exception thrown when a {@link CreateUpdateUserDTO} is null

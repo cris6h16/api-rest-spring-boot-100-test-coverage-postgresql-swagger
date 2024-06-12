@@ -3,7 +3,6 @@ package org.cris6h16.apirestspringboot.DTOs;
 import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 
 
 /**

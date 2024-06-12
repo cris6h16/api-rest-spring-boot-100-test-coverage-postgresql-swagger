@@ -1,7 +1,7 @@
 package org.cris6h16.apirestspringboot.Constants;
 
-import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 
 /**
@@ -35,10 +35,6 @@ public class Cons {
 
         public static class Fails {
             public static final String NOT_FOUND = "User not found";
-        }
-
-        public static class UserDetailsServiceImpl {
-            public static final String USER_HAS_NOT_ROLES = "User retrieved from database hasn't roles";
         }
 
         /**
@@ -83,7 +79,6 @@ public class Cons {
         public class Fails {
             public static final String ACCESS_DENIED = "Access denied";
             public static final String UNAUTHORIZED = "Unauthorized";
-            public static final String IS_NOT_YOUR_ID_MSG = "You aren't the owner of this id";
         }
     }
 

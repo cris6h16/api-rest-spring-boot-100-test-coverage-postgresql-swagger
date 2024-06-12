@@ -1,9 +1,9 @@
 package org.cris6h16.apirestspringboot.Controllers.MetaAnnotations;
 
 
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.userdetails.User;
-import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
