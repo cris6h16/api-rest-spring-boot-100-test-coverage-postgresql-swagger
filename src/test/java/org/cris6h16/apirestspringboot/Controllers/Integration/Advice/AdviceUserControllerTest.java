@@ -10,7 +10,6 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.controller.UserControllerTransversalException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -113,9 +112,7 @@ class AdviceUserControllerTest {
     }
 
     /**
-     * Test the handling of {@link UserControllerTransversalException}
-     * raised on {@link UserController} and handled by the
-     * {@link ExceptionHandlerControllers}.
+     * handled by the {@link ExceptionHandlerControllers}.
      * <p>
      * Test: try to fetch a user's account that not correspond to the principal<br>
      * Method: {@link UserController#get(Long)}
@@ -136,8 +133,7 @@ class AdviceUserControllerTest {
 
 
     /**
-     * Test the {@link UserControllerTransversalException} raised from
-     * {@link UserController} then will be handled by the {@link ExceptionHandlerControllers}.
+     * handled by the {@link ExceptionHandlerControllers}.
      *
      * <p>
      * Test: try to update a user's account that not correspond to the principal<br>
@@ -165,8 +161,7 @@ class AdviceUserControllerTest {
     }
 
     /**
-     * Test the {@link UserControllerTransversalException} raised from {@link UserController}
-     * then will be handled by the {@link ExceptionHandlerControllers}.
+     * handled by the {@link ExceptionHandlerControllers}.
      *
      * <p>
      * Test: try to delete a user's account that not correspond to the principal<br>
@@ -189,8 +184,7 @@ class AdviceUserControllerTest {
     }
 
     /**
-     * Test the {@link UserControllerTransversalException} raised from {@link UserController}
-     * then will be handled by the {@link ExceptionHandlerControllers}.
+     * handled by the {@link ExceptionHandlerControllers}.
      * <p>
      * Test: try to fetch all users, but the principal is not an admin<br>
      * Method: {@link UserController#getUsers(Pageable)}

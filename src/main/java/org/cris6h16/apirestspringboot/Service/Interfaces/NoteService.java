@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-//todo: remove unnecessary imports in all classes
 
 /**
  * Service layer for {@link NoteRepository}

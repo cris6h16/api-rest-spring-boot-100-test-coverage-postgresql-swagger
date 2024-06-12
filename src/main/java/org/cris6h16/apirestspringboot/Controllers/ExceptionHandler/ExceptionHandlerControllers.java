@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWithStatus;
 import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
 import org.springframework.http.HttpHeaders;
@@ -55,7 +56,15 @@ public class ExceptionHandlerControllers {
      */
     @ExceptionHandler(value = NoResourceFoundException.class)
     public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
-        return buildAFailResponse(HttpStatus.NOT_FOUND, Cons.Response.ForClient.NO_RESOURCE_FOUND);
+        logDebug(ex);
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        String msg = Cons.Auth.Fails.UNAUTHORIZED;
+
+        if (isAuthenticated()) {
+            status = HttpStatus.NOT_FOUND;
+            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
+        }
+        return buildAFailResponse(status, msg);
     }
 
     /**
@@ -73,14 +82,19 @@ public class ExceptionHandlerControllers {
      */
     @ExceptionHandler(value = AccessDeniedException.class) // added thanks to the logs (ERROR)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        boolean IsAuthenticated = (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
-//todo: log the exceptions in the handler
-        HttpStatus status = HttpStatus.UNAUTHORIZED; //todo: docs about why dont give more info if is not authenticated
+        logDebug(ex);
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
         String msg = Cons.Auth.Fails.UNAUTHORIZED;
 
-        if (IsAuthenticated) {
-            status = HttpStatus.FORBIDDEN;
-            msg = Cons.Auth.Fails.ACCESS_DENIED;
+        if (isAuthenticated()) {
+            status = HttpStatus.NOT_FOUND;
+            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
+
+            if (isAdmin()) {
+                status = HttpStatus.FORBIDDEN;
+                msg = Cons.Auth.Fails.ACCESS_DENIED;
+            }
         }
 
         return buildAFailResponse(status, msg);
@@ -103,6 +117,7 @@ public class ExceptionHandlerControllers {
      */
     @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
     public ResponseEntity<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        logDebug(ex);
         return buildAFailResponse(HttpStatus.BAD_REQUEST, Cons.Response.ForClient.GENERIC_ERROR);
     }
 
@@ -117,9 +132,10 @@ public class ExceptionHandlerControllers {
      */
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<String> handleException(Exception ex) {
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        logDebug(ex);
 
-        log.error("Unhandled exception: {}", ex.toString());
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        log.error("Unhandled exception caught in Advice: {}", ex.toString());
         return buildAFailResponse(status, Cons.Response.ForClient.GENERIC_ERROR);
     }
 
@@ -168,6 +184,52 @@ public class ExceptionHandlerControllers {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         return new ResponseEntity<>(body, headers, status);
+    }
+
+
+    /**
+     * Log the exception caught in the advice
+     *
+     * @param ex the exception to log
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private void logDebug(Exception ex) {
+        log.debug("Exception caught in the Advice: {}", ex == null ? "null" : ex.toString());
+    }
+
+    /**
+     * Check if the user is authenticated
+     *
+     * @return true if is authenticated ( {@code principal instanceof UserWithId} )
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @see UserWithId
+     * @since 1.0
+     */
+    private boolean isAuthenticated() {
+        return (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
+    }
+
+    /**
+     * Check if the user has the role {@link ERole#ROLE_ADMIN}
+     *
+     * @return true if the {@code principal} has the role {@link ERole#ROLE_ADMIN}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private boolean isAdmin() {
+        if (!isAuthenticated()) return false;
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (obj instanceof UserWithId) {
+            UserWithId user = (UserWithId) obj;
+            if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) return false;
+            return user.getAuthorities()
+                    .stream()
+                    .anyMatch(a -> a
+                            .getAuthority()
+                            .contains(ERole.ROLE_ADMIN.toString()));
+        }
+        return false;
     }
 
 }

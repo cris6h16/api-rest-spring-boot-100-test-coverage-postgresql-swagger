@@ -63,15 +63,31 @@ public class OtherExceptionsCaughtByAdviceTest {
     private UserServiceImpl userService;
 
     /**
-     * Test: when is request an nonexistent endpoint then {@link NoResourceFoundException}
-     * then response with {@link HttpStatus#NOT_FOUND} && {@link Cons.Response.ForClient#NO_RESOURCE_FOUND}
+     * Test: when is request an nonexistent endpoint then {@link NoResourceFoundException} and is unauthenticated
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @Test
     @Tag("NoResourceFoundException")
-    void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException() throws Exception {
+    @Tag("PRINCIPLE_OF_LEAST_PRIVILEGE")
+    void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException_Unauthenticated() throws Exception {
+        mvc.perform(get("/helloword/not-found"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
+    }
+
+    /**
+     * Test: when is request an nonexistent endpoint then {@link NoResourceFoundException} but is authenticated
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("NoResourceFoundException")
+    @Tag("PRINCIPLE_OF_LEAST_PRIVILEGE")
+    @WithMockUserWithId
+    void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException_Authenticated() throws Exception {
         mvc.perform(get("/helloword/not-found"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));

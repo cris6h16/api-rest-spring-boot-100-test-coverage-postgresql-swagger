@@ -15,7 +15,7 @@ import java.util.Collection;
  * <pre>{@code
  * ENDPOINT: GET /api/v1/users/{id}
  * REQUEST: GET /api/v1/users/1
- * THROW IF: #principal.id != 1
+ * ACCESS DENIED IF: #principal.id != 1
  * }</pre>
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

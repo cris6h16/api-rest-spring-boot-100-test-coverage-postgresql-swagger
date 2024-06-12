@@ -251,9 +251,8 @@ public class ServiceUtilsNoteServiceImplTest {
      * @since 1.0
      */
     @Tag("get")
-    @ParameterizedTest// todo: refactor others testing to parameterized to avoid boilerplate
-    @ValueSource(longs = {0, -1, -99})
-// -99 == null
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -99})/* -99 == null */
     void ServiceUtilsNoteServiceImplTest_get_idInvalidUserId(Long userId) {
         // Arrange
         Long noteId = 1L;

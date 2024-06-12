@@ -10,10 +10,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-<!--    todo: change groupId, artifactId, version, name, description-->
+<!--    todo: change groupId, artifactId, version, name, description if the version is increased-->
     <groupId>org.cris6h16</groupId>
     <artifactId>api-rest-spring-boot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>api-rest-spring-boot</name>
     <description>api-rest-spring-boot</description>
 

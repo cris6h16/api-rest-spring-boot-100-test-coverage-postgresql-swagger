@@ -111,7 +111,7 @@ public class Cons {
      * @since 1.0
      */
     public static class TESTING {
-        public static final String NOT_PRINT_STACK_TRACE_PATTERN = "cris6h16's random exception";
+        public static final String NOT_PRINT_STACK_TRACE_PATTERN = "cris6h16's";
     }
 
 }

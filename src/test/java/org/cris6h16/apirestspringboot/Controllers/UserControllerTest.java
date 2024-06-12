@@ -112,7 +112,7 @@ class UserControllerTest {
                                     "password": "12345678",
                                     "email": "cristianmherrera21@gmail.com"                                    
                                 }
-                                """)) // todo: test security like csrf
+                                """))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
                 .andReturn().getResponse().getHeader("Location");

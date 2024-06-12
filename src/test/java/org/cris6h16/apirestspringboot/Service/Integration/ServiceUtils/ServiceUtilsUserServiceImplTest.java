@@ -524,7 +524,6 @@ class ServiceUtilsUserServiceImplTest {
      */
     @Test
     @Tag("getPage")
-    // todo: correct sintaxis "()"
     void ServiceUtils_get_PageableNull_ThenGenericResponse() {
         // Arrange
         Pageable pageable = null;

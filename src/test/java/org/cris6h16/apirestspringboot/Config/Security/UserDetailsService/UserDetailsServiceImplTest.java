@@ -103,7 +103,7 @@ class UserDetailsServiceImplTest {
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() { // todo: rename tests all
+    void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() { // todo: rename tests all, remove the """standard""" format from the name
         // Arrange
         UserEntity usr = UserEntity.builder()
                 .id(1L)

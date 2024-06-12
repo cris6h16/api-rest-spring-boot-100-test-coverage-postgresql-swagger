@@ -82,7 +82,7 @@ public class UserController {
     )
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> update(@PathVariable Long id,
-                                       @RequestBody CreateUpdateUserDTO dto) {//TODO: Impl boudary cases for all @CONTROLLERS
+                                       @RequestBody CreateUpdateUserDTO dto) {
         userService.update(id, dto);
         return ResponseEntity.noContent().build();
     }
