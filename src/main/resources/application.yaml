@@ -40,9 +40,8 @@ server:
     include-stacktrace: never
 
 
-debug: true
 
-logging:
-  level:
-    root: debug
+#logging:
+#  level:
+#    root:
 

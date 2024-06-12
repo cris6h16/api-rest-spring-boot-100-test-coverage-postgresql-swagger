@@ -124,11 +124,11 @@ class AdviceUserControllerTest {
      */
     @Test
     @WithMockUserWithId(id = 2, username = "cris6h16", roles = {"ROLE_USER"})
-    void AdviceUserControllerTest_get_OtherUserAccount_Then403AndFailMsg() throws Exception {
+    void AdviceUserControllerTest_get_OtherUserAccount_Then404() throws Exception {
         mvc.perform(get("/api/users/1"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound()) // principle of least privilege
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 
 
@@ -146,7 +146,7 @@ class AdviceUserControllerTest {
      **/
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
-    void AdviceUserControllerTest_update_OtherUserAccount_Then403AndFailMsg() throws Exception {
+    void AdviceUserControllerTest_update_OtherUserAccount_Then404() throws Exception {
         mvc.perform(patch("/api/users/2") // id is diff
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -155,9 +155,9 @@ class AdviceUserControllerTest {
                                 "username": "newUsername"
                                 }
                                 """)) // any content
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound()) // principle of least privilege
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 
     /**
@@ -175,12 +175,12 @@ class AdviceUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
-    void AdviceUserControllerTest_delete_OtherUserAccount_Then403AndFailMsg() throws Exception {
+    void AdviceUserControllerTest_delete_OtherUserAccount_Then404() throws Exception {
         mvc.perform(delete("/api/users/2")
                         .with(csrf()))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound()) // principle of least privilege
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 
     /**
@@ -196,11 +196,11 @@ class AdviceUserControllerTest {
      */
     @Test
     @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
-    void AdviceUserControllerTest_getUsers_IsNotAdmin_Then403() throws Exception {
+    void AdviceUserControllerTest_getUsers_IsNotAdmin_Then404() throws Exception {
         mvc.perform(get("/api/users")
                         .with(csrf()))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound()) // principle of least privilege
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.ACCESS_DENIED));
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 }

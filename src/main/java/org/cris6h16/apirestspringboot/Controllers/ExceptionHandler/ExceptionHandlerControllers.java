@@ -11,11 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.security.Principal;
@@ -51,7 +54,7 @@ public class ExceptionHandlerControllers {
      * @return a {@link ResponseEntity} containing the status {@link HttpStatus#NOT_FOUND}
      * and the message {@link Cons.Response.ForClient#NO_RESOURCE_FOUND}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @apiNote Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
+     * @note Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
      * @since 1.0
      */
     @ExceptionHandler(value = NoResourceFoundException.class)
@@ -73,7 +76,7 @@ public class ExceptionHandlerControllers {
      * @param ex the exception
      * @return A {@link ResponseEntity} with status {@link HttpStatus#FORBIDDEN}
      * and message {@link  Cons.Auth.Fails#ACCESS_DENIED}
-     * @apiNote Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
+     * @note Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
      * @implNote the response is diff if is authenticated or not, this is verified seeing
      * if the {@link Principal} is an instance of {@link UserWithId}, that means that my
      * custom {@link UserDetails} was loaded ( authenticated correctly )
@@ -111,8 +114,8 @@ public class ExceptionHandlerControllers {
      * @param ex the exception
      * @return a {@link ResponseEntity} with status {@link HttpStatus#BAD_REQUEST}
      * and messages {@link Cons.Response.ForClient#GENERIC_ERROR}
+     * @note Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @apiNote Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
      * @since 1.0
      */
     @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
@@ -120,6 +123,22 @@ public class ExceptionHandlerControllers {
         logDebug(ex);
         return buildAFailResponse(HttpStatus.BAD_REQUEST, Cons.Response.ForClient.GENERIC_ERROR);
     }
+
+    /**
+     * Handling of {@link HttpMediaTypeNotSupportedException}
+     *
+     * @param ex the exception
+     * @return a {@link ResponseEntity} with status with the proper status code
+     * @note Added thanks to {@link ServiceUtils#logUnhandledException(Exception)}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<String> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex) {
+        logDebug(ex);
+        return buildAFailResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE);
+    }
+
 
     /**
      * Handling of generic exceptions
@@ -221,9 +240,9 @@ public class ExceptionHandlerControllers {
         if (!isAuthenticated()) return false;
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (obj instanceof UserWithId) {
-            UserWithId user = (UserWithId) obj;
-            if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) return false;
-            return user.getAuthorities()
+            UserWithId usr = (UserWithId) obj;
+            if (usr.getAuthorities() == null || usr.getAuthorities().isEmpty()) return false;
+            return usr.getAuthorities()
                     .stream()
                     .anyMatch(a -> a
                             .getAuthority()
