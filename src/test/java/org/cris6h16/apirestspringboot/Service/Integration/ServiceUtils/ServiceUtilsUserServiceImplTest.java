@@ -427,7 +427,7 @@ class ServiceUtilsUserServiceImplTest {
         CreateUpdateUserDTO thrower = new CreateUpdateUserDTO() {
             @Override
             public String getPassword() {
-                throw new ArrayIndexOutOfBoundsException(Cons.TESTING.NOT_PRINT_STACK_TRACE_PATTERN); // random exception
+                throw new ArrayIndexOutOfBoundsException(Cons.TESTING.UNHANDLED_ERROR_WITH_TESTING_PURPOSES); // random exception
             }
         };
 

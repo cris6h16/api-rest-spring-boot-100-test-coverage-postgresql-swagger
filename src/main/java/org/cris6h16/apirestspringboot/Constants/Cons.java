@@ -98,21 +98,27 @@ public class Cons {
     }
 
 
-    /**
-     * Constants for testing purposes
-     * <p>
-     * the {@link TESTING#NOT_PRINT_STACK_TRACE_PATTERN} is used to avoid that
-     * {@link ServiceUtils#logUnhandledException(Exception)} print the stack trace
-     * when the exception message contains this pattern.
-     * <br>
-     * This pattern will be contained in the messages on the
-     * unhandled exceptions thrown in the tests for testing purposes <br>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     public static class TESTING {
-        public static final String NOT_PRINT_STACK_TRACE_PATTERN = "cris6h16's";
+        /**
+         * Constant for testing purposes
+         * <p>
+         * the {@link TESTING#UNHANDLED_ERROR_WITH_TESTING_PURPOSES} is the pattern
+         * used for identify if an unhandled exceptions was thrown for testing purposes
+         *
+         * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+         * @since 1.0
+         */
+        public static final String UNHANDLED_ERROR_WITH_TESTING_PURPOSES = "cris6h16's";
     }
 
+    public static class Logs {
+        /**
+         * Used to store the logs when an unhandled exception is thrown, used in
+         * {@link ServiceUtils#logUnhandledException(Exception)}
+         *
+         * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+         * @since 1.0
+         */
+        public static final String UNHANDLED_EXCEPTIONS_FILE = "unhandled_exceptions.log";
+    }
 }

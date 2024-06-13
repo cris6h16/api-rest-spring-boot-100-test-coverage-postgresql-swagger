@@ -24,8 +24,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,6 +115,8 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
     }
 
+
+
     /**
      * Test: unexpected type in path
      * (e.g. expected[ {@code GET `api/users/1`} ] but was[ {@code GET `api/users/hello`} ] )
@@ -131,6 +132,25 @@ public class OtherExceptionsCaughtByAdviceTest {
         mvc.perform(get("/api/users/string"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+    }
+
+    /**
+     * Test: when is request with a media type not supported
+     *
+     * @throws Exception
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("HttpMediaTypeNotSupportedException")
+    @WithMockUserWithId(id = 1)
+    void OtherExceptionsCaughtByAdviceTest_HttpMediaTypeNotSupportedException() throws Exception {
+        mvc.perform(post("/api/users")
+                        .with(csrf())
+                        .contentType("application/xml")
+                        .content("<xml>hello</xml>"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
     }
 
     /**
@@ -153,5 +173,6 @@ public class OtherExceptionsCaughtByAdviceTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
 
     }
+
 
 }

@@ -14,6 +14,11 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Set;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
@@ -132,17 +137,39 @@ public class ServiceUtils {
     }
 
     /**
-     * Log the {@code exception.toString()} with the level {@link org.slf4j.event.Level#ERROR}<br>
-     * also print the stackTrace if {@link #ignoreStackTrace(Exception)} return false
+     * save the {@code UnauthenticatedException} in a file, also log an {@code ERROR}
+     * if the exception is an exception threw in production.
      *
      * @param e the exception to log
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    public void logUnhandledException(Exception e) {
-        log.error("Unhandled exception: {}", (e == null ? null : e.toString()));
-        if (!ignoreStackTrace(e))
-            e.printStackTrace(); // todo: replace the printing of stackTrace with a log file or like that
+    public void logUnhandledException(@NotNull Exception e) {
+        boolean isTesting = this.thisContains(e.getMessage(), Cons.TESTING.UNHANDLED_ERROR_WITH_TESTING_PURPOSES);
+        if (!isTesting)
+            log.error("Unhandled exception: {}", (e.toString())); // print ERRORs in testing can be confusing
+        saveUnhandledException(e);
+    }
+
+    /**
+     * Save the unhandled exception in the file: {@link Cons.Logs#UNHANDLED_EXCEPTIONS_FILE}
+     *
+     * @param e the exception to save in the file
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private void saveUnhandledException(Exception e) {
+        Path path = Path.of(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE);
+        try {
+            if (!Files.exists(path)) Files.createFile(path);
+            Files.writeString(
+                    path,
+                    new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()) + "\n",
+                    StandardOpenOption.APPEND);
+
+        } catch (Exception ex) {
+            log.error("Error saving the unhandled exception in the file: {}", ex.toString());
+        }
     }
 
     /**
@@ -157,21 +184,6 @@ public class ServiceUtils {
         log.debug("Handled exception: {}", e.toString());
     }
 
-    /**
-     * Verify if the stackTrace should be printed or not<br>
-     * return {@code true}, basically if {@code e.message} contains
-     * {@link Cons.TESTING#NOT_PRINT_STACK_TRACE_PATTERN}
-     *
-     * @param e the exception to verify
-     * @return true if {@code e.message} contains the mentioned pattern
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    private boolean ignoreStackTrace(Exception e) {
-        return e != null &&
-                e.getMessage() != null &&
-                e.getMessage().toLowerCase().contains(Cons.TESTING.NOT_PRINT_STACK_TRACE_PATTERN.toLowerCase());
-    }
 
     /**
      * @param id to validate

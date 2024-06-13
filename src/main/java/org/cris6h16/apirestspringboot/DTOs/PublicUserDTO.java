@@ -17,7 +17,6 @@ import java.util.Set;
  * @since 1.0
  */
 @AllArgsConstructor
-@ToString
 @Getter
 @Builder
 public class PublicUserDTO {

@@ -16,7 +16,6 @@ import java.util.Date;
  * @since 1.0
  */
 @AllArgsConstructor
-@ToString
 @Getter
 @Builder
 public class PublicNoteDTO {

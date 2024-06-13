@@ -19,7 +19,6 @@ import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
 @AllArgsConstructor
 @Getter
 @Setter
-@ToString
 public class CreateNoteDTO {
     private String title;
     private String content;

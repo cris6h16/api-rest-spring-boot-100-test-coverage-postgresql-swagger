@@ -238,17 +238,20 @@ public class ExceptionHandlerControllers {
      */
     private boolean isAdmin() {
         if (!isAuthenticated()) return false;
+        boolean isAdm = false;
+
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (obj instanceof UserWithId) {
             UserWithId usr = (UserWithId) obj;
             if (usr.getAuthorities() == null || usr.getAuthorities().isEmpty()) return false;
-            return usr.getAuthorities()
+            isAdm = usr
+                    .getAuthorities()
                     .stream()
                     .anyMatch(a -> a
                             .getAuthority()
                             .contains(ERole.ROLE_ADMIN.toString()));
         }
-        return false;
+        return isAdm;
     }
 
 }

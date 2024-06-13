@@ -11,7 +11,6 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
  * @since 1.0
  */
 @AllArgsConstructor
-@ToString
 @Getter
 @Builder
 @EqualsAndHashCode
