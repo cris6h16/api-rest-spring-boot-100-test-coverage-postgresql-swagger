@@ -35,7 +35,7 @@ public class FilesSyncUtils {
                         StandardOpenOption.APPEND)
                 ) {
                     writer.write(content);
-                    writer.newLine();
+//                    writer.newLine(); // handle it manually is most intuitive
                 }
 
             } catch (Exception e) {
