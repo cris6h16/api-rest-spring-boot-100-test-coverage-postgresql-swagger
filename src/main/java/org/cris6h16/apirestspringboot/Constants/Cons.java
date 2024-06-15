@@ -12,6 +12,11 @@ import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
  * @since 1.0
  */
 public class Cons {
+    public class FrontEnd {
+        public static final String BASE_URL = "http://localhost:3000";
+    }
+
+
     public class User {
         public class Constrains {
             public static final String EMAIL_UNIQUE_NAME = "email_unique";

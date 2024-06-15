@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
@@ -54,7 +55,7 @@ public class UserController {
      * Get a user by id<br>
      * make it through: {@link UserService#get(Long)}
      *
-     * @param id          of the user to get
+     * @param id of the user to get
      * @return {@link ResponseEntity} with the user data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -71,8 +72,8 @@ public class UserController {
      * Update a user<br>
      * make it through: {@link UserService#update(Long, CreateUpdateUserDTO)}
      *
-     * @param id          of the user to update
-     * @param dto         with just the fields that we want to update not blank
+     * @param id  of the user to update
+     * @param dto with just the fields that we want to update not blank
      * @return {@link ResponseEntity} with no content
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -91,7 +92,7 @@ public class UserController {
      * Delete a user<br>
      * make it through: {@link UserService#delete(Long)}
      *
-     * @param id          of the user to delete
+     * @param id of the user to delete
      * @return {@link ResponseEntity} with no content
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0

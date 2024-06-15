@@ -9,11 +9,19 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -30,8 +38,14 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-//               .csrf(AbstractHttpConfigurer::disable) // todo: enable this
-                .httpBasic(withDefaults());
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(withDefaults()) // use a bean known as corsConfigurationSource
+                .httpBasic(withDefaults())
+                .sessionManagement(
+                        sm -> sm
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::migrateSession)
+                );
         return http.build();
     }
 
@@ -62,5 +76,18 @@ public class SecurityConfig {
     @Bean
     UserDetailsService userDetailsService(UserRepository ur, PasswordEncoder pe) {
         return new UserDetailsServiceImpl(ur, pe);
+    }
+
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration conf = new CorsConfiguration();
+        conf.setAllowedOrigins(Arrays.asList("https://example.com:8080"));
+        conf.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));
+        conf.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+//        conf.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", conf);
+        return source;
     }
 }
