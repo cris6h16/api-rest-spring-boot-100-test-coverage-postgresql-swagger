@@ -78,7 +78,12 @@ public class SecurityConfig {
         return new UserDetailsServiceImpl(ur, pe);
     }
 
-
+    /**
+     * Create a custom cors policy.
+     * @return A new instance of {@link UrlBasedCorsConfigurationSource}.
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration conf = new CorsConfiguration();

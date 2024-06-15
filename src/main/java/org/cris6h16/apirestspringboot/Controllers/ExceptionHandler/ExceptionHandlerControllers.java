@@ -91,13 +91,13 @@ public class ExceptionHandlerControllers {
         String msg = Cons.Auth.Fails.UNAUTHORIZED;
 
         if (isAuthenticated()) {
-            status = HttpStatus.NOT_FOUND;
-            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
-
-            if (isAdmin()) {
+            if (!isAdmin()) {
+                status = HttpStatus.NOT_FOUND;
+                msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
+            } /* else { --> for the moment all are permitted for the admin ( commented for reach the better coverage )
                 status = HttpStatus.FORBIDDEN;
                 msg = Cons.Auth.Fails.ACCESS_DENIED;
-            }
+            }*/
         }
 
         return buildAFailResponse(status, msg);

@@ -9,14 +9,14 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.AbstractExceptionWit
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
+import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
@@ -40,6 +40,11 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Component
 public class ServiceUtils {
 
+    private final FilesSyncUtils filesUtils;
+
+    public ServiceUtils(FilesSyncUtils filesUtils) {
+        this.filesUtils = filesUtils;
+    }
 
     /**
      * Create a new exception (Extended of {@link AbstractExceptionWithStatus})
@@ -160,16 +165,11 @@ public class ServiceUtils {
      */
     private void saveUnhandledException(Exception e) {
         Path path = Path.of(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE);
-        try {
-            if (!Files.exists(path)) Files.createFile(path);
-            Files.writeString(
-                    path,
-                    new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()) + "\n",
-                    StandardOpenOption.APPEND);
-
-        } catch (Exception ex) {
-            log.error("Error saving the unhandled exception in the file: {}", ex.toString());
-        }
+        filesUtils.appendToFile(
+                path,
+                new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()),
+                SychFor.UNHANDLED_EXCEPTIONS
+        );
     }
 
     /**

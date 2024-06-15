@@ -124,6 +124,8 @@ public class Cons {
          * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
          * @since 1.0
          */
-        public static final String UNHANDLED_EXCEPTIONS_FILE = "unhandled_exceptions.log";
+        public static final String UNHANDLED_EXCEPTIONS_FILE = "logs/exceptions/unhandled.log";
+        public static final String SUCCESS_AUTHENTICATION_FILE = "logs/auth/success.log";
+        public static final String FAIL_AUTHENTICATION_FILE = "logs/auth/failures.log";
     }
 }
