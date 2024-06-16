@@ -1,10 +1,12 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Controllers.ExceptionHandler.ExceptionHandlerControllers;
 import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -49,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @since 1.0
  */
 @WebMvcTest(NoteController.class)
+@Tag("UnitTest")
 public class NoteControllerTest {
 
     @Autowired
@@ -155,5 +158,24 @@ public class NoteControllerTest {
         this.mvc.perform(delete(path + "/1")
                         .with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    /**
+     * Test the behavior of {@link NoteController#get(Long, Long)} when
+     * the user is an invited user, then the response should be 404
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
+     * @since 1.0
+     */
+    @Test
+    @WithMockUserWithId(id = 1L, username = "cris6h16", password = "12345678", roles = {"ROLE_INVITED"})
+    void NoteControllerTest_delete_IsInvited_Then404() throws Exception {
+        doNothing().when(noteService).delete(any(Long.class), any(Long.class));
+
+        this.mvc.perform(delete(path + "/1")
+                        .with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
     }
 }

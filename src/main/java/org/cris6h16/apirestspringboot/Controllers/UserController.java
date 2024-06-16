@@ -41,8 +41,7 @@ public class UserController {
      * @since 1.0
      */
     @PostMapping(
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE // if is successful else the defined on Advice
+            consumes = MediaType.APPLICATION_JSON_VALUE
     )
     @PreAuthorize("permitAll()")
     public ResponseEntity<Void> create(@RequestBody CreateUpdateUserDTO user) {
