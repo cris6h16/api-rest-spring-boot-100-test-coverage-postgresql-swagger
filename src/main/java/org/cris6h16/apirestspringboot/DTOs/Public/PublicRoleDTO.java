@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.DTOs;
+package org.cris6h16.apirestspringboot.DTOs.Public;
 
 import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.ERole;

@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
@@ -31,7 +32,7 @@ public class NoteEntity {
 
     @Column(name = "title", length = MAX_TITLE_LENGTH)
     @NotBlank(message = TITLE_IS_BLANK_MSG) // not  null/only spaces
-    @Length(max = 255, message = TITLE_MAX_LENGTH_MSG)
+    @Size(max = 255, message = TITLE_MAX_LENGTH_MSG)
     private String title;
 
     @Column(name = "content", columnDefinition = "TEXT")

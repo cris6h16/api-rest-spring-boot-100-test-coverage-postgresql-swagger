@@ -1,8 +1,10 @@
 package org.cris6h16.apirestspringboot.Service.Interfaces;
 
-import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicUserDTO;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.springframework.data.domain.Pageable;
 
@@ -25,7 +27,7 @@ public interface UserService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    Long create(CreateUpdateUserDTO dto);
+    Long create(CreateUserDTO dto);
 
     /**
      * Get a user by id
@@ -39,31 +41,6 @@ public interface UserService {
      */
     PublicUserDTO get(Long id);
 
-    /**
-     * Update user fields, just the field that we want to update
-     * must contain the new value, the rest fields should be {@code null}
-     * <p>
-     * Examples:
-     * <ul>
-     *     <li>
-     *         <b>update a username:</b><br>
-     *         {@code username: "newName", password: null, email: null ...}
-     *     </li>
-     *     <li>
-     *         <b>update a password:</b><br>
-     *         {@code username: null, password: "newPassword", email: null ...}
-     *     </li>
-     * </ul>
-     * </p>
-     *
-     * @param id  of the user to update
-     * @param dto containing the new values for the user
-     * @throws UserServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    void update(Long id, CreateUpdateUserDTO dto);
 
     /**
      * Delete a user by id
@@ -87,4 +64,10 @@ public interface UserService {
      * @since 1.0
      */
     List<PublicUserDTO> get(Pageable pageable);
+
+    void patchUsernameById(Long id, PatchUsernameUserDTO dto);
+
+    void patchEmailById(Long id, PatchEmailUserDTO dto);
+
+    void patchPasswordById(Long id, PatchPasswordUserDTO dto);
 }

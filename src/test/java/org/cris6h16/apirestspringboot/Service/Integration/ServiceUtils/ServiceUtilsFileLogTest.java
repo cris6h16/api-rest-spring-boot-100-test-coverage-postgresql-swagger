@@ -1,8 +1,8 @@
 package org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.hibernate.LazyInitializationException;
@@ -63,7 +63,7 @@ public class ServiceUtilsFileLogTest {
         // Arrange
         assertThat(Files.notExists(p)).isTrue();
 
-        CreateUpdateUserDTO dto = new CreateUpdateUserDTO() {
+        CreateUserDTO dto = new CreateUserDTO() {
             @Override
             public String getEmail() {
                 throw new LazyInitializationException("TEST EXCEPTION: IGNORE THIS = this exception will be handled as in prod");
@@ -149,12 +149,12 @@ public class ServiceUtilsFileLogTest {
     }
 
     /**
-     * @return a {@link CreateUpdateUserDTO}
+     * @return a {@link CreateUserDTO}
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    CreateUpdateUserDTO createUpdateUserDTO() {
-        return CreateUpdateUserDTO.builder()
+    CreateUserDTO createUpdateUserDTO() {
+        return CreateUserDTO.builder()
                 .username("hello-word" + "cris6h16")
                 .password("hello-word" + "12345678")
                 .email("hello-word" + "cristianmherrera21@gmail.com")

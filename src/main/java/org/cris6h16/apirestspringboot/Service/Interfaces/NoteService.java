@@ -1,8 +1,7 @@
 package org.cris6h16.apirestspringboot.Service.Interfaces;
 
-import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.springframework.data.domain.Pageable;
 
@@ -55,7 +54,7 @@ public interface NoteService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void put(Long noteId, CreateNoteDTO note, Long userId);
+    void put(Long noteId, Long userId, CreateNoteDTO note);
 
     /**
      * DELETE the note where:<br>

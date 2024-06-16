@@ -1,8 +1,6 @@
 package org.cris6h16.apirestspringboot.Constants;
 
-import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.CreateUpdateUserDTO;
-import org.cris6h16.apirestspringboot.Service.Utils.ServiceUtils;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 
 /**
  * This class contains all the constants used in the project
@@ -18,6 +16,11 @@ public class Cons {
 
 
     public class User {
+
+        public class Controller {
+            public static final String PATH = "api/v1/users";
+        }
+
         public class Constrains {
             public static final String EMAIL_UNIQUE_NAME = "email_unique";
             public static final String EMAIL_UNIQUE_MSG = "Email already exists";
@@ -43,10 +46,14 @@ public class Cons {
         }
 
         /**
-         * {@link CreateUpdateUserDTO}
+         * All DTOs
          */
         public static class DTO {
-            public static final String NULL = "User to update/create cannot be null";
+            /**
+             * message for provide errors when any dto related to the user entity is
+             * null like the patch DTOs, create user DTO, and so on.
+             */
+            public static final String ANY_RELATED_DTO_WITH_USER_NULL = "User data to update/create cannot be null";
         }
     }
 
@@ -116,14 +123,13 @@ public class Cons {
         public static final String UNHANDLED_ERROR_WITH_TESTING_PURPOSES = "cris6h16's";
     }
 
+    /**
+     * path of the log files
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     public static class Logs {
-        /**
-         * Used to store the logs when an unhandled exception is thrown, used in
-         * {@link ServiceUtils#logUnhandledException(Exception)}
-         *
-         * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-         * @since 1.0
-         */
         public static final String UNHANDLED_EXCEPTIONS_FILE = "logs/exceptions/unhandled.log";
         public static final String SUCCESS_AUTHENTICATION_FILE = "logs/auth/success.log";
         public static final String FAIL_AUTHENTICATION_FILE = "logs/auth/failures.log";

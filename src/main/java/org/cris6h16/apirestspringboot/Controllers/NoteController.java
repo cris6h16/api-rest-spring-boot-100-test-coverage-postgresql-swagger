@@ -1,14 +1,14 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
-import org.cris6h16.apirestspringboot.DTOs.CreateNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,7 +36,7 @@ public class NoteController {
 
     /**
      * Create a {@link NoteEntity}<br>
-     * make it through: {@link NoteServiceImpl#create(CreateNoteDTO, Long)}
+     * Uses: {@link NoteServiceImpl#create(CreateNoteDTO, Long)}
      *
      * @param note        {@link CreateNoteDTO} with the data of the new note
      * @param principalId injected, the id of the principal; the user that is creating the note
@@ -56,7 +56,7 @@ public class NoteController {
 
     /**
      * Get a page of {@link NoteEntity}<br>
-     * make it through: {@link NoteServiceImpl#getPage(Pageable, Long)}
+     * Uses: {@link NoteServiceImpl#getPage(Pageable, Long)}
      *
      * @param pageable    the page request
      * @param principalId injected, the id of the principal; the user that is getting the notes
@@ -74,7 +74,7 @@ public class NoteController {
 
     /**
      * Get a {@link NoteEntity} by id<br>
-     * make it through: {@link NoteServiceImpl#get(Long, Long)}
+     * Uses: {@link NoteServiceImpl#get(Long, Long)}
      *
      * @param noteId      of the note to get
      * @param principalId injected, the id of the principal; the user that is getting the note
@@ -93,7 +93,7 @@ public class NoteController {
 
     /**
      * Update a {@link NoteEntity}<br>
-     * make it through: {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)}
+     * Uses: {@link NoteServiceImpl#put(Long, Long, CreateNoteDTO)}
      *
      * @param noteId      of the note to update
      * @param note        to be PUT
@@ -106,16 +106,16 @@ public class NoteController {
             value = "/{noteId}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> update(@PathVariable Long noteId,
-                                       @RequestBody CreateNoteDTO note,
-                                       @MyId Long principalId) {
-        noteService.put(noteId, note, principalId);
+    public ResponseEntity<Void> put(@PathVariable Long noteId,
+                                    @RequestBody CreateNoteDTO note,
+                                    @MyId Long principalId) {
+        noteService.put(noteId, principalId, note);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Delete a {@link NoteEntity}<br>
-     * make it through: {@link NoteServiceImpl#delete(Long, Long)}
+     * Uses: {@link NoteServiceImpl#delete(Long, Long)}
      *
      * @param noteId      of the note to delete
      * @param principalId the principal id; the user that is deleting the note

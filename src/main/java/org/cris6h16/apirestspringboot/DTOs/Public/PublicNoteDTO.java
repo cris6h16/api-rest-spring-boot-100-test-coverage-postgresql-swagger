@@ -1,9 +1,8 @@
-package org.cris6h16.apirestspringboot.DTOs;
+package org.cris6h16.apirestspringboot.DTOs.Public;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 
 import java.util.Date;
