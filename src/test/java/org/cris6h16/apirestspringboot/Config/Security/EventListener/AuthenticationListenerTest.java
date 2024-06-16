@@ -7,9 +7,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,8 @@ import static org.mockito.Mockito.*;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
+@ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
 class AuthenticationListenerTest {
 
 
@@ -35,16 +39,6 @@ class AuthenticationListenerTest {
     @InjectMocks
     private AuthenticationListener authenticationListener;
 
-    private AutoCloseable closeable;
-
-    @BeforeEach
-    void setUp() {
-        closeable = MockitoAnnotations.openMocks(this);
-    }
-    @AfterEach
-    void tearDown() throws Exception {
-        closeable.close();
-    }
 
     /**
      * Test for {@link AuthenticationListener#onSuccess(AuthenticationSuccessEvent)}

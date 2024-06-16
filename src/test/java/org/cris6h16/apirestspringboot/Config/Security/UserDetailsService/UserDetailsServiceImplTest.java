@@ -6,6 +6,7 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.when;
  * @see UserDetailsServiceImpl
  * @since 1.0
  */
+@Tag("UnitTest")
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
 
