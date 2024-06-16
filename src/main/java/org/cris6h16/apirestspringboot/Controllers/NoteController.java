@@ -45,8 +45,7 @@ public class NoteController {
      * @since 1.0
      */
     @PostMapping(
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE // if is successful else the defined on Advice
+            consumes = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Void> create(@RequestBody CreateNoteDTO note, @MyId Long principalId) {
         Long id = noteService.create(note, principalId);
