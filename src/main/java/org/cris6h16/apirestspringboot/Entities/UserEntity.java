@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.hibernate.validator.constraints.Length;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -47,7 +46,7 @@ public class UserEntity {
 
 
     @Column(name = "password", updatable = true)
-    @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+    @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG, min = Cons.User.Validations.MIN_PASSWORD_LENGTH)
     @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
     private String password; // pass is passed encrypted, then always is > 8
 

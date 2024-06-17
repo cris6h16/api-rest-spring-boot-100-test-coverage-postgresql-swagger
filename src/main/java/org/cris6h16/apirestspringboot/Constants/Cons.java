@@ -34,7 +34,7 @@ public class Cons {
             public static final String USERNAME_MAX_LENGTH_MSG = "Username must be less than 20 characters";
             public static final String USERNAME_IS_BLANK_MSG = "Username mustn't be blank";
             public static final byte MAX_USERNAME_LENGTH = 20;
-            public static final String PASS_IS_BLANK_MSG = "Password mustn't be blank";
+            public static final byte MIN_PASSWORD_LENGTH = 8;
 
             public class InService {
                 public static final String PASS_IS_TOO_SHORT_MSG = "Password must be at least 8 characters";
@@ -115,13 +115,13 @@ public class Cons {
         /**
          * Constant for testing purposes
          * <p>
-         * the {@link TESTING#UNHANDLED_ERROR_WITH_TESTING_PURPOSES} is the pattern
+         * the {@link TESTING#UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES} is the pattern
          * used for identify if an unhandled exceptions was thrown for testing purposes
          *
          * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
          * @since 1.0
          */
-        public static final String UNHANDLED_ERROR_WITH_TESTING_PURPOSES = "cris6h16's";
+        public static final String UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES = "cris6h16's";
     }
 
     /**

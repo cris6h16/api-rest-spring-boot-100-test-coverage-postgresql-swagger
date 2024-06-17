@@ -26,6 +26,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.nio.file.Path;
@@ -148,6 +149,12 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(status, forClient);
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e) {
+        logHandledDebug(e);
+        return buildAFailResponse(HttpStatus.valueOf(e.getStatusCode().value()), e.getReason());
+    }
+
     /**
      * Handling of {@link NoResourceFoundException}
      *
@@ -158,6 +165,7 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     @ExceptionHandler(value = NoResourceFoundException.class)
+
     public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
         logHandledDebug(ex);
         HttpStatus status = HttpStatus.UNAUTHORIZED;
@@ -378,9 +386,9 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     public void logUnhandledException(@NotNull Exception e) {
-        boolean isTesting = this.thisContains(e.getMessage(), Cons.TESTING.UNHANDLED_ERROR_WITH_TESTING_PURPOSES);
-        if (!isTesting)
-            log.error("Unhandled exception: {}", (e.toString())); // print ERRORs in testing can be confusing
+        boolean isTesting = this.thisContains(e.getMessage(), Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES);
+        if (isTesting) return;
+        log.error("Unhandled exception: {}", (e.toString())); // print ERRORs in testing can be confusing
         saveUnhandledException(e);
     }
 

@@ -14,6 +14,7 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.EmailAlreadyExistException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
@@ -32,6 +33,8 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.MIN_PASSWORD_LENGTH;
 
 
 /**
@@ -64,7 +67,14 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(CreateUserDTO dto) {// assumes that the data entry is validate in the controller (additional: @Valid doesnt work here)
+    public Long create(CreateUserDTO dto) {// assumes that the data entry has all attributes NotNull (additional: @Valid doesnt work here)
+
+        dto.setEmail(dto.getEmail().toLowerCase().trim());
+        dto.setPassword(dto.getPassword().toLowerCase().trim());
+        dto.setUsername(dto.getUsername().toLowerCase().trim());
+
+        //  after trim
+        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
 
         RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
                 .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
@@ -126,6 +136,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) {
+        dto.setUsername(dto.getUsername().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByUsername(dto.getUsername())) throw new UsernameAlreadyExistsException();
         userRepository.updateUsernameById(dto.getUsername(), id);
@@ -137,6 +148,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchEmailById(Long id, PatchEmailUserDTO dto) { // todo: see if @Valid can replace the @not null
+        dto.setEmail(dto.getEmail().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
         userRepository.updateEmailById(dto.getEmail(), id);
@@ -148,6 +160,8 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
+        dto.setPassword(dto.getPassword().toLowerCase().trim());
+        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }

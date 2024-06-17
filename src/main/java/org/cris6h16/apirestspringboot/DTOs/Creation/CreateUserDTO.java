@@ -11,6 +11,7 @@ import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_IS_BLANK_MSG;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
 
 // import Constants.Cons.User.*
 
@@ -35,15 +36,12 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMA
  */
 @JsonFormat
 public class CreateUserDTO {
-    @Size(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG) //--> null is valid
     @NotBlank(message = USERNAME_IS_BLANK_MSG)
     private String username;
 
-    @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG) //--> null is valid
-    @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+    @NotBlank(message = PASS_IS_TOO_SHORT_MSG)
     private String password; // pass is passed encrypted, then always is > 8
 
-    @Email(message = EMAIL_INVALID_MSG)// --> null is valid
     @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 }

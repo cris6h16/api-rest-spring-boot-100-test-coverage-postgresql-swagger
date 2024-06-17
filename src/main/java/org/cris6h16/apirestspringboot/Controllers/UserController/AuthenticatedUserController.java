@@ -78,7 +78,7 @@ public class AuthenticatedUserController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable(required = true) Long id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
     }
