@@ -38,7 +38,7 @@ public class AdminUserController {
      * @since 1.0
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PublicUserDTO>> getUsers(Pageable pageable) {
+    public ResponseEntity<List<PublicUserDTO>> getPage(Pageable pageable) {
         List<PublicUserDTO> l = userService.get(pageable);
         return ResponseEntity.ok(l);
     }

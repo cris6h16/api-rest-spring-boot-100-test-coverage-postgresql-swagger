@@ -11,9 +11,11 @@ import org.cris6h16.apirestspringboot.Entities.RoleEntity;
  * @since 1.0
  */
 @AllArgsConstructor
+@NoArgsConstructor // required for Jackson
 @Getter
 @Builder
 @EqualsAndHashCode
+@ToString
 public class PublicRoleDTO {
     private ERole name;
 }

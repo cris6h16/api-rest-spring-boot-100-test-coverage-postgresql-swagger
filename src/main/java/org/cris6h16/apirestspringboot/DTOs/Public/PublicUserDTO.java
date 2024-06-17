@@ -1,8 +1,7 @@
 package org.cris6h16.apirestspringboot.DTOs.Public;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 
 import java.util.Date;
@@ -16,6 +15,9 @@ import java.util.Set;
  * @since 1.0
  */
 @AllArgsConstructor
+@NoArgsConstructor // Required for Jackson
+@EqualsAndHashCode
+@ToString
 @Getter
 @Builder
 public class PublicUserDTO {

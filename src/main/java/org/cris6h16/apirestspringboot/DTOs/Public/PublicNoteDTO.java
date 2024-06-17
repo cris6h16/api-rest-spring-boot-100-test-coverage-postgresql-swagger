@@ -1,8 +1,6 @@
 package org.cris6h16.apirestspringboot.DTOs.Public;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 
 import java.util.Date;
@@ -15,8 +13,11 @@ import java.util.Date;
  * @since 1.0
  */
 @AllArgsConstructor
+@NoArgsConstructor // required for Jackson
 @Getter
 @Builder
+@EqualsAndHashCode
+@ToString
 public class PublicNoteDTO {
     private Long id;
     private String title;
