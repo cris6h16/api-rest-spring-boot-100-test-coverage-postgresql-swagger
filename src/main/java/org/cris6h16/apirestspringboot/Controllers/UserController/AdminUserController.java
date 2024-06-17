@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
+import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;

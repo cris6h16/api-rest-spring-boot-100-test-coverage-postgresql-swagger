@@ -1,5 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
@@ -37,7 +39,7 @@ public class PublicUserController {
      * @since 1.0
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> create(@RequestBody CreateUserDTO user) {
+    public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateUserDTO user) {
         Long id = userService.create(user);
         URI uri = URI.create(path + "/" + id);
         return ResponseEntity.created(uri).build();

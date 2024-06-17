@@ -42,7 +42,7 @@ public class UserEntity {
 
     @Column(name = "username", length = MAX_USERNAME_LENGTH)
     @Size(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
-    @NotBlank(message = USERNAME_IS_BLANK_MSG) // for sending null/empty
+    @NotBlank(message = USERNAME_IS_BLANK_MSG)
     private String username;
 
 

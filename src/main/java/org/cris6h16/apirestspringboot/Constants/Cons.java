@@ -18,7 +18,7 @@ public class Cons {
     public class User {
 
         public class Controller {
-            public static final String PATH = "api/v1/users";
+            public static final String PATH = "/api/v1/users";
         }
 
         public class Constrains {
@@ -105,6 +105,7 @@ public class Cons {
             public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
             public static final String NO_RESOURCE_FOUND = "No resource found";
             public static final String UNSUPPORTED_MEDIA_TYPE = "Unsupported media type";
+            public static final String REQUEST_BODY_MISSING = "Required request body is missing";
 
         }
     }

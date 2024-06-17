@@ -17,9 +17,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -28,6 +31,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
@@ -118,6 +122,31 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(status, forClient);
     }
 
+    // added thanks to the logs in file (ERROR)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        logHandledDebug(e);
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
+
+
+        boolean isRBMissing = thisContains(e.getMessage(), "Request body", "missing");
+        if (isRBMissing) forClient = Cons.Response.ForClient.REQUEST_BODY_MISSING;
+
+        return buildAFailResponse(status, forClient);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        logHandledDebug(e);
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
+
+        List<ObjectError> msgs = e.getAllErrors();
+        if (!msgs.isEmpty()) forClient = msgs.getFirst().getDefaultMessage();
+
+        return buildAFailResponse(status, forClient);
+    }
 
     /**
      * Handling of {@link NoResourceFoundException}

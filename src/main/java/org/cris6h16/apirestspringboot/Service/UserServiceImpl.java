@@ -1,6 +1,6 @@
 package org.cris6h16.apirestspringboot.Service;
 
-import jakarta.validation.Valid;
+import jakarta.validation.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Constants.Cons;
@@ -19,6 +19,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,21 +41,21 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @Service
+//@Validated
 @Slf4j
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    public static final String anyDTOMsg = Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL;
-    public static final String invalidIdMsg = Cons.CommonInEntity.ID_INVALID;
-    public static final String genericMsg = Cons.Response.ForClient.GENERIC_ERROR;
+    private final Validator validator;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder, Validator validator) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.validator = validator;
     }
 
 
@@ -62,7 +64,8 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(@Valid @NotNull(message = anyDTOMsg) CreateUserDTO dto) {
+    public Long create(CreateUserDTO dto) {// assumes that the data entry is validate in the controller (additional: @Valid doesnt work here)
+
         RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
                 .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
@@ -82,7 +85,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public PublicUserDTO get(@NotNull(message = invalidIdMsg) Long id) {
+    public PublicUserDTO get(Long id) {
         Optional<UserEntity> userO = userRepository.findById(id);
         if (userO.isEmpty()) throw new UserNotFoundException();
 
@@ -95,7 +98,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void delete(@NotNull(message = invalidIdMsg) Long id) {
+    public void delete(Long id) {
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.deleteById(id);
     }
@@ -105,7 +108,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public List<PublicUserDTO> get(@NotNull(message = genericMsg) Pageable pageable) {
+    public List<PublicUserDTO> get(Pageable pageable) {
         Pageable pag = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -122,8 +125,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void patchUsernameById(@NotNull(message = invalidIdMsg) Long id,
-                                  @Valid @NotNull(message = anyDTOMsg) PatchUsernameUserDTO dto) {
+    public void patchUsernameById(Long id, PatchUsernameUserDTO dto) {
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByUsername(dto.getUsername())) throw new UsernameAlreadyExistsException();
         userRepository.updateUsernameById(dto.getUsername(), id);
@@ -134,8 +136,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void patchEmailById(@NotNull(message = invalidIdMsg) Long id,
-                               @Valid @NotNull(message = anyDTOMsg) PatchEmailUserDTO dto) { // todo: see if @Valid can replace the @not null
+    public void patchEmailById(Long id, PatchEmailUserDTO dto) { // todo: see if @Valid can replace the @not null
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
         userRepository.updateEmailById(dto.getEmail(), id);
@@ -146,8 +147,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void patchPasswordById(@NotNull(message = invalidIdMsg) Long id,
-                                  @Valid @NotNull(message = anyDTOMsg) PatchPasswordUserDTO dto) {
+    public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }

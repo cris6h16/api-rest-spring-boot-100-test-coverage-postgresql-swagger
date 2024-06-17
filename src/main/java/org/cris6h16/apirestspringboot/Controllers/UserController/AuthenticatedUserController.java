@@ -1,5 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
@@ -35,7 +37,7 @@ public class AuthenticatedUserController {
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<PublicUserDTO> get(@PathVariable Long id) {
+    public ResponseEntity<PublicUserDTO> get(@PathVariable(required = true) Long id) {
         PublicUserDTO u = userService.get(id);
         return ResponseEntity.ok(u);
     }
@@ -43,24 +45,24 @@ public class AuthenticatedUserController {
 
     @PatchMapping(value = "/patch/username/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<Void> patchUsernameById(@PathVariable Long id,
-                                                  @RequestBody PatchUsernameUserDTO dto) {
+    public ResponseEntity<Void> patchUsernameById(@PathVariable(required = true) Long id,
+                                                  @RequestBody(required = true) @Valid PatchUsernameUserDTO dto) {
         userService.patchUsernameById(id, dto);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping(value = "/patch/email/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<Void> patchEmailById(@PathVariable Long id,
-                                               @RequestBody PatchEmailUserDTO dto) {
+    public ResponseEntity<Void> patchEmailById(@PathVariable(required = true) Long id,
+                                               @RequestBody(required = true) @Valid PatchEmailUserDTO dto) {
         userService.patchEmailById(id, dto);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping(value = "/patch/password/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("#id == authentication.principal.id")
-    public ResponseEntity<Void> patchPassword(@PathVariable Long id,
-                                              @RequestBody PatchPasswordUserDTO dto) {
+    public ResponseEntity<Void> patchPassword(@PathVariable(required = true) Long id,
+                                              @RequestBody(required = true) @Valid PatchPasswordUserDTO dto) {
         userService.patchPasswordById(id, dto);
         return ResponseEntity.noContent().build();
     }
