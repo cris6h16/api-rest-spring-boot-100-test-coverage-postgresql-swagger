@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class PublicUserControllerTest {
+class PublicUserControllerTest { // test that and its integration with the service
 
     @Autowired
     private MockMvc mvc;
@@ -89,6 +89,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
     }
 
@@ -104,6 +105,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isUriTooLong())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("cris6h16's handleable exception"));
     }
 
@@ -115,6 +117,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
     }
 
@@ -126,6 +129,7 @@ class PublicUserControllerTest {
                         .content("username=cris6h16&password=12345678"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
     }
 
@@ -136,6 +140,7 @@ class PublicUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
     }
 
@@ -147,6 +152,7 @@ class PublicUserControllerTest {
                         .content("{\"parameter\":\"cris6h16\",\"nonexistent\":\"12345678\", \"cris6h16\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(msg).containsAnyOf(
@@ -164,6 +170,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
     }
 
@@ -175,6 +182,7 @@ class PublicUserControllerTest {
                         .content("{\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
     }
 
@@ -189,6 +197,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"?1\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}".replace("?1", username)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_MAX_LENGTH_MSG));
     }
 
@@ -201,6 +210,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
     }
 
@@ -212,6 +222,7 @@ class PublicUserControllerTest {
                         .content("{\"password\":\"12345678\", \"username\":\"cris6h16\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
     }
 
@@ -224,6 +235,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cris6h16\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_INVALID_MSG));
     }
 
@@ -236,6 +248,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
     }
 
@@ -247,6 +260,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
     }
 
@@ -259,6 +273,7 @@ class PublicUserControllerTest {
                         .content("{\"username\":\"cris6h16\",\"password\":\"1234567\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
     }
 
