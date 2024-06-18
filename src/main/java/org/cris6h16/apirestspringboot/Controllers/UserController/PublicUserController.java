@@ -21,7 +21,7 @@ import java.net.URI;
 @RequestMapping(PublicUserController.path)
 public class PublicUserController {
 
-    public static final String path = Cons.User.Controller.PATH;
+    public static final String path = Cons.User.Controller.Path.PATH;
 
     UserServiceImpl userService;
 

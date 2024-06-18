@@ -41,7 +41,7 @@ server:
 
 
 
-#logging:
-#  level:
-#    root: debug
+logging:
+  level:
+    root: debug
 

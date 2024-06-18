@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -147,6 +148,11 @@ public class ExceptionHandlerControllers {
         if (!msgs.isEmpty()) forClient = msgs.getFirst().getDefaultMessage();
 
         return buildAFailResponse(status, forClient);
+    }
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        logHandledDebug(e);
+        return buildAFailResponse(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage());
     }
 
     @ExceptionHandler(ResponseStatusException.class)

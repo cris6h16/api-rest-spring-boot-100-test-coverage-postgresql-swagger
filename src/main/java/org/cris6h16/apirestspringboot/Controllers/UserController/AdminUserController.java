@@ -22,7 +22,7 @@ import java.util.List;
 @RequestMapping(AdminUserController.path)
 @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
 public class AdminUserController {
-    public static final String path = Cons.User.Controller.PATH;
+    public static final String path = Cons.User.Controller.Path.PATH;
 
     UserServiceImpl userService;
 

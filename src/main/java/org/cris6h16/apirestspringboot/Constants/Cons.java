@@ -1,7 +1,6 @@
 package org.cris6h16.apirestspringboot.Constants;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
-import org.springframework.data.domain.Sort;
 
 /**
  * This class contains all the constants used in the project
@@ -19,7 +18,13 @@ public class Cons {
     public class User {
 
         public class Controller {
-            public static final String PATH = "/api/v1/users";
+
+            public class Path {
+                public static final String PATH = "/api/v1/users";
+                public static final String COMPLEMENT_PATCH_USERNAME = "/patch/username";
+                public static final String COMPLEMENT_PATCH_EMAIL = "/patch/email";
+                public static final String COMPLEMENT_PATCH_PASS = "/patch/password";
+            }
         }
 
         public class Constrains {

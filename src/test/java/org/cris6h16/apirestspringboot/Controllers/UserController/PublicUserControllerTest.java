@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -34,12 +34,15 @@ class PublicUserControllerTest { // test that and its integration with the servi
     @MockBean
     private UserServiceImpl userService;
 
+
+    private static String path = Cons.User.Controller.Path.PATH;
+
     @Test
     @Order(1)
     void create_successful_Then201_Created() throws Exception {
         when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);
 
-        String location = this.mvc.perform(post(Cons.User.Controller.PATH)
+        String location = this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
@@ -48,12 +51,15 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andReturn().getResponse().getHeader("Location");
 
         assertThat(location).matches("/api/v1/users/222");
+        verify(userService).create(any(CreateUserDTO.class));
     }
 
     //todo: doc why is created, all depends on the service
     @Test
     @Order(2)
     void create_givenJsonAttributesUntrimmed_Then_201_Created() throws Exception {// depends on service
+        when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);
+
         String username = "  cris6h16 ";
         String password = " 12345678    ";
         String email = "        cristianmherrera21@gmail.com     ";
@@ -64,9 +70,8 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 email
         );
 
-        when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);
 
-        String location = this.mvc.perform(post(Cons.User.Controller.PATH)
+        String location = this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -75,6 +80,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andReturn().getResponse().getHeader("Location");
 
         assertThat(location).matches("/api/v1/users/222");
+        verify(userService).create(any(CreateUserDTO.class));
     }
 
     @Test
@@ -83,7 +89,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
         when(userService.create(any(CreateUserDTO.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
 
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
@@ -99,7 +105,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
         when(userService.create(any(CreateUserDTO.class))) // random exception
                 .thenThrow(new ResponseStatusException(HttpStatus.URI_TOO_LONG, "cris6h16's handleable exception"));
 
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
@@ -112,18 +118,19 @@ class PublicUserControllerTest { // test that and its integration with the servi
 
     @Test
     void create_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .content("username=cris6h16&password=12345678"))
@@ -131,22 +138,26 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_contentEmpty_then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        String msg = this.mvc.perform(post(Cons.User.Controller.PATH)
+        String msg = this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"parameter\":\"cris6h16\",\"nonexistent\":\"12345678\", \"cris6h16\":\"cristianmherrera21@gmail.com\"}"))
@@ -160,11 +171,12 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 Cons.User.Validations.USERNAME_IS_BLANK_MSG,
                 Cons.User.Validations.EMAIL_IS_BLANK_MSG
         );
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_givenEmptyUsername_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
@@ -172,11 +184,13 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_UsernameNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
@@ -184,6 +198,8 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
@@ -191,7 +207,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
     void create_UsernameTooLong_DTO_Then400_BAD_REQUEST() throws Exception {
         String username = "a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1);
 
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"?1\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}".replace("?1", username)))
@@ -204,7 +220,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
 
     @Test
     void create_givenEmptyEmail_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"\"}"))
@@ -212,11 +228,13 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_EmailNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"12345678\", \"username\":\"cris6h16\"}"))
@@ -224,12 +242,14 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     @Disabled("test corresponding to entity")
     void create_InvalidEmail_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"cris6h16\"}"))
@@ -242,7 +262,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
 
     @Test
     void create_givenEmptyPassword_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
@@ -250,11 +270,13 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     void create_PasswordNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
@@ -262,12 +284,14 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
+
+        verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
     @Disabled("test corresponding to service")
     void create_Password7Chars_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.PATH)
+        this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"1234567\", \"email\":\"cristianmherrera21@gmail.com\"}"))

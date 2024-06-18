@@ -52,6 +52,8 @@ class AdminUserControllerTest {
     @MockBean
     private UserServiceImpl userService;
 
+    private static String path = Cons.User.Controller.Path.PATH;
+
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
@@ -61,7 +63,7 @@ class AdminUserControllerTest {
         when(userService.getPage(any(Pageable.class)))
                 .thenReturn(mockedUsersList);
 
-        String body = this.mvc.perform(get(Cons.User.Controller.PATH))
+        String body = this.mvc.perform(get(path))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
@@ -69,8 +71,7 @@ class AdminUserControllerTest {
                 objectMapper.readValue(body, PublicUserDTO[].class)
         );
 
-        assertThatCollection(retrievedFromController)
-                .containsExactlyElementsOf(mockedUsersList);
+        assertThatCollection(retrievedFromController).containsExactlyElementsOf(mockedUsersList);
         verify(userService).getPage(any(Pageable.class));
     }
 
@@ -79,7 +80,7 @@ class AdminUserControllerTest {
     void getPage_PageableDefaultParamsWork() throws Exception {
         when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
 
-        this.mvc.perform(get(Cons.User.Controller.PATH)).andExpect(status().isOk());
+        this.mvc.perform(get(path)).andExpect(status().isOk());
 
         verify(userService).getPage(argThat(pageable ->
                 pageable.getPageNumber() == Cons.User.Page.DEFAULT_PAGE &&
@@ -93,7 +94,7 @@ class AdminUserControllerTest {
     void getPage_PageableCustomParamsWork() throws Exception {
         when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
 
-        this.mvc.perform(get(Cons.User.Controller.PATH + "?page=7&size=21&sort=cris6h16,desc"))
+        this.mvc.perform(get(path + "?page=7&size=21&sort=cris6h16,desc"))
                 .andExpect(status().isOk());
 
         verify(userService).getPage(argThat(pageable ->
@@ -107,7 +108,7 @@ class AdminUserControllerTest {
     @Test
     @WithMockUser
     void getPage_isNotAnAdmin_Then401_UNAUTHORIZED() throws Exception {
-        this.mvc.perform(get(Cons.User.Controller.PATH))
+        this.mvc.perform(get(path))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
@@ -120,7 +121,7 @@ class AdminUserControllerTest {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
 
-        this.mvc.perform(get(Cons.User.Controller.PATH))
+        this.mvc.perform(get(path))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
@@ -132,7 +133,7 @@ class AdminUserControllerTest {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.TOO_EARLY, "cris6h16's handleable exception"));
 
-        this.mvc.perform(get(Cons.User.Controller.PATH))
+        this.mvc.perform(get(path))
                 .andExpect(status().isTooEarly())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("cris6h16's handleable exception"));

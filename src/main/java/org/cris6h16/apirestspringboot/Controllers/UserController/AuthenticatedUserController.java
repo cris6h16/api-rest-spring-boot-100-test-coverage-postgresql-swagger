@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(AuthenticatedUserController.path)
 public class AuthenticatedUserController {
-    public static final String path = Cons.User.Controller.PATH;
+    public static final String path = Cons.User.Controller.Path.PATH;
 
     UserServiceImpl userService;
 
@@ -41,7 +41,10 @@ public class AuthenticatedUserController {
     }
 
 
-    @PatchMapping(value = "/patch/username/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(
+            value = Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchUsernameById(@PathVariable(required = true) Long id,
                                                   @RequestBody(required = true) @Valid PatchUsernameUserDTO dto) {
@@ -49,7 +52,10 @@ public class AuthenticatedUserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping(value = "/patch/email/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(
+            value = Cons.User.Controller.Path.COMPLEMENT_PATCH_EMAIL + "/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchEmailById(@PathVariable(required = true) Long id,
                                                @RequestBody(required = true) @Valid PatchEmailUserDTO dto) {
@@ -57,7 +63,10 @@ public class AuthenticatedUserController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping(value = "/patch/password/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(
+            value = Cons.User.Controller.Path.COMPLEMENT_PATCH_PASS + "/{id}",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchPassword(@PathVariable(required = true) Long id,
                                               @RequestBody(required = true) @Valid PatchPasswordUserDTO dto) {
