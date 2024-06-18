@@ -63,7 +63,7 @@ public interface UserService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    List<PublicUserDTO> get(Pageable pageable);
+    List<PublicUserDTO> getPage(Pageable pageable);
 
     void patchUsernameById(Long id, PatchUsernameUserDTO dto);
 

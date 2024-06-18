@@ -118,11 +118,11 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public List<PublicUserDTO> get(Pageable pageable) {
+    public List<PublicUserDTO> getPage(Pageable pageable) {
         Pageable pag = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                pageable.getSortOr(Sort.by(Sort.Direction.ASC, "id"))
+                pageable.getSort()
         );
 
         return userRepository.findAll(pag).stream()

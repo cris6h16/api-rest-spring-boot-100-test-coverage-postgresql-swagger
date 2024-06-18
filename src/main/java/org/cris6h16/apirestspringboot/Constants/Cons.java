@@ -1,6 +1,7 @@
 package org.cris6h16.apirestspringboot.Constants;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.springframework.data.domain.Sort;
 
 /**
  * This class contains all the constants used in the project
@@ -54,6 +55,12 @@ public class Cons {
              * null like the patch DTOs, create user DTO, and so on.
              */
             public static final String ANY_RELATED_DTO_WITH_USER_NULL = "User data to update/create cannot be null";
+        }
+
+        public static class Page {
+            public static final byte DEFAULT_PAGE = 0;
+            public static final byte DEFAULT_SIZE = 10;
+            public static final String DEFAULT_SORT = "id";
         }
     }
 

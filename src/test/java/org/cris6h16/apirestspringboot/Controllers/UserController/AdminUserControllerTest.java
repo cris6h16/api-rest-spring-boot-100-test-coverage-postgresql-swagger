@@ -17,10 +17,14 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -28,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCollection;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,7 +58,7 @@ class AdminUserControllerTest {
     @Order(1)
     void getPage_successful_Then200_Ok() throws Exception {
         List<PublicUserDTO> mockedUsersList = createPublicUserDTOs(20);
-        when(userService.get(any(Pageable.class)))
+        when(userService.getPage(any(Pageable.class)))
                 .thenReturn(mockedUsersList);
 
         String body = this.mvc.perform(get(Cons.User.Controller.PATH))
@@ -67,18 +71,73 @@ class AdminUserControllerTest {
 
         assertThatCollection(retrievedFromController)
                 .containsExactlyElementsOf(mockedUsersList);
+        verify(userService).getPage(any(Pageable.class));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getPage_PageableDefaultParamsWork() throws Exception {
+        when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
+
+        this.mvc.perform(get(Cons.User.Controller.PATH)).andExpect(status().isOk());
+
+        verify(userService).getPage(argThat(pageable ->
+                pageable.getPageNumber() == Cons.User.Page.DEFAULT_PAGE &&
+                        pageable.getPageSize() == Cons.User.Page.DEFAULT_SIZE &&
+                        pageable.getSort().getOrderFor("id").getDirection().equals(Sort.Direction.ASC)
+        ));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getPage_PageableCustomParamsWork() throws Exception {
+        when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
+
+        this.mvc.perform(get(Cons.User.Controller.PATH + "?page=7&size=21&sort=cris6h16,desc"))
+                .andExpect(status().isOk());
+
+        verify(userService).getPage(argThat(pageable ->
+                pageable.getPageNumber() == 7 &&
+                        pageable.getPageSize() == 21 &&
+                        pageable.getSort().getOrderFor("cris6h16").getDirection().equals(Sort.Direction.DESC)
+        ));
     }
 
 
     @Test
     @WithMockUser
-    @Order(1)
     void getPage_isNotAnAdmin_Then401_UNAUTHORIZED() throws Exception {
         this.mvc.perform(get(Cons.User.Controller.PATH))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
+        verify(userService, never()).getPage(any(Pageable.class));
     }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getPage_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+        when(userService.getPage(any(Pageable.class)))
+                .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
+
+        this.mvc.perform(get(Cons.User.Controller.PATH))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    void getPage_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+        when(userService.getPage(any(Pageable.class)))
+                .thenThrow(new ResponseStatusException(HttpStatus.TOO_EARLY, "cris6h16's handleable exception"));
+
+        this.mvc.perform(get(Cons.User.Controller.PATH))
+                .andExpect(status().isTooEarly())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value("cris6h16's handleable exception"));
+    }
+
 
     private List<PublicUserDTO> createPublicUserDTOs(int i) {
         List<PublicUserDTO> l = new ArrayList<>();

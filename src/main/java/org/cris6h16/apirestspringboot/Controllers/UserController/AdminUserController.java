@@ -6,6 +6,8 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +32,7 @@ public class AdminUserController {
 
     /**
      * Get all users<br>
-     * make it using: {@link UserService#get(Pageable)}
+     * make it using: {@link UserService#getPage(Pageable)}
      *
      * @param pageable the page request
      * @return {@link ResponseEntity} with a list of users
@@ -38,8 +40,14 @@ public class AdminUserController {
      * @since 1.0
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<PublicUserDTO>> getPage(Pageable pageable) {
-        List<PublicUserDTO> l = userService.get(pageable);
+    public ResponseEntity<List<PublicUserDTO>> getPage(
+            @PageableDefault(
+                    size = Cons.User.Page.DEFAULT_SIZE,
+                    page = Cons.User.Page.DEFAULT_PAGE,
+                    sort = Cons.User.Page.DEFAULT_SORT,
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable) {
+        List<PublicUserDTO> l = userService.getPage(pageable);
         return ResponseEntity.ok(l);
     }
 }
