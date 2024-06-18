@@ -19,7 +19,7 @@ import java.security.Principal;
  * {@code authentication.name.equalsIgnoreCase('anonymousUser') ? -1}
  * <p>
  * is necessary because even if you put {@code @PreAuthorize("isAuthenticated()")} before of all,
- * you will get an SpEL exception, spring first evaluates the syntax of SpEL.
+ * you will getById an SpEL exception, spring first evaluates the syntax of SpEL.
  * <p>
  * I have a custom impl of {@link User} which has a
  * {@code getId()} method({@link UserWithId}). if I'm not logged in.

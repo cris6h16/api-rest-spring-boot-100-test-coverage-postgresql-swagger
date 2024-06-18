@@ -96,7 +96,7 @@ public class NoteServiceImpl implements NoteService {
         if (user.isEmpty()) throw new UserNotFoundException();
 
         NoteEntity n = noteRepository
-                .findByIdAndUserId(noteId, userId) // If exists get it, else create ==> exists || create ==> same ID
+                .findByIdAndUserId(noteId, userId) // If exists getById it, else create ==> exists || create ==> same ID
                 .orElse(NoteEntity.builder().id(noteId).build());
 
         n.setTitle(dto.getTitle());

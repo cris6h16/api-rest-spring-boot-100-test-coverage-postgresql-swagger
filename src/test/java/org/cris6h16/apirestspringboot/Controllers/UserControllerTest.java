@@ -118,7 +118,7 @@
 //    }
 //
 //    /**
-//     * Test the successful behavior of {@link UserController#get(Long)}
+//     * Test the successful behavior of {@link UserController#getById(Long)}
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
 //     * @since 1.0
@@ -137,9 +137,9 @@
 //                .createdAt(user.getCreatedAt())
 //                .roles((Set.of(roleDTO))) // immutable
 //                .build();
-//        when(userService.get(user.getId())).thenReturn(publicUserDTO);
+//        when(userService.getById(user.getId())).thenReturn(publicUserDTO);
 //
-//        mvc.perform(get("/api/users/1"))
+//        mvc.perform(getById("/api/users/1"))
 //                .andExpect(status().isOk())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(jsonPath("$.id").value(user.getId()))
@@ -174,7 +174,7 @@
 //
 //
 //    /**
-//     * Test the successful behavior of {@link UserController#delete(Long)}
+//     * Test the successful behavior of {@link UserController#deleteById(Long)}
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
 //     * @since 1.0
@@ -182,9 +182,9 @@
 //    @Test
 //    @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
 //    void UserControllerTest_delete_Successful_Then204NoContent() throws Exception {
-//        doNothing().when(userService).delete(any(Long.class));
+//        doNothing().when(userService).deleteById(any(Long.class));
 //
-//        mvc.perform(delete("/api/users/1")
+//        mvc.perform(deleteById("/api/users/1")
 //                        .with(csrf()))
 //                .andExpect(status().isNoContent());
 //    }
@@ -208,16 +208,16 @@
 //                .createdAt(new Date())
 //                .roles(Set.of(PublicRoleDTO.builder().name(ERole.ROLE_USER).build()))
 //                .build());
-//        when(userService.get(any(PageRequest.class))).thenReturn(users);
+//        when(userService.getById(any(PageRequest.class))).thenReturn(users);
 //
-//        mvc.perform(get(path))
+//        mvc.perform(getById(path))
 //                .andExpect(status().isOk())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(jsonPath("$").isArray())
 //                .andExpect(jsonPath("$.length()").value(users.size()))
-//                .andExpect(jsonPath("$[0].id").value(users.get(0).getId()))
-//                .andExpect(jsonPath("$[0].username").value(users.get(0).getUsername()))
-//                .andExpect(jsonPath("$[0].email").value(users.get(0).getEmail()))
+//                .andExpect(jsonPath("$[0].id").value(users.getById(0).getId()))
+//                .andExpect(jsonPath("$[0].username").value(users.getById(0).getUsername()))
+//                .andExpect(jsonPath("$[0].email").value(users.getById(0).getEmail()))
 //                .andExpect(jsonPath("$[0].roles").isArray())
 //                .andExpect(jsonPath("$[0].createdAt").isNotEmpty())
 //                .andExpect(jsonPath("$[0].roles[0].name").value(ERole.ROLE_USER.name()));

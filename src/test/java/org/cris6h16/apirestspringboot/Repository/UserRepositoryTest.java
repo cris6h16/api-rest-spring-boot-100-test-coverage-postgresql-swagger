@@ -87,8 +87,8 @@
 //
 //        // Assert
 //        assertThat(result).isNotEmpty();
-//        assertThat(result.get().getId()).isNotNull();
-//        assertThat(result.get().getUsername()).isEqualTo(usr.getUsername());
+//        assertThat(result.getById().getId()).isNotNull();
+//        assertThat(result.getById().getUsername()).isEqualTo(usr.getUsername());
 //    }
 //
 //    /**
@@ -108,8 +108,8 @@
 //
 //        // Assert
 //        assertThat(result).isNotEmpty();
-//        assertThat(result.get().getId()).isNotNull();
-//        assertThat(result.get().getEmail()).isEqualTo(usr.getEmail());
+//        assertThat(result.getById().getId()).isNotNull();
+//        assertThat(result.getById().getEmail()).isEqualTo(usr.getEmail());
 //    }
 //
 //    /**
@@ -128,7 +128,7 @@
 //        // Act
 //        try {
 //            userRepository.executeInTransaction(() -> {
-//                userRepository.delete(usr);
+//                userRepository.deleteById(usr);
 //                userRepository.flush();
 //            });
 //        } catch (Exception e) {

@@ -99,7 +99,7 @@
 //            // Assert
 //            assertThat(notes)
 //                    .hasSize(5)
-//                    .containsAll(userNotes.get(user));
+//                    .containsAll(userNotes.getById(user));
 //        }
 //    }
 //
@@ -127,7 +127,7 @@
 //                // Assert
 //                if (isOwner) {
 //                    assertThat(found).isPresent();
-//                    assertThat(found.get()).isEqualTo(n);
+//                    assertThat(found.getById()).isEqualTo(n);
 //
 //                } else assertThat(found).isEmpty();
 //            }
@@ -137,7 +137,7 @@
 //    /**
 //     * Test {@link  NoteRepository#findByUser(UserEntity, Pageable)}.<br>
 //     * The method should return the notes of the user in pages of 2 elements each.<br>
-//     * Here I get all the existent pages of notes of each user, the pages are sorted by
+//     * Here I getById all the existent pages of notes of each user, the pages are sorted by
 //     * the {@link NoteEntity#getTitle()} field in ascending order.
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
@@ -182,7 +182,7 @@
 //    /**
 //     * Test {@link  NoteRepository#findByUser(UserEntity, Pageable)}<br>
 //     * The method should return the notes of the user in pages of 2 elements each.<br>
-//     * Here I get all the existent pages of notes of each user, the pages are sorted by
+//     * Here I getById all the existent pages of notes of each user, the pages are sorted by
 //     * the {@code title} field in descending order.
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

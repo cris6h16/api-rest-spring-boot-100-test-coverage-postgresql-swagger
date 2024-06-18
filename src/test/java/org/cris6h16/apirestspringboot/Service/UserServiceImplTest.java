@@ -173,7 +173,7 @@
 //    }
 //
 //    /**
-//     * Test {@link UserServiceImpl#get(Long)} when is successful.
+//     * Test {@link UserServiceImpl#getById(Long)} when is successful.
 //     * <br>
 //     * Test: Get a user by id, the user is found in DB with {@code roles==null}
 //     * then the roles in the response should be an empty set.
@@ -182,7 +182,7 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtils_get_UserFoundWithRolesNull_thenInRolesReturnEmptySet_Successful() {
 //        // Arrange
 //        UserEntity entity = createUserEntityWithIdAndRolesWithId();
@@ -192,7 +192,7 @@
 //        doNothing().when(serviceUtils).validateId(any(Long.class));
 //
 //        // Act
-//        PublicUserDTO dto = userService.get(entity.getId());
+//        PublicUserDTO dto = userService.getById(entity.getId());
 //
 //        // Assert
 //        assertThat(dto)
@@ -207,13 +207,13 @@
 //    }
 //
 //    /**
-//     * Test {@link UserServiceImpl#get(Long)} when is successful.
+//     * Test {@link UserServiceImpl#getById(Long)} when is successful.
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtils_get_UserFoundWithRoles_Successful() {
 //        // Arrange
 //        UserEntity entity = createUserEntityWithIdAndRolesWithId();
@@ -221,7 +221,7 @@
 //        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
 //
 //        // Act
-//        PublicUserDTO dto = userService.get(entity.getId());
+//        PublicUserDTO dto = userService.getById(entity.getId());
 //
 //        // Assert
 //        assertThat(dto)
@@ -350,42 +350,42 @@
 //    }
 //
 //    /**
-//     * Test {@link UserServiceImpl#delete(Long)} when is successful.
+//     * Test {@link UserServiceImpl#deleteById(Long)} when is successful.
 //     * <br>
-//     * Test: delete a user
+//     * Test: deleteById a user
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtils_delete_UserFound_Successful() {
 //        // Arrange
 //        UserEntity entity = createUserEntityWithIdAndRolesWithId();
 //
 //        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
 //        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        doNothing().when(userRepository).delete(entity);
+//        doNothing().when(userRepository).deleteById(entity);
 //
 //        // Act
-//        userService.delete(entity.getId());
+//        userService.deleteById(entity.getId());
 //
 //        // Assert
-//        verify(userRepository).delete(argThat(passedToDb ->
+//        verify(userRepository).deleteById(argThat(passedToDb ->
 //                passedToDb.getId().equals(entity.getId())));
 //
 //    }
 //
 //    /**
-//     * Test {@link UserServiceImpl#get(Pageable)} when is successful.
+//     * Test {@link UserServiceImpl#getById(Pageable)} when is successful.
 //     * <br>
-//     * Test: get a page of notes
+//     * Test: getById a page of notes
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get(pageable)")
+//    @Tag("getById(pageable)")
 //    void ServiceUtils_getPageable_ReturnList_Successful() {
 //        // Arrange
 //        int amount = 10;
@@ -400,17 +400,17 @@
 //                .thenReturn(new PageImpl<>(entities));
 //
 //        // Act
-//        List<PublicUserDTO> dtos = userService.get(pag);
+//        List<PublicUserDTO> dtos = userService.getById(pag);
 //
 //        // Assert
 //        for (int i = 0; i < entities.size(); i++) {
-//            assertThat(dtos.get(i))
+//            assertThat(dtos.getById(i))
 //                    .isNotNull()
-//                    .hasFieldOrPropertyWithValue("id", entities.get(i).getId())
-//                    .hasFieldOrPropertyWithValue("username", entities.get(i).getUsername())
-//                    .hasFieldOrPropertyWithValue("email", entities.get(i).getEmail())
-//                    .hasFieldOrPropertyWithValue("createdAt", entities.get(i).getCreatedAt())
-//                    .hasFieldOrPropertyWithValue("updatedAt", entities.get(i).getUpdatedAt())
+//                    .hasFieldOrPropertyWithValue("id", entities.getById(i).getId())
+//                    .hasFieldOrPropertyWithValue("username", entities.getById(i).getUsername())
+//                    .hasFieldOrPropertyWithValue("email", entities.getById(i).getEmail())
+//                    .hasFieldOrPropertyWithValue("createdAt", entities.getById(i).getCreatedAt())
+//                    .hasFieldOrPropertyWithValue("updatedAt", entities.getById(i).getUpdatedAt())
 //                    .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
 //        }
 //

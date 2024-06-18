@@ -51,7 +51,11 @@ class PublicUserControllerTest { // test that and its integration with the servi
                 .andReturn().getResponse().getHeader("Location");
 
         assertThat(location).matches("/api/v1/users/222");
-        verify(userService).create(any(CreateUserDTO.class));
+        verify(userService).create(argThat(
+                dto -> dto.getUsername().equals("cris6h16")
+                        && dto.getPassword().equals("12345678")
+                        && dto.getEmail().equals("cristianmherrera21@gmail.com")
+        ));
     }
 
     //todo: doc why is created, all depends on the service

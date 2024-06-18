@@ -178,7 +178,7 @@
 //    }
 //
 //    /**
-//     * test the exception raised in {@link UserServiceImpl#get(Long)}
+//     * test the exception raised in {@link UserServiceImpl#getById(Long)}
 //     * when it's called with a user id that doesn't exist in the database.
 //     *
 //     * <p>
@@ -193,13 +193,13 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtils_get_UserNotFound() {
 //        // Arrange
 //        Long id = 1L;
 //
 //        // Act & Assert
-//        assertThatThrownBy(() -> userService.get(id))
+//        assertThatThrownBy(() -> userService.getById(id))
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -207,7 +207,7 @@
 //
 //
 //    /**
-//     * test the exception raised in {@link UserServiceImpl#get(Long)}
+//     * test the exception raised in {@link UserServiceImpl#getById(Long)}
 //     * when it's called with an invalid user id
 //     * (negative, zero, null).
 //     * <p>
@@ -224,14 +224,14 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99}) // -99 == null
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtils_get_UserIdInvalid_Negative(Long id) {
 //        // Arrange
 //        id = (id == -99) ? null : id;
 //
 //        // Act & Assert
 //        Long finalId = id;
-//        assertThatThrownBy(() -> userService.get(finalId))
+//        assertThatThrownBy(() -> userService.getById(finalId))
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -349,7 +349,7 @@
 //
 //
 ////    @Test
-////    @Tag("get")
+////    @Tag("getById")
 ////    @Disabled
 ////    void ServiceUtils_get_ThrowsUnhandledException() {
 //    // I couldn't implement this, but has the same handling for all methods;
@@ -439,7 +439,7 @@
 //
 //    /**
 //     * test the exception raised in {@link ServiceUtils#validateId(Long)}
-//     * when {@link UserServiceImpl#delete(Long)} is called with an invalid user id
+//     * when {@link UserServiceImpl#deleteById(Long)} is called with an invalid user id
 //     * (negative, zero, null).
 //     *
 //     * <p>
@@ -456,14 +456,14 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99}) // -99 == null
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtils_delete_UserIdInvalid_Negative(Long id) {
 //        // Arrange
 //        id = (id == -99) ? null : id;
 //
 //        // Act & Assert
 //        Long finalId = id;
-//        assertThatThrownBy(() -> userService.delete(finalId))
+//        assertThatThrownBy(() -> userService.deleteById(finalId))
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageContaining(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -471,7 +471,7 @@
 //
 //    /**
 //     * test the exception raised in {@link UserServiceImpl#validateIdAndGetUser(Long)}
-//     * when {@link UserServiceImpl#delete(Long)} is called with a user id that doesn't exist in the database.
+//     * when {@link UserServiceImpl#deleteById(Long)} is called with a user id that doesn't exist in the database.
 //     *
 //     * <p>
 //     * then the exception threw should be:
@@ -486,27 +486,27 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtils_delete_UserNotFound() {
 //        // Arrange
 //        Long id = 1L;
 //
 //        // Act & Assert
-//        assertThatThrownBy(() -> userService.delete(id))
+//        assertThatThrownBy(() -> userService.deleteById(id))
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
 //    }
 ////
 ////    @Test
-////    @Tag("delete")
+////    @Tag("deleteById")
 ////    @Disabled()
 ////    void ServiceUtils_delete_ThrowsUnhandledException() {
 ////        // I couldn't implement this
 ////  }
 //
 //    /**
-//     * test an unexpected exception raised in {@link UserServiceImpl#get(Pageable)}
+//     * test an unexpected exception raised in {@link UserServiceImpl#getById(Pageable)}
 //     * when it's called with a {@link Pageable} null.
 //     *
 //     * <p>
@@ -528,7 +528,7 @@
 //        Pageable pageable = null;
 //
 //        // Act & Assert
-//        assertThatThrownBy(() -> userService.get(pageable))
+//        assertThatThrownBy(() -> userService.getById(pageable))
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageStartingWith(Cons.Response.ForClient.GENERIC_ERROR)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -563,7 +563,7 @@
 //                Sort.by(Sort.Direction.ASC, "ttt"));
 //
 //        // Act & Assert
-//        assertThatThrownBy(() -> userService.get(pageable))
+//        assertThatThrownBy(() -> userService.getById(pageable))
 //
 //                .isInstanceOf(UserServiceTransversalException.class)
 //                .hasMessageStartingWith("No property") // No property 'ttt' found for type 'UserEntity'
@@ -654,7 +654,7 @@
 ////                        user.getPassword().startsWith("{bcrypt}$") &&
 ////                        user.getEmail().equals(dto.getEmail()) &&
 ////                        user.getRoles().size() == 1 &&
-////                        (roleRetrieved ? user.getRoles().stream().findFirst().get().getId() == 10L : true) &&
+////                        (roleRetrieved ? user.getRoles().stream().findFirst().getById().getId() == 10L : true) &&
 ////                        user.getCreatedAt() != null
 ////        ));
 ////    }

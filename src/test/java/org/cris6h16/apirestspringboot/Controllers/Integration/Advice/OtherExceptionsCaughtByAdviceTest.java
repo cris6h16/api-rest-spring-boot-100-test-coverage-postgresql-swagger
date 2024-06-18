@@ -70,7 +70,7 @@
 //    @Tag("NoResourceFoundException")
 //    @Tag("PRINCIPLE_OF_LEAST_PRIVILEGE")
 //    void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException_Unauthenticated() throws Exception {
-//        mvc.perform(get("/helloword/not-found"))
+//        mvc.perform(getById("/helloword/not-found"))
 //                .andExpect(status().isUnauthorized())
 //                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
 //    }
@@ -86,7 +86,7 @@
 //    @Tag("PRINCIPLE_OF_LEAST_PRIVILEGE")
 //    @WithMockUserWithId
 //    void OtherExceptionsCaughtByAdviceTest_NoResourceFoundException_Authenticated() throws Exception {
-//        mvc.perform(get("/helloword/not-found"))
+//        mvc.perform(getById("/helloword/not-found"))
 //                .andExpect(status().isNotFound())
 //                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
 //    }
@@ -105,11 +105,11 @@
 //        String pathUsers = UserController.path;
 //        String pathNotes = NoteController.path;
 //
-//        mvc.perform(get(pathUsers + "/1"))
+//        mvc.perform(getById(pathUsers + "/1"))
 //                .andExpect(status().isUnauthorized())
 //                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
 //
-//        mvc.perform(get(pathNotes + "/1"))
+//        mvc.perform(getById(pathNotes + "/1"))
 //                .andExpect(status().isUnauthorized())
 //                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
 //    }
@@ -128,7 +128,7 @@
 //    @Test
 //    @Tag("MethodArgumentTypeMismatchException")
 //    void OtherExceptionsCaughtByAdviceTest_MethodArgumentTypeMismatchException() throws Exception {
-//        mvc.perform(get("/api/users/string"))
+//        mvc.perform(getById("/api/users/string"))
 //                .andExpect(status().isBadRequest())
 //                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
 //    }
@@ -164,9 +164,9 @@
 //    @WithMockUserWithId(id = 1)
 //    void OtherExceptionsCaughtByAdviceTest_Exception() throws Exception {
 //
-//        doThrow(new NullPointerException()).when(userService).delete(any());
+//        doThrow(new NullPointerException()).when(userService).deleteById(any());
 //
-//        mvc.perform(delete("/api/users/1")
+//        mvc.perform(deleteById("/api/users/1")
 //                        .with(csrf()))
 //                .andExpect(status().isInternalServerError())
 //                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));

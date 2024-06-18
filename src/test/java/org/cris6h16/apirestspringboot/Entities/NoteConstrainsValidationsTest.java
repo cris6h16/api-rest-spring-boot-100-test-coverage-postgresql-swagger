@@ -38,7 +38,7 @@ public class NoteConstrainsValidationsTest {
     private NoteEntity note;
 
     /**
-     * Before each test, delete all data from the repositories and
+     * Before each test, deleteById all data from the repositories and
      * call {@link #_initializeAndPrepare()};
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

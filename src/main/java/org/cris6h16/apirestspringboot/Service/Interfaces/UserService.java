@@ -32,26 +32,26 @@ public interface UserService {
     /**
      * Get a user by id
      *
-     * @param id of the user to get
+     * @param id of the user to getById
      * @return the user owner of the provided {@code id} as a {@link PublicUserDTO}
      * @throws UserServiceTransversalException with the proper
      *                                         status code and message ready to be sent to the client
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    PublicUserDTO get(Long id);
+    PublicUserDTO getById(Long id);
 
 
     /**
      * Delete a user by id
      *
-     * @param id of the user to delete
+     * @param id of the user to deleteById
      * @throws UserServiceTransversalException with the proper
      *                                         status code and message ready to be sent to the client
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void delete(Long id);
+    void deleteById(Long id);
 
     /**
      * Get all users paginated

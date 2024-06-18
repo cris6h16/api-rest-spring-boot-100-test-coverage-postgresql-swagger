@@ -235,7 +235,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#get(Long, Long)} is called with an invalid user id (negative).
+//     * {@link NoteServiceImpl#getById(Long, Long)} is called with an invalid user id (negative).
 //     *
 //     * <p>
 //     * then the exception threw should be:
@@ -249,7 +249,7 @@
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
 //     * @since 1.0
 //     */
-//    @Tag("get")
+//    @Tag("getById")
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})/* -99 == null */
 //    void ServiceUtilsNoteServiceImplTest_get_idInvalidUserId(Long userId) {
@@ -259,7 +259,7 @@
 //
 //        // Act && Assert
 //        Long finalUserId = userId;
-//        assertThatThrownBy(() -> noteService.get(noteId, finalUserId))
+//        assertThatThrownBy(() -> noteService.getById(noteId, finalUserId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -267,7 +267,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-//     * when {@link NoteServiceImpl#get(Long, Long)} is called with a user id that doesn't exist.
+//     * when {@link NoteServiceImpl#getById(Long, Long)} is called with a user id that doesn't exist.
 //     *
 //     * <p>
 //     * then the exception threw should be:
@@ -281,14 +281,14 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtilsNoteServiceImplTest_get_UserNotFound() {
 //        // Arrange
 //        Long userId = 1L; // checked first
 //        Long noteId = 1L;
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.get(noteId, userId))
+//        assertThatThrownBy(() -> noteService.getById(noteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -297,7 +297,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#get(Long, Long)} is called with an invalid note id (negative).
+//     * {@link NoteServiceImpl#getById(Long, Long)} is called with an invalid note id (negative).
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -310,7 +310,7 @@
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
 //     * @since 1.0
 //     */
-//    @Tag("get")
+//    @Tag("getById")
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})
 //    void ServiceUtilsNoteServiceImplTest_get_idInvalidNoteId(Long noteId) {
@@ -320,7 +320,7 @@
 //
 //        // Act && Assert
 //        Long finalNoteId = noteId;
-//        assertThatThrownBy(() -> noteService.get(finalNoteId, userId))
+//        assertThatThrownBy(() -> noteService.getById(finalNoteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -328,7 +328,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link NoteServiceImpl#validateIdAndGetNote(Long, UserEntity)} \
-//     * when {@link NoteServiceImpl#get(Long, Long)} is called with a note id that doesn't exist.
+//     * when {@link NoteServiceImpl#getById(Long, Long)} is called with a note id that doesn't exist.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -340,14 +340,14 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void ServiceUtilsNoteServiceImplTest_get_NoteNotFound() {
 //        // Arrange
 //        Long userId = userRepository.saveAndFlush(createUserEntityWithoutId()).getId();
 //        Long noteId = 1L; // checked 2nd
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.get(noteId, userId))
+//        assertThatThrownBy(() -> noteService.getById(noteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessageContaining(Cons.Note.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -355,10 +355,10 @@
 //
 ////
 ////    @Test
-////    @Tag("get")
+////    @Tag("getById")
 ////    @Disabled
 ////    void ServiceUtilsNoteServiceImplTest_get_UnhandledException() {
-////        // I couldn't find a way to throw an unhandled exception in the get method
+////        // I couldn't find a way to throw an unhandled exception in the getById method
 ////        // but with `ServiceUtilsNoteServiceImplTest_create_UnhandledException` is enough
 ////    }
 //
@@ -522,7 +522,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#delete(Long, Long)} is called with invalid user ids.
+//     * {@link NoteServiceImpl#deleteById(Long, Long)} is called with invalid user ids.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -535,7 +535,7 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})// -99 == null
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtilsNoteServiceImplTest_delete_idInvalidUserId(Long userId) {
 //        // Arrange
 //        userId = (userId == -99) ? null : userId;
@@ -543,7 +543,7 @@
 //
 //        // Act && Assert
 //        Long finalUserId = userId;
-//        assertThatThrownBy(() -> noteService.delete(noteId, finalUserId))
+//        assertThatThrownBy(() -> noteService.deleteById(noteId, finalUserId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -551,7 +551,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-//     * when {@link NoteServiceImpl#delete(Long, Long)} is called with a user id that doesn't exist.
+//     * when {@link NoteServiceImpl#deleteById(Long, Long)} is called with a user id that doesn't exist.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -561,14 +561,14 @@
 //     * </p>
 //     */
 //    @Test
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtilsNoteServiceImplTest_delete_UserNotFound() {
 //        // Arrange
 //        Long userId = 1L;
 //        Long noteId = 1L;
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+//        assertThatThrownBy(() -> noteService.deleteById(noteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.User.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -576,7 +576,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#delete(Long, Long)} is called with invalid note ids.
+//     * {@link NoteServiceImpl#deleteById(Long, Long)} is called with invalid note ids.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -589,7 +589,7 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})// -99 == null
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtilsNoteServiceImplTest_delete_idInvalidNoteId(Long noteId) {
 //        // Arrange
 //        Long userId = userRepository.saveAndFlush(createUserEntityWithoutId()).getId();
@@ -597,7 +597,7 @@
 //
 //        // Act && Assert
 //        Long finalNoteId = noteId;
-//        assertThatThrownBy(() -> noteService.delete(finalNoteId, userId))
+//        assertThatThrownBy(() -> noteService.deleteById(finalNoteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -605,7 +605,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link NoteServiceImpl#validateIdAndGetNote(Long, UserEntity)}
-//     * when {@link NoteServiceImpl#delete(Long, Long)} is called with a note id that doesn't exist.
+//     * when {@link NoteServiceImpl#deleteById(Long, Long)} is called with a note id that doesn't exist.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>
@@ -615,14 +615,14 @@
 //     * </p>
 //     */
 //    @Test
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void ServiceUtilsNoteServiceImplTest_delete_NoteNotFound() {
 //        // Arrange
 //        Long userId = userRepository.saveAndFlush(createUserEntityWithoutId()).getId();
 //        Long noteId = 1L;
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.delete(noteId, userId))
+//        assertThatThrownBy(() -> noteService.deleteById(noteId, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.Note.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -631,7 +631,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * when {@link NoteServiceImpl#delete(Long, Long)} is called with invalid user ids.
+//     * when {@link NoteServiceImpl#deleteById(Long, Long)} is called with invalid user ids.
 //     * <p>
 //     * then the exception threw should be:
 //     * <br>

@@ -76,7 +76,7 @@ public class NoteController {
      * Get a {@link NoteEntity} by id<br>
      * Uses: {@link NoteServiceImpl#get(Long, Long)}
      *
-     * @param noteId      of the note to get
+     * @param noteId      of the note to getById
      * @param principalId injected, the id of the principal; the user that is getting the note
      * @return {@link ResponseEntity} with the note data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
@@ -117,7 +117,7 @@ public class NoteController {
      * Delete a {@link NoteEntity}<br>
      * Uses: {@link NoteServiceImpl#delete(Long, Long)}
      *
-     * @param noteId      of the note to delete
+     * @param noteId      of the note to deleteById
      * @param principalId the principal id; the user that is deleting the note
      * @return {@link ResponseEntity#noContent()} if successful
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

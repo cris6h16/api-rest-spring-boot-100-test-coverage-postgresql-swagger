@@ -144,7 +144,7 @@
 //    //todo: write the remaining
 //
 //    /**
-//     * Test the behavior of {@link NoteController#get(Long, Long)} when
+//     * Test the behavior of {@link NoteController#getById(Long, Long)} when
 //     * the user is an invited user, then the response should be 404
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -154,9 +154,9 @@
 //    @Tag("Advice")
 //    @WithMockUserWithId(id = 1L, username = "cris6h16", password = "12345678", roles = {"ROLE_INVITED"})
 //    void delete_IsInvited_Then404() throws Exception {
-//        doNothing().when(noteService).delete(any(Long.class), any(Long.class));
+//        doNothing().when(noteService).deleteById(any(Long.class), any(Long.class));
 //
-//        this.mvc.perform(delete(path + "/1")
+//        this.mvc.perform(deleteById(path + "/1")
 //                        .with(csrf()))
 //                .andExpect(status().isNotFound())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -203,17 +203,17 @@
 //        list.add(PublicNoteDTO.builder().title("title").content("content").build());
 //        when(noteService.getPage(any(PageRequest.class), any(Long.class))).thenReturn(list);
 //
-//        this.mvc.perform(get(path))
+//        this.mvc.perform(getById(path))
 //                .andExpect(status().isOk())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(jsonPath("$").isArray())
 //                .andExpect(jsonPath("$.length()").value(1))
-//                .andExpect(jsonPath("$[0].title").value(list.get(0).getTitle()))
-//                .andExpect(jsonPath("$[0].content").value(list.get(0).getContent()));
+//                .andExpect(jsonPath("$[0].title").value(list.getById(0).getTitle()))
+//                .andExpect(jsonPath("$[0].content").value(list.getById(0).getContent()));
 //    }
 //
 //    /**
-//     * Test the successful behavior of {@link NoteController#get(Long, Long)}
+//     * Test the successful behavior of {@link NoteController#getById(Long, Long)}
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
 //     * @since 1.0
@@ -222,9 +222,9 @@
 //    @WithMockUserWithId(id = 1L, username = "cris6h16", password = "12345678", roles = {"ROLE_USER"})
 //    void get_Successful_Then200AndReturnNote() throws Exception {
 //        PublicNoteDTO note = PublicNoteDTO.builder().title("title").content("content").build();
-//        when(noteService.get(any(Long.class), any(Long.class))).thenReturn(note);
+//        when(noteService.getById(any(Long.class), any(Long.class))).thenReturn(note);
 //
-//        this.mvc.perform(get(path + "/1"))
+//        this.mvc.perform(getById(path + "/1"))
 //                .andExpect(status().isOk())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(jsonPath("$.title").value(note.getTitle()))
@@ -250,7 +250,7 @@
 //    }
 //
 //    /**
-//     * Test the successful behavior of {@link NoteController#delete(Long, Long)}.
+//     * Test the successful behavior of {@link NoteController#deleteById(Long, Long)}.
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
 //     * @since 1.0
@@ -258,9 +258,9 @@
 //    @Test
 //    @WithMockUserWithId(id = 1L, username = "cris6h16", password = "12345678", roles = {"ROLE_USER"})
 //    void delete_Successful_Then204() throws Exception {
-//        doNothing().when(noteService).delete(any(Long.class), any(Long.class));
+//        doNothing().when(noteService).deleteById(any(Long.class), any(Long.class));
 //
-//        this.mvc.perform(delete(path + "/1")
+//        this.mvc.perform(deleteById(path + "/1")
 //                        .with(csrf()))
 //                .andExpect(status().isNoContent());
 //    }

@@ -23,7 +23,7 @@ public class Cons {
                 public static final String PATH = "/api/v1/users";
                 public static final String COMPLEMENT_PATCH_USERNAME = "/patch/username";
                 public static final String COMPLEMENT_PATCH_EMAIL = "/patch/email";
-                public static final String COMPLEMENT_PATCH_PASS = "/patch/password";
+                public static final String COMPLEMENT_PATCH_PASSWORD = "/patch/password";
             }
         }
 

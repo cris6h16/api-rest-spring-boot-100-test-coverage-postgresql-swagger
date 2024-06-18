@@ -26,17 +26,17 @@ public class AuthenticatedUserController {
 
     /**
      * Get a user by id<br>
-     * make it through: {@link UserService#get(Long)}
+     * make it through: {@link UserService#getById(Long)}
      *
-     * @param id of the user to get
+     * @param id of the user to getById
      * @return {@link ResponseEntity} with the user data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
-    public ResponseEntity<PublicUserDTO> get(@PathVariable(required = true) Long id) {
-        PublicUserDTO u = userService.get(id);
+    public ResponseEntity<PublicUserDTO> getById(@PathVariable(required = true) Long id) {
+        PublicUserDTO u = userService.getById(id);
         return ResponseEntity.ok(u);
     }
 
@@ -64,29 +64,29 @@ public class AuthenticatedUserController {
     }
 
     @PatchMapping(
-            value = Cons.User.Controller.Path.COMPLEMENT_PATCH_PASS + "/{id}",
+            value = Cons.User.Controller.Path.COMPLEMENT_PATCH_PASSWORD + "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
-    public ResponseEntity<Void> patchPassword(@PathVariable(required = true) Long id,
-                                              @RequestBody(required = true) @Valid PatchPasswordUserDTO dto) {
+    public ResponseEntity<Void> patchPasswordById(@PathVariable(required = true) Long id,
+                                                  @RequestBody(required = true) @Valid PatchPasswordUserDTO dto) {
         userService.patchPasswordById(id, dto);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Delete a user<br>
-     * make it through: {@link UserService#delete(Long)}
+     * make it through: {@link UserService#deleteById(Long)}
      *
-     * @param id of the user to delete
+     * @param id of the user to deleteById
      * @return {@link ResponseEntity} with no content
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
-    public ResponseEntity<Void> delete(@PathVariable(required = true) Long id) {
-        userService.delete(id);
+    public ResponseEntity<Void> deleteById(@PathVariable(required = true) Long id) {
+        userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 

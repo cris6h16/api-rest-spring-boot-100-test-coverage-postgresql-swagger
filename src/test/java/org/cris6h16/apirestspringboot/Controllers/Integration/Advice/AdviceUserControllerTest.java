@@ -112,7 +112,7 @@
 //     * handled by the {@link ExceptionHandlerControllers}.
 //     * <p>
 //     * Test: try to fetch a user's account that not correspond to the principal<br>
-//     * Method: {@link UserController#get(Long)}
+//     * Method: {@link UserController#getById(Long)}
 //     * </p>
 //     *
 //     * @implNote Endpoint method depends {@code principal.id} then {@link WithMockUserWithId}
@@ -122,7 +122,7 @@
 //    @Test
 //    @WithMockUserWithId(id = 2, username = "cris6h16", roles = {"ROLE_USER"})
 //    void AdviceUserControllerTest_get_OtherUserAccount_Then404() throws Exception {
-//        mvc.perform(get("/api/users/1"))
+//        mvc.perform(getById("/api/users/1"))
 //                .andExpect(status().isNotFound()) // principle of least privilege
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
@@ -161,8 +161,8 @@
 //     * handled by the {@link ExceptionHandlerControllers}.
 //     *
 //     * <p>
-//     * Test: try to delete a user's account that not correspond to the principal<br>
-//     * Method: {@link UserController#delete(Long)}
+//     * Test: try to deleteById a user's account that not correspond to the principal<br>
+//     * Method: {@link UserController#deleteById(Long)}
 //     * </p>
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -173,7 +173,7 @@
 //    @Test
 //    @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
 //    void AdviceUserControllerTest_delete_OtherUserAccount_Then404() throws Exception {
-//        mvc.perform(delete("/api/users/2")
+//        mvc.perform(deleteById("/api/users/2")
 //                        .with(csrf()))
 //                .andExpect(status().isNotFound()) // principle of least privilege
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -194,7 +194,7 @@
 //    @Test
 //    @WithMockUserWithId(id = 1, username = "cris6h16", roles = {"ROLE_USER"})
 //    void AdviceUserControllerTest_getUsers_IsNotAdmin_Then404() throws Exception {
-//        mvc.perform(get("/api/users")
+//        mvc.perform(getById("/api/users")
 //                        .with(csrf()))
 //                .andExpect(status().isNotFound()) // principle of least privilege
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON))

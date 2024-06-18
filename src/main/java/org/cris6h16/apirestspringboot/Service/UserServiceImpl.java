@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public PublicUserDTO get(Long id) {
+    public PublicUserDTO getById(Long id) {
         Optional<UserEntity> userO = userRepository.findById(id);
         if (userO.isEmpty()) throw new UserNotFoundException();
 
@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void delete(Long id) {
+    public void deleteById(Long id) {
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.deleteById(id);
     }

@@ -31,7 +31,7 @@ public interface NoteRepository extends
     boolean existsByIdAndUserId(Long noteId, Long userId);
 
     void deleteByIdAndUserId(Long noteId, Long userId);
-    // todo: delete this and see how use the examples<s>
+    // todo: deleteById this and see how use the examples<s>
 
     <S extends NoteEntity> Page<S> findByUserId(Long userId, Pageable pageable);
 }

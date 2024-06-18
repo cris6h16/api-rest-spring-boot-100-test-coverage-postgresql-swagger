@@ -19,7 +19,7 @@ public interface NoteService {
      * Get a note by:<br>
      * {@code (note.id == noteId) && (note.user.id == userId)}
      *
-     * @param noteId of the note to get
+     * @param noteId of the note to getById
      * @param userId of the user that owns the note
      * @return the note that has the provided {@code noteId} and {@code userId}, as a {@link PublicNoteDTO}
      * @throws NoteServiceTransversalException with the proper
@@ -60,7 +60,7 @@ public interface NoteService {
      * DELETE the note where:<br>
      * {@code (note.id == noteId) && (note.user.id == userId)}
      *
-     * @param noteId of the note to delete
+     * @param noteId of the note to deleteById
      * @param userId of the user that owns the note
      * @throws NoteServiceTransversalException with the proper
      *                                         status code and message ready to be sent to the client

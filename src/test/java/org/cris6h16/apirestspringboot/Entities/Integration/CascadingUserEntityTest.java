@@ -43,7 +43,7 @@
 //
 //
 //    /**
-//     * Before each test, delete all data from the repositories and
+//     * Before each test, deleteById all data from the repositories and
 //     * call {@link #initializeAndPrepare()};
 //     *
 //     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
@@ -148,7 +148,7 @@
 //        boolean bothSaved = userRepository.count() == 1 && roleRepository.count() == 1;
 //
 //        // Act
-//        userRepository.delete(usr);
+//        userRepository.deleteById(usr);
 //
 //        // Assert
 //        assertThat(bothSaved).isTrue();
@@ -208,7 +208,7 @@
 //        boolean saved = userRepository.count() == 1 && noteRepository.count() == notes.size();
 //
 //        // Act
-//        userRepository.delete(usr);
+//        userRepository.deleteById(usr);
 //
 //        // Assert
 //        assertThat(saved).isTrue();

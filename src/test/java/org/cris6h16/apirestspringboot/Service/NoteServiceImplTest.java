@@ -126,7 +126,7 @@
 //
 //
 //    /**
-//     * Test for {@link NoteServiceImpl#get(Long, Long)} when is successful.
+//     * Test for {@link NoteServiceImpl#getById(Long, Long)} when is successful.
 //     * <br>
 //     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a null content
 //     * then the {@link NoteEntity} passed to DB for be saved should have an empty content, not a null.
@@ -135,7 +135,7 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get")
+//    @Tag("getById")
 //    void NoteServiceImplTest_get_Successful() {
 //        // Arrange
 //        UserEntity user = createUserEntityWithId();
@@ -148,7 +148,7 @@
 //                .thenReturn(Optional.of(note));
 //
 //        // Act
-//        PublicNoteDTO publicNote = noteService.get(note.getId(), user.getId());
+//        PublicNoteDTO publicNote = noteService.getById(note.getId(), user.getId());
 //
 //        // Assert
 //        assertThat(publicNote)
@@ -199,7 +199,7 @@
 //
 //
 //    /**
-//     * Test for {@link NoteServiceImpl#delete(Long, Long)} when is successful.
+//     * Test for {@link NoteServiceImpl#deleteById(Long, Long)} when is successful.
 //     * <br>
 //     * Test: Delete a note based on the id.
 //     *
@@ -207,7 +207,7 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("delete")
+//    @Tag("deleteById")
 //    void NoteServiceImplTest_delete_Successful() {
 //        // Arrange
 //        UserEntity user = createUserEntityWithId();
@@ -218,16 +218,16 @@
 //                .thenReturn(user);
 //        when(noteRepository.findByIdAndUser(note.getId(), user))
 //                .thenReturn(Optional.of(note));
-//        doNothing().when(noteRepository).delete(note);
+//        doNothing().when(noteRepository).deleteById(note);
 //
 //        // Act
-//        noteService.delete(note.getId(), user.getId());
+//        noteService.deleteById(note.getId(), user.getId());
 //
 //        // Assert
 //        verify(serviceUtils).validateId(any(Long.class));
 //        verify(userService).validateIdAndGetUser(user.getId());
 //        verify(noteRepository).findByIdAndUser(note.getId(), user);
-//        verify(noteRepository).delete(note);
+//        verify(noteRepository).deleteById(note);
 //    }
 //
 //
@@ -240,7 +240,7 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("get(pageable)")
+//    @Tag("getById(pageable)")
 //    void NoteServiceImplTest_getPageable_Successful() {
 //        // Arrange
 //        UserEntity user = createUserEntityWithId();
@@ -263,11 +263,11 @@
 //        assertThat(publicNotes).hasSize(list.size());
 //
 //        for (int i = 0; i < list.size(); i++) {
-//            assertThat(publicNotes.get(i))
-//                    .hasFieldOrPropertyWithValue("id", list.get(i).getId())
-//                    .hasFieldOrPropertyWithValue("title", list.get(i).getTitle())
-//                    .hasFieldOrPropertyWithValue("content", list.get(i).getContent())
-//                    .hasFieldOrPropertyWithValue("updatedAt", list.get(i).getUpdatedAt());
+//            assertThat(publicNotes.getById(i))
+//                    .hasFieldOrPropertyWithValue("id", list.getById(i).getId())
+//                    .hasFieldOrPropertyWithValue("title", list.getById(i).getTitle())
+//                    .hasFieldOrPropertyWithValue("content", list.getById(i).getContent())
+//                    .hasFieldOrPropertyWithValue("updatedAt", list.getById(i).getUpdatedAt());
 //        }
 //
 //    }
