@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.DTOs.Creation;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
@@ -26,10 +27,11 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @Getter
 @Setter
 public class CreateNoteDTO {
-    @NotBlank(message = TITLE_IS_BLANK_MSG) // not  null/only spaces
-    @Size(max = 255, message = TITLE_MAX_LENGTH_MSG)
+
+    @NotBlank(message = TITLE_IS_BLANK_MSG)
     private String title;
 
+    @NotNull(message = CONTENT_IS_NULL_MSG)
     private String content;
 
 }

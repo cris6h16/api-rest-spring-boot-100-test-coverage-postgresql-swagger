@@ -19,10 +19,9 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(AdminUserController.path)
+@RequestMapping(Cons.User.Controller.Path.PATH)
 @PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
 public class AdminUserController {
-    public static final String path = Cons.User.Controller.Path.PATH;
 
     UserServiceImpl userService;
 

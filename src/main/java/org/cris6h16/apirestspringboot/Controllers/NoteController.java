@@ -1,11 +1,15 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import jakarta.validation.Valid;
+import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.MetaAnnotations.MyId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -25,8 +29,7 @@ import java.util.List;
 @RequestMapping(path = NoteController.path)
 @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER')")
 public class NoteController {
-
-    public static final String path = "/api/notes";
+    public static final String path = Cons.Note.Controller.Path.PATH;
     private final NoteServiceImpl noteService;
 
     public NoteController(NoteServiceImpl noteService) {
@@ -47,7 +50,8 @@ public class NoteController {
     @PostMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> create(@RequestBody CreateNoteDTO note, @MyId Long principalId) {
+    public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateNoteDTO note,
+                                       @MyId Long principalId) {
         Long id = noteService.create(note, principalId);
         URI uri = URI.create(path + "/" + id);
 
@@ -67,7 +71,14 @@ public class NoteController {
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<List<PublicNoteDTO>> getPage(Pageable pageable, @MyId Long principalId) {
+    public ResponseEntity<List<PublicNoteDTO>> getPage(
+            @PageableDefault(
+                    size = Cons.Note.Page.DEFAULT_SIZE,
+                    page = Cons.Note.Page.DEFAULT_PAGE,
+                    sort = Cons.Note.Page.DEFAULT_SORT,
+                    direction = Sort.Direction.ASC
+            ) Pageable pageable,
+            @MyId Long principalId) {
         List<PublicNoteDTO> list = noteService.getPage(pageable, principalId);
         return ResponseEntity.ok(list);
     }
@@ -86,7 +97,8 @@ public class NoteController {
             value = "/{noteId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<PublicNoteDTO> get(@PathVariable Long noteId, @MyId Long principalId) {
+    public ResponseEntity<PublicNoteDTO> get(@PathVariable(required = true) Long noteId,
+                                             @MyId Long principalId) {
         PublicNoteDTO en = noteService.get(noteId, principalId);
         return ResponseEntity.ok(en);
     }
@@ -106,8 +118,8 @@ public class NoteController {
             value = "/{noteId}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> put(@PathVariable Long noteId,
-                                    @RequestBody CreateNoteDTO note,
+    public ResponseEntity<Void> put(@PathVariable(required = true) Long noteId,
+                                    @RequestBody(required = true) @Valid CreateNoteDTO note,
                                     @MyId Long principalId) {
         noteService.put(noteId, principalId, note);
         return ResponseEntity.noContent().build();
@@ -124,7 +136,8 @@ public class NoteController {
      * @since 1.0
      */
     @DeleteMapping(value = "/{noteId}")
-    public ResponseEntity<Void> delete(@PathVariable Long noteId, @MyId Long principalId) {
+    public ResponseEntity<Void> delete(@PathVariable(required = true) Long noteId,
+                                       @MyId Long principalId) {
         noteService.delete(noteId, principalId);
         return ResponseEntity.noContent().build();
     }

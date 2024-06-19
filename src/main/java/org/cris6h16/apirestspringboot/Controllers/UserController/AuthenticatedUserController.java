@@ -14,10 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(AuthenticatedUserController.path)
+@RequestMapping(Cons.User.Controller.Path.PATH)
 public class AuthenticatedUserController {
-    public static final String path = Cons.User.Controller.Path.PATH;
-
     UserServiceImpl userService;
 
     public AuthenticatedUserController(UserServiceImpl userService) {

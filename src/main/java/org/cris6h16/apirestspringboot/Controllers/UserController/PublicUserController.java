@@ -23,6 +23,7 @@ public class PublicUserController {
 
     public static final String path = Cons.User.Controller.Path.PATH;
 
+
     UserServiceImpl userService;
 
     public PublicUserController(UserServiceImpl userService) {

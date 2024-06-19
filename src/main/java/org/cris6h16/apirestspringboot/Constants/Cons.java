@@ -70,9 +70,16 @@ public class Cons {
     }
 
     public class Note {
+        public class Controller {
+            public class Path {
+                public static final String PATH = "/api/v1/notes";
+            }
+        }
+
         public class Validations {
             public static final String TITLE_MAX_LENGTH_MSG = "Title must be less than 255 characters";
             public static final String TITLE_IS_BLANK_MSG = "Title is required";
+            public static final String CONTENT_IS_NULL_MSG = "Content can be empty but not null";
             public static final short MAX_TITLE_LENGTH = 255;
         }
 
@@ -85,6 +92,12 @@ public class Cons {
          */
         public static class DTO {
             public static final String NULL = "Note to update/create cannot be null";
+        }
+
+        public static class Page {
+            public static final byte DEFAULT_PAGE = 0;
+            public static final byte DEFAULT_SIZE = 10;
+            public static final String DEFAULT_SORT = "id";
         }
 
     }

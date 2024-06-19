@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.validator.constraints.Length;
@@ -36,6 +37,7 @@ public class NoteEntity {
     private String title;
 
     @Column(name = "content", columnDefinition = "TEXT")
+    @NotNull(message = CONTENT_IS_NULL_MSG)
     private String content;
 
     @Column(name = "updated_at")
