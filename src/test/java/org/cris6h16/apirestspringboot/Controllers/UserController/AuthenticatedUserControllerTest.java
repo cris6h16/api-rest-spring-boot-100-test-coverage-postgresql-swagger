@@ -183,7 +183,7 @@ class AuthenticatedUserControllerTest {
                         .content("{\"username\":\"cris6h16\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(userService, times(1)).patchUsernameById(1L,
+        verify(userService, times(1)).patchUsernameById(eq(1L),
                 argThat(dto -> dto.getUsername().equals("cris6h16")));
     }
 
@@ -384,7 +384,7 @@ class AuthenticatedUserControllerTest {
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(userService, times(1)).patchEmailById(1L,
+        verify(userService, times(1)).patchEmailById(eq(1L),
                 argThat(dto -> dto.getEmail().equals("cristianmherrera21@gmail.com")));
     }
 
@@ -588,7 +588,7 @@ class AuthenticatedUserControllerTest {
                         .content("{\"password\":\"1234567\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(userService, times(1)).patchPasswordById(1L,
+        verify(userService, times(1)).patchPasswordById(eq(1L),
                 argThat(dto -> dto.getPassword().equals("1234567")));
     }
 
@@ -765,7 +765,6 @@ class AuthenticatedUserControllerTest {
     void patchPasswordById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
                 .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -777,7 +776,6 @@ class AuthenticatedUserControllerTest {
 
 
     // -------------------------------------------------- DELETE --------------------------------------------------\\
-// todo: trimmed for all patch && for all argPassd(dto -> dto.getPass() == passed , etc
 
     @Test
     @Order(4)
@@ -792,8 +790,57 @@ class AuthenticatedUserControllerTest {
         verify(userService, times(1)).deleteById(1L);
     }
 
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
+    void deleteById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+        this.mvc.perform(delete(path + "/one")
+                        .with(csrf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+        verify(userService, never()).deleteById(anyLong());
+    }
 
     @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
+    void deleteById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+        this.mvc.perform(delete(path + "/").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
+    void deleteById_Unauthenticated_Then404_NotFound() throws Exception {
+        this.mvc.perform(delete(path + "/").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).deleteById(anyLong());
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
+    void deleteById_hasRoleInvited_Then404_NotFound() throws Exception {
+        this.mvc.perform(delete(path + "/").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).deleteById(anyLong());
+    }
+
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
+    void deleteById_OtherUserAccount_Then404_NotFound() throws Exception {
+        this.mvc.perform(delete(path + "/").with(csrf()))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).deleteById(anyLong());
+    }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
