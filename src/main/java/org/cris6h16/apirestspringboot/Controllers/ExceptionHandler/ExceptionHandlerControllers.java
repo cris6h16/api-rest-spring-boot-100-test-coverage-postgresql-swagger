@@ -94,15 +94,15 @@ public class ExceptionHandlerControllers {
 
         // structure: No property '<ttt>' found for type '<UserEntity>'
         boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
-        if (propertyNonexistent)
-            forClient = e.getMessage().split("for type")[0].trim(); // expose: No property '<ttt>' found
+        if (propertyNonexistent) forClient = e.getMessage().split("for type")[0].trim(); // expose: No property '<ttt>' found
 
         return buildAFailResponse(status, forClient);
     }
 
     /**
      * Handles when a {@link DataIntegrityViolationException} is thrown
-     * due to some constraint violation like unique constraints
+     * due to some constraint violation like unique constraints, the customs
+     * responses are based on the name of the constraints
      *
      * @param e the mentioned Exception
      * @return the response with the proper message && status {@code 409 Conflict}

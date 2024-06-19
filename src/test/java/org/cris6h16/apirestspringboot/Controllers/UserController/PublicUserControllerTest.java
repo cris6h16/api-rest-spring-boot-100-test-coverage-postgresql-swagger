@@ -59,6 +59,7 @@ class PublicUserControllerTest { // test that and its integration with the servi
     }
 
     //todo: doc why is created, all depends on the service
+    //todo: test this for all where a DTO is passed
     @Test
     @Order(2)
     void create_givenJsonAttributesUntrimmed_Then_201_Created() throws Exception {// depends on service
