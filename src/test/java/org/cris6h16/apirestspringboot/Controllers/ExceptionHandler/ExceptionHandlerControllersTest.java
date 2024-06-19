@@ -9,6 +9,7 @@ import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -56,9 +57,9 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleConstraintViolationException_withViolations_Then400_BAD_REQUEST_andCustomMsg() throws Exception {
-        Set<ConstraintViolation<?>> violations = new HashSet<>();
-        violations.add(mockConstraintViolation("My custom message in the validation"));
-        ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", violations);
+        ConstraintViolation<?> violation = mock(ConstraintViolation.class);
+        when(violation.getMessage()).thenReturn("My custom message in the validation");
+        ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", Set.of(violation));
 
         when(userService.create(any(CreateUserDTO.class)))
                 .thenThrow(exception);
@@ -284,23 +285,43 @@ class ExceptionHandlerControllersTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
     }
 
+    /**
+     * @see ExceptionHandlerControllers#logUnhandledException(Exception)
+     */
     @Test
     @WithMockUserWithId(roles = "ROLE_ADMIN")
-    void handleException_Then500_INTERNAL_SERVER_ERROR_andCustomMsg() throws Exception {
+    void handleException_Then500_andCustomMsg_alsoShouldNotLogDueToExceptionMessageContainATestingPattern() throws Exception {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new NullPointerException("Unexpected exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
         this.mvc.perform(get(Cons.User.Controller.Path.PATH))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+        verify(this.filesSyncUtils, never()).appendToFile(any(), any(), any());
     }
 
+    /**
+     * @see ExceptionHandlerControllers#logUnhandledException(Exception)
+     */
+    @Test
+    @WithMockUserWithId(roles = "ROLE_ADMIN")
+    void handleException_Then500_andCustomMsg_alsoShouldLogDueToExceptionIsConsiderAsExceptionInProduction() throws Exception {
+        when(userService.getPage(any(Pageable.class)))
+                .thenThrow(new NullPointerException("Unexpected exception in production (doesnt contain the testing pattern)"));
+        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
 
-    //  mock ConstraintViolation
-    private ConstraintViolation<?> mockConstraintViolation(String message) {
-        ConstraintViolation<?> violation = mock(ConstraintViolation.class);
-        when(violation.getMessage()).thenReturn(message);
-        return violation;
+        verify(this.filesSyncUtils, times(1)).appendToFile(
+                argThat(path -> path.toString().equals(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE)),
+                argThat(line ->
+                        line.toString().contains("Unexpected exception in production") &&
+                                line.toString().contains("NullPointerException") &&
+                                line.toString().split("::").length == 3
+                ),
+                eq(SychFor.UNHANDLED_EXCEPTIONS)
+        );
     }
+
 
     private CreateUserDTO createUserDTO() {
         return CreateUserDTO.builder()

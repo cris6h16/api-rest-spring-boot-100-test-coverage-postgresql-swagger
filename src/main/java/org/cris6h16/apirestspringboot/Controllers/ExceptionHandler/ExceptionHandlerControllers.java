@@ -385,7 +385,7 @@ public class ExceptionHandlerControllers {
 
     /**
      * save the {@code UnauthenticatedException} in a file, also log an {@code ERROR}
-     * if the exception is an exception threw in production.
+     * only if the exception is an exception threw in production
      *
      * @param e the exception to log
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
