@@ -27,7 +27,7 @@ public interface NoteService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    PublicNoteDTO get(Long noteId, Long userId);
+    PublicNoteDTO getByIdAndUserId(Long noteId, Long userId);
 
     /**
      * Create a new note with the provided {@code note} setting the {@code userId} as the owner

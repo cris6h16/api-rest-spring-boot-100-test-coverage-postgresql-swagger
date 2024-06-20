@@ -76,19 +76,9 @@ class AuthenticatedUserControllerTest {
     }
 
 
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
-    void getById_hasRoleInvited_Then404_NotFound() throws Exception {
-        this.mvc.perform(get(path + "/1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-        verify(userService, never()).getById(any(Long.class));
-    }
-
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void getById_OtherUserAccount_Then404_NotFound() throws Exception {
         this.mvc.perform(get(path + "/2"))
                 .andExpect(status().isNotFound())
@@ -213,7 +203,7 @@ class AuthenticatedUserControllerTest {
     }
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchUsernameById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
@@ -227,7 +217,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchUsernameById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
@@ -242,7 +232,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchUsernameById_contentEmpty_then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
@@ -266,22 +256,7 @@ class AuthenticatedUserControllerTest {
         verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
     }
 
-    /**
-     * @see ERole#ROLE_INVITED
-     */
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
-    void patchUsernameById_hasRoleInvited_Then404_NotFound() throws Exception {
-        this.mvc.perform(patch(path_patch_username + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"cris6h16\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
 
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
-    }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
@@ -414,7 +389,7 @@ class AuthenticatedUserControllerTest {
     }
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchEmailById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
@@ -428,7 +403,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchEmailById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
@@ -443,7 +418,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchEmailById_contentEmpty_then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
@@ -467,22 +442,6 @@ class AuthenticatedUserControllerTest {
         verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
     }
 
-    /**
-     * @see ERole#ROLE_INVITED
-     */
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
-    void patchEmailById_hasRoleInvited_Then404_NotFound() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
@@ -618,7 +577,7 @@ class AuthenticatedUserControllerTest {
     }
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchPasswordById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
@@ -632,7 +591,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchPasswordById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
@@ -647,7 +606,7 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
+    @WithMockUserWithId
     void patchPasswordById_contentEmpty_then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
@@ -671,22 +630,7 @@ class AuthenticatedUserControllerTest {
         verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
     }
 
-    /**
-     * @see ERole#ROLE_INVITED
-     */
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_INVITED"})
-    void patchPasswordById_hasRoleInvited_Then404_NotFound() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
 
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
@@ -821,15 +765,7 @@ class AuthenticatedUserControllerTest {
         verify(userService, never()).deleteById(anyLong());
     }
 
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_hasRoleInvited_Then404_NotFound() throws Exception {
-        this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-        verify(userService, never()).deleteById(anyLong());
-    }
+
 
 
     @Test

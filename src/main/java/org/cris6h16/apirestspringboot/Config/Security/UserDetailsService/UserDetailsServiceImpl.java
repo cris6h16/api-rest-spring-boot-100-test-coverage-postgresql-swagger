@@ -38,7 +38,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     /**
      * Load the user from the database by the {@code username}.<br>
      * if {@code user.roles == null || user.roles.isEmpty()} then assign a role
-     * default role {@link ERole#ROLE_INVITED}
+     * default role {@link ERole#ROLE_USER}
      *
      * @param username of the user to load from the database.
      * @return The user loaded from the database.
@@ -55,7 +55,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // If the user hasn't roles assigned, assign a role that is considered as "invited"
         if (user.getRoles() == null || user.getRoles().isEmpty() ) {
             user.setRoles(new HashSet<>(Collections.singleton(
-                    RoleEntity.builder().name(ERole.ROLE_INVITED).build()
+                    RoleEntity.builder().name(ERole.ROLE_USER).build()
             )));
         }
 

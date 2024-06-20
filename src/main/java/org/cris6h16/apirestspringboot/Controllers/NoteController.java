@@ -12,7 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -85,7 +84,7 @@ public class NoteController {
 
     /**
      * Get a {@link NoteEntity} by id<br>
-     * Uses: {@link NoteServiceImpl#get(Long, Long)}
+     * Uses: {@link NoteServiceImpl#getByIdAndUserId(Long, Long)}
      *
      * @param noteId      of the note to getById
      * @param principalId injected, the id of the principal; the user that is getting the note
@@ -97,9 +96,9 @@ public class NoteController {
             value = "/{noteId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<PublicNoteDTO> get(@PathVariable(required = true) Long noteId,
-                                             @MyId Long principalId) {
-        PublicNoteDTO en = noteService.get(noteId, principalId);
+    public ResponseEntity<PublicNoteDTO> getByIdAndUserId(@PathVariable(required = true) Long noteId,
+                                                          @MyId Long principalId) {
+        PublicNoteDTO en = noteService.getByIdAndUserId(noteId, principalId);
         return ResponseEntity.ok(en);
     }
 

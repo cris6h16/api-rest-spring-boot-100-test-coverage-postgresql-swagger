@@ -10,11 +10,6 @@ import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
  * @since 1.0
  */
 public enum ERole {
-    /**
-     * Used when we need to load a UserDetails from the database and the UserDetails
-     * has no roles assigned
-     */
-    ROLE_INVITED,
     ROLE_USER,
     ROLE_ADMIN
 }

@@ -94,7 +94,8 @@ public class ExceptionHandlerControllers {
 
         // structure: No property '<ttt>' found for type '<UserEntity>'
         boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
-        if (propertyNonexistent) forClient = e.getMessage().split("for type")[0].trim(); // expose: No property '<ttt>' found
+        if (propertyNonexistent)
+            forClient = e.getMessage().split("for type")[0].trim(); // expose: No property '<ttt>' found
 
         return buildAFailResponse(status, forClient);
     }
@@ -128,9 +129,9 @@ public class ExceptionHandlerControllers {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         logHandledDebug(e);
+
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
 
         boolean isRBMissing = thisContains(e.getMessage(), "Request body", "missing");
         if (isRBMissing) forClient = Cons.Response.ForClient.REQUEST_BODY_MISSING;
@@ -149,9 +150,12 @@ public class ExceptionHandlerControllers {
 
         return buildAFailResponse(status, forClient);
     }
+
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         logHandledDebug(e);
+        if (!isAuthenticated()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
+        if (!isAdmin()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
         return buildAFailResponse(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage());
     }
 
@@ -177,7 +181,7 @@ public class ExceptionHandlerControllers {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         String msg = Cons.Auth.Fails.UNAUTHORIZED;
 
-        if (isAuthenticated()) {
+        if (isAdminOrUser()) {
             status = HttpStatus.NOT_FOUND;
             msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
         }
@@ -200,15 +204,13 @@ public class ExceptionHandlerControllers {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         String msg = Cons.Auth.Fails.UNAUTHORIZED;
 
-        if (isAuthenticated()) {
-            if (!isAdmin()) {
-                status = HttpStatus.NOT_FOUND;
-                msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
-            } /* else { --> for the moment all are permitted for the admin ( commented for reach the better coverage )
+        if (!isAdmin()) {
+            status = HttpStatus.NOT_FOUND;
+            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
+        } /* else { --> for the moment all are permitted for the admin ( commented for reach the better coverage )
                 status = HttpStatus.FORBIDDEN;
                 msg = Cons.Auth.Fails.ACCESS_DENIED;
             }*/
-        }
 
         return buildAFailResponse(status, msg);
     }
@@ -245,6 +247,9 @@ public class ExceptionHandlerControllers {
     @ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<String> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex) {
         logHandledDebug(ex);
+        // the content & its type is evaluated before of the MethodSecurity
+        if (!isAdminOrUser()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
+
         return buildAFailResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE);
     }
 
@@ -359,6 +364,24 @@ public class ExceptionHandlerControllers {
                             .contains(ERole.ROLE_ADMIN.toString()));
         }
         return isAdm;
+    }
+
+    private boolean isAdminOrUser() {
+        if (!isAuthenticated()) return false;
+        boolean isAny = false;
+
+        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (obj instanceof UserWithId usr) {
+            if (usr.getAuthorities() == null || usr.getAuthorities().isEmpty()) return false;
+            isAny = usr
+                    .getAuthorities()
+                    .stream()
+                    .anyMatch(a ->
+                            a.getAuthority().contains(ERole.ROLE_ADMIN.toString()) ||
+                                    a.getAuthority().contains(ERole.ROLE_USER.toString())
+                    );
+        }
+        return isAny;
     }
 
     /**

@@ -74,8 +74,8 @@ public class NoteServiceImpl implements NoteService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public PublicNoteDTO get(@NotNull(message = invalidIdMsg) Long noteId,
-                             @NotNull(message = invalidIdMsg) Long userId) {
+    public PublicNoteDTO getByIdAndUserId(@NotNull(message = invalidIdMsg) Long noteId,
+                                          @NotNull(message = invalidIdMsg) Long userId) {
         if (!userRepository.existsById(userId)) throw new UserNotFoundException();
         Optional<NoteEntity> n = noteRepository.findByIdAndUserId(noteId, userId);
         if (n.isEmpty()) throw new NoteNotFoundException();

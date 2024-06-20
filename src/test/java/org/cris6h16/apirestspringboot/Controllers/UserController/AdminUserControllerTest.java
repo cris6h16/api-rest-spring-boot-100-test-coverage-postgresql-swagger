@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
@@ -76,6 +77,26 @@ class AdminUserControllerTest {
     }
 
     @Test
+    void getPage_isNotAuthenticated_Then404_NOT_FOUND() throws Exception {
+        this.mvc.perform(get(path))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).getPage(any(Pageable.class));
+    }
+
+
+    @Test
+    @WithMockUserWithId
+    void getPage_isNotAnAdmin_Then404_NOT_FOUND() throws Exception {
+        this.mvc.perform(get(path))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+        verify(userService, never()).getPage(any(Pageable.class));
+    }
+
+    @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getPage_PageableDefaultParamsWork() throws Exception {
         when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
@@ -85,7 +106,7 @@ class AdminUserControllerTest {
         verify(userService).getPage(argThat(pageable ->
                 pageable.getPageNumber() == Cons.User.Page.DEFAULT_PAGE &&
                         pageable.getPageSize() == Cons.User.Page.DEFAULT_SIZE &&
-                        pageable.getSort().getOrderFor("id").getDirection().equals(Sort.Direction.ASC)
+                        pageable.getSort().getOrderFor(Cons.User.Page.DEFAULT_SORT).getDirection().equals(Sort.Direction.ASC)
         ));
     }
 
@@ -105,15 +126,6 @@ class AdminUserControllerTest {
     }
 
 
-    @Test
-    @WithMockUser
-    void getPage_isNotAnAdmin_Then401_UNAUTHORIZED() throws Exception {
-        this.mvc.perform(get(path))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
-        verify(userService, never()).getPage(any(Pageable.class));
-    }
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})

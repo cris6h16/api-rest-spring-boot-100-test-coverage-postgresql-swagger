@@ -63,7 +63,7 @@ class UserDetailsServiceImplTest {
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * but the roles are null then a default role should be assigned {@link ERole#ROLE_INVITED}<br>
+     * but the roles are null then a default role should be assigned {@link ERole#ROLE_USER}<br>
      * I want to emphasize that this fail will occur if a user was created externally to the application
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
@@ -93,13 +93,13 @@ class UserDetailsServiceImplTest {
                 .hasFieldOrPropertyWithValue("username", usr.getUsername())
                 .hasFieldOrPropertyWithValue("password", usr.getPassword())
                 .hasFieldOrPropertyWithValue("id", usr.getId());
-        assertThat(userDetails.getAuthorities().iterator().next().getAuthority()).isEqualTo(ERole.ROLE_INVITED.name());
+        assertThat(userDetails.getAuthorities().iterator().next().getAuthority()).isEqualTo(ERole.ROLE_USER.name());
     }
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
      * but the roles are empty then It should return a {@link UserDetails} with
-     * a default role {@link ERole#ROLE_INVITED}
+     * a default role {@link ERole#ROLE_USER}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
@@ -130,7 +130,7 @@ class UserDetailsServiceImplTest {
                 .iterator()
                 .next()
                 .getAuthority()
-        ).isEqualTo(ERole.ROLE_INVITED.name());
+        ).isEqualTo(ERole.ROLE_USER.name());
     }
 
     /**

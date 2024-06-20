@@ -293,18 +293,6 @@ class PublicUserControllerTest { // test that and its integration with the servi
         verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
-    @Test
-    @Disabled("test corresponding to service")
-    void create_Password7Chars_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(path)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"cris6h16\",\"password\":\"1234567\", \"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-    }
 
 
     // asser all was trimmed
