@@ -78,12 +78,12 @@ class AuthenticatedUserControllerTest {
 
 
     @Test
-    @WithMockUserWithId
-    void getById_OtherUserAccount_Then404_NotFound() throws Exception {
+    @WithMockUserWithId(id = 1L)
+    void getById_OtherUserAccount_Then403_Forbidden() throws Exception {
         this.mvc.perform(get(path + "/2"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Content-Type"))
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).getById(any(Long.class));
     }
 

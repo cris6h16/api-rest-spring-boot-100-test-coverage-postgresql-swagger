@@ -286,7 +286,7 @@ class ExceptionHandlerControllersTest {
     }
 
     /**
-     * @see ExceptionHandlerControllers#logUnhandledException(Exception)
+     * @see ExceptionHandlerControllers#logHiddenExceptionForTheUser(Exception)
      */
     @Test
     @WithMockUserWithId(roles = "ROLE_ADMIN")
@@ -300,7 +300,7 @@ class ExceptionHandlerControllersTest {
     }
 
     /**
-     * @see ExceptionHandlerControllers#logUnhandledException(Exception)
+     * @see ExceptionHandlerControllers#logHiddenExceptionForTheUser(Exception)
      */
     @Test
     @WithMockUserWithId(roles = "ROLE_ADMIN")
@@ -312,13 +312,13 @@ class ExceptionHandlerControllersTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
 
         verify(this.filesSyncUtils, times(1)).appendToFile(
-                argThat(path -> path.toString().equals(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE)),
+                argThat(path -> path.toString().equals(Cons.Logs.HiddenExceptionsOfUsers)),
                 argThat(line ->
                         line.toString().contains("Unexpected exception in production") &&
                                 line.toString().contains("NullPointerException") &&
                                 line.toString().split("::").length == 3
                 ),
-                eq(SychFor.UNHANDLED_EXCEPTIONS)
+                eq(SychFor.HIDDEN_EXCEPTIONS_OF_USERS)
         );
     }
 

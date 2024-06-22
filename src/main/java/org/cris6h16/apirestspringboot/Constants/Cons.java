@@ -156,7 +156,7 @@ public class Cons {
      * @since 1.0
      */
     public static class Logs {
-        public static final String UNHANDLED_EXCEPTIONS_FILE = "logs/exceptions/unhandled.log";
+        public static final String HiddenExceptionsOfUsers = "logs/exceptions/unhandled.log";
         public static final String SUCCESS_AUTHENTICATION_FILE = "logs/auth/success.log";
         public static final String FAIL_AUTHENTICATION_FILE = "logs/auth/failures.log";
     }

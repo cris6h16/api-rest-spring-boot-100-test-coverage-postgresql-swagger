@@ -14,14 +14,14 @@ public class FilesSyncUtils {
     // Synchronization objects
     private static final Object successData = new Object();
     private static final Object failureData = new Object();
-    private static final Object unhandledExceptions = new Object();
+    private static final Object hiddenExceptionsOfUsers = new Object();
 
     public void appendToFile(Path path, String content, SychFor syncFor) {
         synchronized (
                 switch (syncFor) {
                     case SychFor.SUCCESS_DATA -> successData;
                     case SychFor.FAILURE_DATA -> failureData;
-                    case SychFor.UNHANDLED_EXCEPTIONS -> unhandledExceptions;
+                    case SychFor.HIDDEN_EXCEPTIONS_OF_USERS -> hiddenExceptionsOfUsers;
                 }
         ) {
             try {

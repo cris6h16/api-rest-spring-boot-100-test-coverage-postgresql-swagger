@@ -6,6 +6,7 @@ import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWit
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -74,27 +76,27 @@ class AdminUserControllerTest {
     }
 
     @Test
-    void getPage_isNotAuthenticated_Then404_NOT_FOUND() throws Exception {
+    void getPage_isNotAuthenticated_Then401_UNAUTHORIZED() throws Exception {
         this.mvc.perform(get(path))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-        verify(userService, never()).getPage(any(Pageable.class));
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist("Content-Type"))
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).getPage(any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void getPage_isNotAnAdmin_Then404_NOT_FOUND() throws Exception {
+    void getPage_isNotAnAdmin_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(get(path))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-        verify(userService, never()).getPage(any(Pageable.class));
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Content-Type"))
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).getPage(any());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "cris6h16", roles = {"ADMIN"})
     void getPage_PageableDefaultParamsWork() throws Exception {
         when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
 
@@ -123,9 +125,8 @@ class AdminUserControllerTest {
     }
 
 
-
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUserWithId(roles = {"ROLE_ADMIN"})
     void getPage_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
@@ -133,19 +134,19 @@ class AdminUserControllerTest {
         this.mvc.perform(get(path))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUserWithId(roles = {"ROLE_ADMIN"})
     void getPage_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        when(userService.getPage(any(Pageable.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.TOO_EARLY, "cris6h16's handleable exception"));
+        ProperExceptionForTheUser e = new ProperExceptionForTheUser(HttpStatus.PRECONDITION_REQUIRED, "Hello World I'm a handleable exception of cris6h16");
+        when(userService.getPage(any(Pageable.class))).thenThrow(e);
 
         this.mvc.perform(get(path))
-                .andExpect(status().isTooEarly())
+                .andExpect(status().isPreconditionRequired())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("cris6h16's handleable exception"));
+                .andExpect(jsonPath("$.message").value("Hello World I'm a handleable exception of cris6h16"));
     }
 
 

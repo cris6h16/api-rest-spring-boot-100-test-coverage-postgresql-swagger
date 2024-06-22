@@ -9,31 +9,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
 import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
@@ -50,9 +40,12 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 public class ExceptionHandlerControllers {
 
     private final FilesSyncUtils filesSyncUtils;
+    private static long lastTimeAnExceptionWasSavedToFile;
+    private static final long TIME_TO_SAVE_EXCEPTIONS = 10 * 60 * 1000; // 10 minutes
 
     public ExceptionHandlerControllers(FilesSyncUtils filesSyncUtils) {
         this.filesSyncUtils = filesSyncUtils;
+        this.lastTimeAnExceptionWasSavedToFile = 0;
     }
 
     /**
@@ -76,30 +69,6 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(status, forClient);
     }
 
-
-    /**
-     * If a {@link PropertyReferenceException} was thrown trying to sort
-     * a page with a nonexistent attribute
-     *
-     * @param e the exception
-     * @return the response with the proper message and status {@code BAD_REQUEST}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(PropertyReferenceException.class)
-    public ResponseEntity<String> handlePropertyReferenceException(PropertyReferenceException e) {
-        logHandledDebug(e);
-
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        // structure: No property '<ttt>' found for type '<UserEntity>'
-        boolean propertyNonexistent = this.thisContains(e.getMessage(), "for type");
-        if (propertyNonexistent)
-            forClient = e.getMessage().split("for type")[0].trim(); // expose: No property '<ttt>' found
-
-        return buildAFailResponse(status, forClient);
-    }
 
     /**
      * Handles when a {@link DataIntegrityViolationException} is thrown
@@ -126,135 +95,11 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(status, forClient);
     }
 
-    // added thanks to the logs in file (ERROR)
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+    @ExceptionHandler(ProperExceptionForTheUser.class)
+    public ResponseEntity<String> handleProperExceptionForTheUser(ProperExceptionForTheUser e) {
         logHandledDebug(e);
-        if (!isAdmin()) return buildAFailResponse(HttpStatus.FORBIDDEN, Cons.Auth.Fails.ACCESS_DENIED);
-
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        boolean isRBMissing = thisContains(e.getMessage(), "Request body", "missing");
-        if (isRBMissing) forClient = Cons.Response.ForClient.REQUEST_BODY_MISSING;
-
-        return buildAFailResponse(status, forClient);
+        return buildAFailResponse(e.getStatus(), e.getReason());
     }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        logHandledDebug(e);
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        List<ObjectError> msgs = e.getAllErrors();
-        if (!msgs.isEmpty()) forClient = msgs.getFirst().getDefaultMessage();
-
-        return buildAFailResponse(status, forClient);
-    }
-
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<String> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
-        logHandledDebug(e);
-        if (!isAuthenticated()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
-        if (!isAdmin()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
-        return buildAFailResponse(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage());
-    }
-
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException e) {
-        logHandledDebug(e);
-        return buildAFailResponse(HttpStatus.valueOf(e.getStatusCode().value()), e.getReason());
-    }
-
-    /**
-     * Handling of {@link NoResourceFoundException}
-     *
-     * @param ex exception
-     * @return a proper response complying the principle of least privilege
-     * @note Added thanks to {@link #logUnhandledException(Exception)}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(value = NoResourceFoundException.class)
-
-    public ResponseEntity<String> handleNoResourceFoundException(NoResourceFoundException ex) {
-        logHandledDebug(ex);
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
-        String msg = Cons.Auth.Fails.UNAUTHORIZED;
-
-        if (isAdminOrUser()) {
-            status = HttpStatus.NOT_FOUND;
-            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
-        }
-        return buildAFailResponse(status, msg);
-    }
-
-    /**
-     * Handling for {@link AccessDeniedException}
-     *
-     * @param ex the exception
-     * @return A proper response complying the principle of least privilege
-     * @note Added thanks to {@link #logUnhandledException(Exception)}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(value = AccessDeniedException.class) // added thanks to the logs (ERROR)
-    public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException ex) {
-        logHandledDebug(ex);
-
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
-        String msg = Cons.Auth.Fails.UNAUTHORIZED;
-
-        if (!isAdmin()) {
-            status = HttpStatus.NOT_FOUND;
-            msg = Cons.Response.ForClient.NO_RESOURCE_FOUND;
-        } /* else { --> for the moment all are permitted for the admin ( commented for reach the better coverage )
-                status = HttpStatus.FORBIDDEN;
-                msg = Cons.Auth.Fails.ACCESS_DENIED;
-            }*/
-
-        return buildAFailResponse(status, msg);
-    }
-
-    /**
-     * Handling of {@link MethodArgumentTypeMismatchException}
-     * <p>
-     * Example of when it can be thrown: <br>
-     * <strong>ENDPOINT</strong> {@code GET api/users/1} but was {@code GET api/users/string}
-     * </p>
-     *
-     * @param ex the exception
-     * @return a {@link ResponseEntity} with status {@link HttpStatus#BAD_REQUEST}
-     * and a generic message
-     * @note Added thanks to {@link #logUnhandledException(Exception)}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<String> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
-        logHandledDebug(ex);
-        return buildAFailResponse(HttpStatus.BAD_REQUEST, Cons.Response.ForClient.GENERIC_ERROR);
-    }
-
-    /**
-     * Handling of {@link HttpMediaTypeNotSupportedException}
-     *
-     * @param ex the exception
-     * @return a {@link ResponseEntity} with status with the proper status code
-     * @note Added thanks to {@link #logUnhandledException(Exception)}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(value = HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<String> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex) {
-        logHandledDebug(ex);
-        // the content & its type is evaluated before of the MethodSecurity
-        if (!isAdminOrUser()) return buildAFailResponse(HttpStatus.UNAUTHORIZED, Cons.Auth.Fails.UNAUTHORIZED);
-
-        return buildAFailResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE);
-    }
-
 
     /**
      * Handling of generic exceptions
@@ -267,9 +112,19 @@ public class ExceptionHandlerControllers {
      */
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<String> handleException(Exception e) {
-        logUnhandledException(e);
-        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
-        return buildAFailResponse(status, Cons.Response.ForClient.GENERIC_ERROR);
+        logHandledDebug(e);
+        if (isAdmin()) return buildFailResponseForAdmin(e);
+        else {
+            saveHiddenExceptionForTheUserEveryDefinedMins(e);
+            return buildFailResponseSimulatingEmptyBody(HttpStatus.FORBIDDEN); // simulate a Response<Void>, I cannot put that as return type because if is admin, the response will contain a String, also returning something in the body for !admins this can be mapped for know the existent endpoints( i.g. if the bad user make a request to an /admin endpoint the response will be a 403 Forbidden with empty body, but if the user make a request to an endpoint that doesn't exist (NoResourceFoundException) it will be a 403 Forbidden with a body that I decide pass here. So, the user can know the existent endpoints)
+        }
+    }
+
+    private ResponseEntity<String> buildFailResponseForAdmin(Exception e) {
+        String body = buildFailJsonBody(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR, System.currentTimeMillis());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(body, headers, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     /**
@@ -319,8 +174,10 @@ public class ExceptionHandlerControllers {
         return new ResponseEntity<>(body, headers, status);
     }
 
-    private ResponseEntity<Void> buildEmptyFailResponse(HttpStatus status) {
-        return ResponseEntity.status(status).build();
+    private ResponseEntity<String> buildFailResponseSimulatingEmptyBody(HttpStatus status) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(null, headers, status);
     }
 
 
@@ -343,7 +200,7 @@ public class ExceptionHandlerControllers {
      * @see UserWithId
      * @since 1.0
      */
-    private boolean isAuthenticated() {
+    private boolean _isAuthenticated() {
         return (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
     }
 
@@ -355,7 +212,7 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     private boolean isAdmin() {
-        if (!isAuthenticated()) return false;
+        if (!_isAuthenticated()) return false;
         boolean isAdm = false;
 
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -372,23 +229,6 @@ public class ExceptionHandlerControllers {
         return isAdm;
     }
 
-    private boolean isAdminOrUser() {
-        if (!isAuthenticated()) return false;
-        boolean isAny = false;
-
-        Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (obj instanceof UserWithId usr) {
-            if (usr.getAuthorities() == null || usr.getAuthorities().isEmpty()) return false;
-            isAny = usr
-                    .getAuthorities()
-                    .stream()
-                    .anyMatch(a ->
-                            a.getAuthority().contains(ERole.ROLE_ADMIN.toString()) ||
-                                    a.getAuthority().contains(ERole.ROLE_USER.toString())
-                    );
-        }
-        return isAny;
-    }
 
     /**
      * Verify if the {@code msg.toLowerCase().trim()} contains all the
@@ -412,34 +252,25 @@ public class ExceptionHandlerControllers {
         return contains;
     }
 
-    /**
-     * save the {@code UnauthenticatedException} in a file, also log an {@code ERROR}
-     * only if the exception is an exception threw in production
-     *
-     * @param e the exception to log
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    public void logUnhandledException(@NotNull Exception e) {
-        boolean isTesting = this.thisContains(e.getMessage(), Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES);
-        if (isTesting) return;
-        log.error("Unhandled exception: {}", (e.toString())); // print ERRORs in testing can be confusing
-        saveUnhandledException(e);
-    }
 
     /**
-     * Save the unhandled exception in the file: {@link Cons.Logs#UNHANDLED_EXCEPTIONS_FILE}
+     * Save the unhandled exception in the file: {@link Cons.Logs#HiddenExceptionsOfUsers}
      *
      * @param e the exception to save in the file
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    private void saveUnhandledException(Exception e) {
-        Path path = Path.of(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE);
+    private void saveHiddenExceptionForTheUserEveryDefinedMins(Exception e) {
+        if (System.currentTimeMillis() - lastTimeAnExceptionWasSavedToFile < TIME_TO_SAVE_EXCEPTIONS)
+            return;
+
+        Path path = Path.of(Cons.Logs.HiddenExceptionsOfUsers);
         filesSyncUtils.appendToFile(
                 path,
-                new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()),
-                SychFor.UNHANDLED_EXCEPTIONS
+                new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()) + "\n",
+                SychFor.HIDDEN_EXCEPTIONS_OF_USERS
         );
+
+        lastTimeAnExceptionWasSavedToFile = System.currentTimeMillis();
     }
 }

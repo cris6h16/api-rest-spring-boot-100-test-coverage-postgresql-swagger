@@ -36,7 +36,7 @@ public class ServiceUtilsFileLogTest {
     @Autowired
     private UserServiceImpl userService;
 
-    static Path p = Path.of(Cons.Logs.UNHANDLED_EXCEPTIONS_FILE);
+    static Path p = Path.of(Cons.Logs.HiddenExceptionsOfUsers);
 
     /**
      * Delete the file before all the tests
