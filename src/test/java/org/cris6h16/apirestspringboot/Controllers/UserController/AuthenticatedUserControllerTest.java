@@ -50,7 +50,7 @@ class AuthenticatedUserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final String path = Cons.User.Controller.Path.PATH;
+    private static final String path = Cons.User.Controller.Path.USER_PATH;
     private static final String path_patch_username = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME;
     private static final String path_patch_email = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_EMAIL;
     private static final String path_patch_password = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_PASSWORD;

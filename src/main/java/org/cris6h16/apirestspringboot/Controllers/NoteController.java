@@ -28,7 +28,7 @@ import java.util.List;
 @RequestMapping(path = NoteController.path)
 @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER')")
 public class NoteController {
-    public static final String path = Cons.Note.Controller.Path.PATH;
+    public static final String path = Cons.Note.Controller.Path.NOTE_PATH;
     private final NoteServiceImpl noteService;
 
     public NoteController(NoteServiceImpl noteService) {

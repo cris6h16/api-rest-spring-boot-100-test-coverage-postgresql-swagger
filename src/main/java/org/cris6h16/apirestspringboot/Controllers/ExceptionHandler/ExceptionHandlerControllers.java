@@ -89,6 +89,7 @@ public class ExceptionHandlerControllers {
     @ExceptionHandler(PropertyReferenceException.class)
     public ResponseEntity<String> handlePropertyReferenceException(PropertyReferenceException e) {
         logHandledDebug(e);
+
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String forClient = Cons.Response.ForClient.GENERIC_ERROR;
 
@@ -129,6 +130,7 @@ public class ExceptionHandlerControllers {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<String> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
         logHandledDebug(e);
+        if (!isAdmin()) return buildAFailResponse(HttpStatus.FORBIDDEN, Cons.Auth.Fails.ACCESS_DENIED);
 
         HttpStatus status = HttpStatus.BAD_REQUEST;
         String forClient = Cons.Response.ForClient.GENERIC_ERROR;
@@ -315,6 +317,10 @@ public class ExceptionHandlerControllers {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         return new ResponseEntity<>(body, headers, status);
+    }
+
+    private ResponseEntity<Void> buildEmptyFailResponse(HttpStatus status) {
+        return ResponseEntity.status(status).build();
     }
 
 

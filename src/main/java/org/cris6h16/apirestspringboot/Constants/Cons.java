@@ -20,7 +20,7 @@ public class Cons {
         public class Controller {
 
             public class Path {
-                public static final String PATH = "/api/v1/users";
+                public static final String USER_PATH = "/api/v1/users";
                 public static final String COMPLEMENT_PATCH_USERNAME = "/patch/username";
                 public static final String COMPLEMENT_PATCH_EMAIL = "/patch/email";
                 public static final String COMPLEMENT_PATCH_PASSWORD = "/patch/password";
@@ -72,7 +72,7 @@ public class Cons {
     public class Note {
         public class Controller {
             public class Path {
-                public static final String PATH = "/api/v1/notes";
+                public static final String NOTE_PATH = "/api/v1/notes";
             }
         }
 

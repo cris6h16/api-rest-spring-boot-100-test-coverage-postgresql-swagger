@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
-import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
@@ -10,7 +9,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,8 +17,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(Cons.User.Controller.Path.PATH)
-@PreAuthorize("isAuthenticated() and hasRole('ADMIN')")
+@RequestMapping(Cons.User.Controller.Path.USER_PATH)
 public class AdminUserController {
 
     UserServiceImpl userService;

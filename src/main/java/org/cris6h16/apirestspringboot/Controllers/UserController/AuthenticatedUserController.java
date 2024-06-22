@@ -10,11 +10,10 @@ import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(Cons.User.Controller.Path.PATH)
+@RequestMapping(Cons.User.Controller.Path.USER_PATH)
 public class AuthenticatedUserController {
     UserServiceImpl userService;
 
@@ -32,7 +31,6 @@ public class AuthenticatedUserController {
      * @since 1.0
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<PublicUserDTO> getById(@PathVariable(required = true) Long id) {
         PublicUserDTO u = userService.getById(id);
         return ResponseEntity.ok(u);
@@ -43,7 +41,6 @@ public class AuthenticatedUserController {
             value = Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchUsernameById(@PathVariable(required = true) Long id,
                                                   @RequestBody(required = true) @Valid PatchUsernameUserDTO dto) {
         userService.patchUsernameById(id, dto);
@@ -54,7 +51,6 @@ public class AuthenticatedUserController {
             value = Cons.User.Controller.Path.COMPLEMENT_PATCH_EMAIL + "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchEmailById(@PathVariable(required = true) Long id,
                                                @RequestBody(required = true) @Valid PatchEmailUserDTO dto) {
         userService.patchEmailById(id, dto);
@@ -65,7 +61,6 @@ public class AuthenticatedUserController {
             value = Cons.User.Controller.Path.COMPLEMENT_PATCH_PASSWORD + "/{id}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> patchPasswordById(@PathVariable(required = true) Long id,
                                                   @RequestBody(required = true) @Valid PatchPasswordUserDTO dto) {
         userService.patchPasswordById(id, dto);
@@ -82,7 +77,6 @@ public class AuthenticatedUserController {
      * @since 1.0
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("isAuthenticated() and hasAnyRole('ADMIN', 'USER') and #id == authentication.principal.id")
     public ResponseEntity<Void> deleteById(@PathVariable(required = true) Long id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();

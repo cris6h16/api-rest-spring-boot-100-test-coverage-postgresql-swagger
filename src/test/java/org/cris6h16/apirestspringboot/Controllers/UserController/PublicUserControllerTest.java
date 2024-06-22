@@ -3,11 +3,13 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
@@ -22,10 +24,12 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+//@SpringBootTest
+//@AutoConfigureMockMvc
+//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+//@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+
+@WebMvcTest(PublicUserController.class)
 class PublicUserControllerTest { // test that and its integration with the service
 
     @Autowired
@@ -35,7 +39,8 @@ class PublicUserControllerTest { // test that and its integration with the servi
     private UserServiceImpl userService;
 
 
-    private static String path = Cons.User.Controller.Path.PATH;
+
+    private static String path = Cons.User.Controller.Path.USER_PATH;
 
     @Test
     @Order(1)

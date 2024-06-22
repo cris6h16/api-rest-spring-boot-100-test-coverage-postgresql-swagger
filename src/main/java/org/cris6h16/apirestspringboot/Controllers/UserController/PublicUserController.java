@@ -1,14 +1,12 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,11 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 
 @RestController
-@PreAuthorize("permitAll()")
 @RequestMapping(PublicUserController.path)
 public class PublicUserController {
 
-    public static final String path = Cons.User.Controller.Path.PATH;
+    public static final String path = Cons.User.Controller.Path.USER_PATH;
 
 
     UserServiceImpl userService;

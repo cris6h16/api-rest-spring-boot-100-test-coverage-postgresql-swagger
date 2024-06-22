@@ -64,7 +64,7 @@ class ExceptionHandlerControllersTest {
         when(userService.create(any(CreateUserDTO.class)))
                 .thenThrow(exception);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isBadRequest())
@@ -80,7 +80,7 @@ class ExceptionHandlerControllersTest {
         when(userService.create(any(CreateUserDTO.class)))
                 .thenThrow(exception);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isBadRequest())
@@ -96,7 +96,7 @@ class ExceptionHandlerControllersTest {
         when(e.getMessage()).thenReturn("No property 'passedProperty' found for type 'customEntity'");
         doThrow(e).when(userService).getPage(any(Pageable.class));
 
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("No property 'passedProperty' found"));
@@ -109,7 +109,7 @@ class ExceptionHandlerControllersTest {
         when(e.getMessage()).thenReturn("property passedProperty for sort was not found");
         doThrow(e).when(userService).getPage(any(Pageable.class));
 
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
@@ -125,7 +125,7 @@ class ExceptionHandlerControllersTest {
 
         when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isConflict())
@@ -143,7 +143,7 @@ class ExceptionHandlerControllersTest {
 
         when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isConflict())
@@ -161,7 +161,7 @@ class ExceptionHandlerControllersTest {
 
         when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isConflict())
@@ -172,7 +172,7 @@ class ExceptionHandlerControllersTest {
     // Required request body is missing
     @Test
     void handleHttpMessageNotReadableException_requiredBodyMissing_Then400_BAD_REQUEST_andCustomMsg() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
 //                        .content("{}") --> validations fails in dto
                         .content("")) // doesn't create the dto
@@ -184,7 +184,7 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleMethodArgumentNotValidException_ViolationsInDTO_Then400_BAD_REQUEST_andValidationMsg() throws Exception {
-        this.mvc.perform(patch(Cons.User.Controller.Path.PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
+        this.mvc.perform(patch(Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(PatchUsernameUserDTO.builder().build()))) // username blank
@@ -196,7 +196,7 @@ class ExceptionHandlerControllersTest {
     @Test
     @WithMockUserWithId(id = 1)
     void handleMethodArgumentNotValidException_postInAPatchEndpoint_Then405_METHOD_NOT_ALLOWED_andGenericMsg() throws Exception {
-        String path = Cons.User.Controller.Path.PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1";
+        String path = Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1";
         this.mvc.perform(post(path).with(csrf()))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -205,7 +205,7 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleMethodArgumentNotValidException_patchInAGetEndpoint_Then405_METHOD_NOT_ALLOWED_andGenericMsg() throws Exception {
-        String path = Cons.User.Controller.Path.PATH;
+        String path = Cons.User.Controller.Path.USER_PATH;
         this.mvc.perform(patch(path).with(csrf()))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -218,7 +218,7 @@ class ExceptionHandlerControllersTest {
         when(userService.create(any(CreateUserDTO.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, "My custom message"));
 
-        this.mvc.perform(post(Cons.User.Controller.Path.PATH).with(csrf())
+        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createUserDTO())))
                 .andExpect(status().isFailedDependency())
@@ -247,7 +247,7 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleAccessDeniedException_Unauthenticated_Then401_UNAUTHORIZED_andCustomMsg() throws Exception {
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
@@ -256,7 +256,7 @@ class ExceptionHandlerControllersTest {
     @Test
     @WithMockUserWithId
     void handleAccessDeniedException_AuthenticatedUser_Then404_NOT_FOUND_andCustomMsg() throws Exception {
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
@@ -265,7 +265,7 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleMethodArgumentTypeMismatchException_longPathVariableReceivedAStr_Then400_BAD_REQUEST_andGenricMsg() throws Exception {
-        String path = Cons.User.Controller.Path.PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME;
+        String path = Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME;
         this.mvc.perform(patch(path + "/one")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -277,7 +277,7 @@ class ExceptionHandlerControllersTest {
 
     @Test
     void handleHttpMediaTypeNotSupportedException_Then415_UNSUPPORTED_MEDIA_TYPE_andCustomMsg() throws Exception {
-        this.mvc.perform(patch(Cons.User.Controller.Path.PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
+        this.mvc.perform(patch(Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_XML)
                         .content(objectMapper.writeValueAsString(PatchUsernameUserDTO.builder().build())))
@@ -293,7 +293,7 @@ class ExceptionHandlerControllersTest {
     void handleException_Then500_andCustomMsg_alsoShouldNotLogDueToExceptionMessageContainATestingPattern() throws Exception {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new NullPointerException("Unexpected exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
         verify(this.filesSyncUtils, never()).appendToFile(any(), any(), any());
@@ -307,7 +307,7 @@ class ExceptionHandlerControllersTest {
     void handleException_Then500_andCustomMsg_alsoShouldLogDueToExceptionIsConsiderAsExceptionInProduction() throws Exception {
         when(userService.getPage(any(Pageable.class)))
                 .thenThrow(new NullPointerException("Unexpected exception in production (doesnt contain the testing pattern)"));
-        this.mvc.perform(get(Cons.User.Controller.Path.PATH))
+        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
 

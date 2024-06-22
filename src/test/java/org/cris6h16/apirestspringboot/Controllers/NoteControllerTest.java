@@ -5,7 +5,6 @@ import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -49,7 +48,7 @@ class NoteControllerTest {
 
     @MockBean
     private NoteServiceImpl noteService;
-    private static String path = Cons.Note.Controller.Path.PATH;
+    private static String path = Cons.Note.Controller.Path.NOTE_PATH;
 
 
     // -------------------------------- CREATE --------------------------------\\
