@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class PublicUserControllerTest { // test that and its integration with the service
+class PublicUserControllerTest {
 
     @Autowired
     private MockMvc mvc;

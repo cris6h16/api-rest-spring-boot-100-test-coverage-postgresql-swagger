@@ -249,24 +249,21 @@ class AuthenticatedUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_OtherUserAccount_Then404_NotFound() throws Exception {
+    void patchUsernameById_OtherUserAccount_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/2")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
     @Test
@@ -321,16 +318,30 @@ class AuthenticatedUserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    void patchUsernameById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
+        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
+                .when(userService).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+
+        this.mvc.perform(patch(path_patch_username + "/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"cris6h16\"}"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchUsernameById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
+        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
                 .when(userService).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
 
         this.mvc.perform(patch(path_patch_username + "/1")
@@ -362,68 +373,58 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+    void patchEmailById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/one")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+    void patchEmailById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void patchEmailById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchEmailById_contentTypeNotSpecified_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchEmailById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchEmailById_contentTypeUnsupported_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchEmailById_contentEmpty_then400_BAD_REQUEST() throws Exception {
+    void patchEmailById_contentEmpty_then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
-
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
     }
 
@@ -434,24 +435,21 @@ class AuthenticatedUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_OtherUserAccount_Then404_NotFound() throws Exception {
+    void patchEmailById_OtherUserAccount_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_email + "/2")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchEmailById(any(), any());
     }
 
     @Test
@@ -506,16 +504,30 @@ class AuthenticatedUserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    void patchEmailById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
+        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
+                .when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+
+        this.mvc.perform(patch(path_patch_email + "/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchEmailById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
+        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
                 .when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
 
         this.mvc.perform(patch(path_patch_email + "/1")
@@ -550,69 +562,59 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+    void patchPasswordById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/one")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+    void patchPasswordById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void patchPasswordById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchPasswordById_contentTypeNotSpecified_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
                         .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchPasswordById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchPasswordById_contentTypeUnsupported_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchPasswordById_contentEmpty_then400_BAD_REQUEST() throws Exception {
+    void patchPasswordById_contentEmpty_then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
     @Test
@@ -622,24 +624,21 @@ class AuthenticatedUserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"1234567\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_OtherUserAccount_Then404_NotFound() throws Exception {
+    void patchPasswordById_OtherUserAccount_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_password + "/2")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchPasswordById(any(), any());
     }
 
     @Test
@@ -652,7 +651,6 @@ class AuthenticatedUserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-
         verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
     }
 
@@ -694,16 +692,30 @@ class AuthenticatedUserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"1234567\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    void patchPasswordById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
+        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
+                .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+
+        this.mvc.perform(patch(path_patch_password + "/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"1234567\"}"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchPasswordById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
+        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
                 .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
         this.mvc.perform(patch(path_patch_password + "/1")
                         .with(csrf())
@@ -732,43 +744,38 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+    void deleteById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
         this.mvc.perform(delete(path + "/one")
                         .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).deleteById(anyLong());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+    void deleteById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
         this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).deleteById(anyLong());
     }
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_Unauthenticated_Then404_NotFound() throws Exception {
+    void deleteById_Unauthenticated_Then401_Unauthorized() throws Exception {
         this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).deleteById(anyLong());
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_OtherUserAccount_Then404_NotFound() throws Exception {
+    void deleteById_OtherUserAccount_Then403_Forbidden() throws Exception {
         this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).deleteById(anyLong());
     }
 
@@ -780,16 +787,28 @@ class AuthenticatedUserControllerTest {
 
         this.mvc.perform(delete(path + "/1")
                         .with(csrf()))
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    void deleteById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
+        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
+                .when(userService).deleteById(any(Long.class));
+
+        this.mvc.perform(delete(path + "/1")
+                        .with(csrf()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void deleteById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
+        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
                 .when(userService).deleteById(any(Long.class));
 
         this.mvc.perform(delete(path + "/1")
