@@ -40,14 +40,14 @@ public class ExceptionHandlerControllers {
 
     private final Object lock = new Object();
     private final FilesUtils filesSyncUtils;
-    private static volatile long lastSavedToFile; // concurrent changed
-    private static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
-    public static List<String> hiddenExceptionsLine;
+    protected static volatile long lastSavedToFile; // concurrent changed
+    protected static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
+    protected static List<String> hiddenExceptionsLines;
 
     public ExceptionHandlerControllers(FilesUtils filesSyncUtils) {
         this.filesSyncUtils = filesSyncUtils;
         lastSavedToFile = 0;
-        hiddenExceptionsLine = new Vector<>(); // for thread safety ( for avoid internally crashes [adding && removing] )
+        hiddenExceptionsLines = new Vector<>(); // for thread safety ( for avoid internally crashes [adding && removing] )
     }
 
     /**
@@ -210,7 +210,11 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     private boolean _isAuthenticated() {
-        return (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
+        try { // in testing the the above is null pointer exception
+            return (SecurityContextHolder.getContext().getAuthentication().getPrincipal()) instanceof UserWithId;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -271,7 +275,18 @@ public class ExceptionHandlerControllers {
      */
     private void saveHiddenExceptionForTheUserEveryDefinedMins(Exception e) {
         synchronized (lock) {
-            hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()).substring(0, Math.min(e.getStackTrace().length, 100)));
+            StringBuilder line = new StringBuilder()
+                    .append(new Date().toString())
+                    .append("::")
+                    .append(e.toString())
+                    .append("::")
+                    .append(
+                            (e.getStackTrace() == null || e.getStackTrace().length == 0) ? "" :
+                                    Arrays.toString(e.getStackTrace()).substring(
+                                            0, Math.min(e.getStackTrace().length, 100)
+                                    )
+                    );
+            hiddenExceptionsLines.add(line.toString());
         }
 
         if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
@@ -280,10 +295,10 @@ public class ExceptionHandlerControllers {
             if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
 
             StringBuilder content = new StringBuilder();
-            for (String str : hiddenExceptionsLine) {
+            for (String str : hiddenExceptionsLines) {
                 content.append(str).append("\n");
             }
-            hiddenExceptionsLine.clear();
+            hiddenExceptionsLines.clear();
             lastSavedToFile = System.currentTimeMillis();
 
             filesSyncUtils.appendToFile(

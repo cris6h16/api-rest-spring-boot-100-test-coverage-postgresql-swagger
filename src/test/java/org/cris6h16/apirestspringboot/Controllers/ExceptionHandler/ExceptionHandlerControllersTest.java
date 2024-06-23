@@ -1,57 +1,50 @@
 package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.assertj.core.api.Assertions;
+import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
-import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
-import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;
-import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@ExtendWith(MockitoExtension.class)
 class ExceptionHandlerControllersTest {
 
-    @Autowired
-    private MockMvc mvc;
+    @InjectMocks
+    private ExceptionHandlerControllers exceptionHandlerControllers;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
-    private UserServiceImpl userService;
-
-    @MockBean
+    @Mock
     private FilesUtils filesSyncUtils;
 
     @Test
@@ -60,272 +53,265 @@ class ExceptionHandlerControllersTest {
         when(violation.getMessage()).thenReturn("My custom message in the validation");
         ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", Set.of(violation));
 
-        when(userService.create(any(CreateUserDTO.class)))
-                .thenThrow(exception);
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleConstraintViolationException(exception);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("My custom message in the validation"));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).contains("\"message\":\"My custom message in the validation\"");
     }
 
     @Test
     void handleConstraintViolationException_withoutViolations_Then400_BAD_REQUEST_andGenericMsg() throws Exception {
-        // Mock ConstraintViolationException without violations
         ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", new HashSet<>());
 
-        when(userService.create(any(CreateUserDTO.class)))
-                .thenThrow(exception);
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleConstraintViolationException(exception);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
     }
 
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void handlePropertyReferenceException_withPropertyNonexistent_Then400_BAD_REQUEST_andSplittedMsg() throws Exception {
-        PropertyReferenceException e = mock(PropertyReferenceException.class);
-        when(e.getMessage()).thenReturn("No property 'passedProperty' found for type 'customEntity'");
-        doThrow(e).when(userService).getPage(any(Pageable.class));
-
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("No property 'passedProperty' found"));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void handlePropertyReferenceException_withUnformattedMessage_Then400_BAD_REQUEST_andGenericMsg() throws Exception {
-        PropertyReferenceException e = mock(PropertyReferenceException.class);
-        when(e.getMessage()).thenReturn("property passedProperty for sort was not found");
-        doThrow(e).when(userService).getPage(any(Pageable.class));
-
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-    }
-
-    /**
-     * @see ExceptionHandlerControllers#handleDataIntegrityViolationException
-     */
     @Test
     void handleDataIntegrityViolationException_withUsernameUniqueConstraint_Then409_CONFLICT_andCustomMsg() throws Exception {
         DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
         when(e.getMessage()).thenReturn("any string here" + Cons.User.Constrains.USERNAME_UNIQUE_NAME + "also here");
 
-        when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isConflict())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Constrains.USERNAME_UNIQUE_MSG));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.User.Constrains.USERNAME_UNIQUE_MSG));
     }
 
-    /**
-     * @see ExceptionHandlerControllers#handleDataIntegrityViolationException
-     */
     @Test
     void handleDataIntegrityViolationException_withEmailUniqueConstraint_Then409_CONFLICT_andCustomMsg() throws Exception {
         DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
         when(e.getMessage()).thenReturn("any string here" + Cons.User.Constrains.EMAIL_UNIQUE_NAME + "also here");
 
-        when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isConflict())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Constrains.EMAIL_UNIQUE_MSG));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.User.Constrains.EMAIL_UNIQUE_MSG));
     }
 
-    /**
-     * @see ExceptionHandlerControllers#handleDataIntegrityViolationException
-     */
     @Test
     void handleDataIntegrityViolationException_withUnhandledUniqueConstraint_Then409_CONFLICT_andGenericMsg() throws Exception {
         DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
         when(e.getMessage()).thenReturn("any string here" + "dni_unique" + "also here");
 
-        when(userService.create(any(CreateUserDTO.class))).thenThrow(e);
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isConflict())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-    }
-
-    // Required request body is missing
-    @Test
-    void handleHttpMessageNotReadableException_requiredBodyMissing_Then400_BAD_REQUEST_andCustomMsg() throws Exception {
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content("{}") --> validations fails in dto
-                        .content("")) // doesn't create the dto
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
-    }
-
-
-    @Test
-    void handleMethodArgumentNotValidException_ViolationsInDTO_Then400_BAD_REQUEST_andValidationMsg() throws Exception {
-        this.mvc.perform(patch(Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(PatchUsernameUserDTO.builder().build()))) // username blank
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1)
-    void handleMethodArgumentNotValidException_postInAPatchEndpoint_Then405_METHOD_NOT_ALLOWED_andGenericMsg() throws Exception {
-        String path = Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1";
-        this.mvc.perform(post(path).with(csrf()))
-                .andExpect(status().isMethodNotAllowed())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("Request method 'POST' is not supported"));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
     }
 
     @Test
-    void handleMethodArgumentNotValidException_patchInAGetEndpoint_Then405_METHOD_NOT_ALLOWED_andGenericMsg() throws Exception {
-        String path = Cons.User.Controller.Path.USER_PATH;
-        this.mvc.perform(patch(path).with(csrf()))
-                .andExpect(status().isMethodNotAllowed())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("Request method 'PATCH' is not supported"));
+    void handleMethodArgumentNotValidException_WithViolations_Then400_BAD_REQUEST_andValidationMsg() throws Exception {
+        ObjectError error = mock(ObjectError.class);
+        when(error.getDefaultMessage()).thenReturn("My custom message in the validation");
+        MethodArgumentNotValidException e = mock(MethodArgumentNotValidException.class);
+        when(e.getAllErrors()).thenReturn(List.of(error));
+
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleMethodArgumentNotValidException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).contains("\"message\":\"My custom message in the validation\"");
     }
 
 
+    // for reach 100% coverage
     @Test
-    void handleResponseStatusException_ThenStatusAndMsgFromTheException() throws Exception {
-        when(userService.create(any(CreateUserDTO.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.FAILED_DEPENDENCY, "My custom message"));
+    void handleMethodArgumentNotValidException_WithNoViolations_Then400_BAD_REQUEST_andGenericMsg() throws Exception {
+        MethodArgumentNotValidException e = mock(MethodArgumentNotValidException.class);
+        when(e.getAllErrors()).thenReturn(List.of());
 
-        this.mvc.perform(post(Cons.User.Controller.Path.USER_PATH).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createUserDTO())))
-                .andExpect(status().isFailedDependency())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("My custom message"));
-    }
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleMethodArgumentNotValidException(e);
 
-
-    @Test
-    void handleNoResourceFoundException_Unauthenticated_Then401_UNAUTHORIZED_andCustomMsg() throws Exception {
-        this.mvc.perform(get("/helloword"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
     }
 
     @Test
-    @WithMockUserWithId
-    void handleNoResourceFoundException_Authenticated_Then404_NOT_FOUND_andCustomMsg() throws Exception {
-        this.mvc.perform(get("/helloword"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-    }
+    void handleProperExceptionForTheUser_ThenStatusAndMsgFromTheException() throws Exception {
+        ProperExceptionForTheUser e = mock(ProperExceptionForTheUser.class);
+        when(e.getStatus()).thenReturn(HttpStatus.VARIANT_ALSO_NEGOTIATES);
+        when(e.getReason()).thenReturn("My custom message in the exception 123");
 
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleProperExceptionForTheUser(e);
 
-    @Test
-    void handleAccessDeniedException_Unauthenticated_Then401_UNAUTHORIZED_andCustomMsg() throws Exception {
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.VARIANT_ALSO_NEGOTIATES);
+        assertThat(res.getBody()).contains("\"message\":\"My custom message in the exception 123\"");
     }
 
     @Test
-    @WithMockUserWithId
-    void handleAccessDeniedException_AuthenticatedUser_Then404_NOT_FOUND_andCustomMsg() throws Exception {
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
+    void handleException_Then403() throws Exception {
+        NullPointerException e = mock(NullPointerException.class);
+        when(e.toString()).thenReturn("NullPointerException: Unexpected exception");
+        when(e.getStackTrace()).thenReturn(new StackTraceElement[0]);
+
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(res.getBody()).isNull();
+        verify(this.filesSyncUtils, times(1))
+                .appendToFile(
+                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        argThat(line ->
+                                line.contains(e.toString()) &&
+                                        line.split("::").length == 3 &&
+                                        line.charAt(line.length() - 1) == '\n'
+                        )
+                );
     }
 
-
     @Test
-    void handleMethodArgumentTypeMismatchException_longPathVariableReceivedAStr_Then400_BAD_REQUEST_andGenricMsg() throws Exception {
-        String path = Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME;
-        this.mvc.perform(patch(path + "/one")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(PatchUsernameUserDTO.builder().build()))) // username blank
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+//    @WithMockUserWithId(roles = {"ROLE_ADMIN"}) // doesn't work, I'll make it manually
+    void handleException_AsAdmin_ThenExceptionToStringInBody_AndExceptionNotSavedInFile() throws Exception {
+        {
+            UserWithId userWithId = mock(UserWithId.class);
+            when(userWithId.getAuthorities()).thenReturn(List.of(new SimpleGrantedAuthority(ERole.ROLE_ADMIN.toString())));
 
-    }
+            Authentication auth = mock(Authentication.class);
+            when(auth.getPrincipal()).thenReturn(userWithId);
 
-    @Test
-    void handleHttpMediaTypeNotSupportedException_Then415_UNSUPPORTED_MEDIA_TYPE_andCustomMsg() throws Exception {
-        this.mvc.perform(patch(Cons.User.Controller.Path.USER_PATH + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_XML)
-                        .content(objectMapper.writeValueAsString(PatchUsernameUserDTO.builder().build())))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-    }
+            SecurityContext mockedContext = mock(SecurityContext.class);
+            when(mockedContext.getAuthentication()).thenReturn(auth);
 
-    /**
-     * @see ExceptionHandlerControllers#logHiddenExceptionForTheUser(Exception)
-     */
-    @Test
-    @WithMockUserWithId(roles = "ROLE_ADMIN")
-    void handleException_Then500_andCustomMsg_alsoShouldNotLogDueToExceptionMessageContainATestingPattern() throws Exception {
-        when(userService.getPage(any(Pageable.class)))
-                .thenThrow(new NullPointerException("Unexpected exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+            SecurityContextHolder.setContext(mockedContext);
+        }
+
+        NullPointerException e = mock(NullPointerException.class);
+        when(e.toString()).thenReturn("NullPointerException: Unexpected exception 123");
+
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(res.getHeaders().get("Content-Type")).contains("application/json");
+        assertThat(res.getBody()).contains(e.toString());
         verify(this.filesSyncUtils, never()).appendToFile(any(), any());
+
+        SecurityContextHolder.clearContext();
     }
 
-    /**
-     * @see ExceptionHandlerControllers#logHiddenExceptionForTheUser(Exception)
-     */
+
     @Test
-    @WithMockUserWithId(roles = "ROLE_ADMIN")
-    void handleException_Then500_andCustomMsg_alsoShouldLogDueToExceptionIsConsiderAsExceptionInProduction() throws Exception {
-        when(userService.getPage(any(Pageable.class)))
-                .thenThrow(new NullPointerException("Unexpected exception in production (doesnt contain the testing pattern)"));
-        this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+    void handleException_Then403_ExceptionWithMessageNull_successfullySavedInFile() throws Exception {
+        NullPointerException e = mock(NullPointerException.class);
+        when(e.getStackTrace()).thenReturn(new StackTraceElement[0]);
 
-        verify(this.filesSyncUtils, times(1)).appendToFile(
-                argThat(path -> path.toString().equals(Cons.Logs.HiddenExceptionsOfUsers)),
-                argThat(line ->
-                        line.toString().contains("Unexpected exception in production") &&
-                                line.toString().contains("NullPointerException") &&
-                                line.toString().split("::").length == 3
-                )
-        );
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(res.getBody()).isNull();
+        verify(this.filesSyncUtils, times(1))
+                .appendToFile(
+                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        argThat(line ->
+                                line.contains(e.toString()) &&
+                                        line.split("::").length == 3 &&
+                                        line.charAt(line.length() - 1) == '\n'
+                        )
+                );
     }
 
+    @Test
+    void handleException_Then403_ExceptionWithStackTraceNull_successfullySavedInFile() throws Exception {
+        NullPointerException e = mock(NullPointerException.class);
 
-    private CreateUserDTO createUserDTO() {
-        return CreateUserDTO.builder()
-                .username("cris6h16")
-                .password("12345678")
-                .email("cristianmherrera21@gmail.com")
-                .build();
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(res.getBody()).isNull();
+        verify(this.filesSyncUtils, times(1))
+                .appendToFile(
+                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        argThat(line ->
+                                line.contains(e.toString()) &&
+                                        line.split("::").length == 3 &&
+                                        line.charAt(line.length() - 1) == '\n'
+                        )
+                );
+    }
+
+    @Test
+    void handleException_Then403_ExceptionWithStackTraceLengthZero_successfullySavedInFile() throws Exception {
+        NullPointerException e = mock(NullPointerException.class);
+        when(e.getStackTrace()).thenReturn(new StackTraceElement[0]);
+
+        ResponseEntity<String> res = this.exceptionHandlerControllers.handleException(e);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(res.getBody()).isNull();
+        verify(this.filesSyncUtils, times(1))
+                .appendToFile(
+                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        argThat(line ->
+                                line.contains(e.toString()) &&
+                                        line.split("::").length == 3 &&
+                                        line.charAt(line.length() - 1) == '\n'
+                        )
+                );
+    }
+
+    @Test
+    void handleException_Then403_andShouldSaveExceptionInFile_ConcurrencyTest() throws InterruptedException {
+        ExceptionHandlerControllers.lastSavedToFile = 0;
+        ExceptionHandlerControllers.hiddenExceptionsLines.clear();
+        ExceptionHandlerControllers.hiddenExceptionsLines.addAll(
+                List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+                        "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
+                        "21", "22", "23", "24", "25", "26", "27", "28", "29", "30")
+        );
+
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+
+        for (int i = 0; i < 50; i++) {
+            executor.submit(() -> {
+                for (int j = 0; j < 30; j++) {
+                    NullPointerException e = mock(NullPointerException.class);
+                    when(e.toString()).thenReturn("NullPointerException: Unexpected exception");
+                    this.exceptionHandlerControllers.handleException(e);
+                }
+            });
+        }
+
+        // Initiates an orderly shutdown in which previously submitted tasks are executed... see the java doc
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) { // wait for the executor to finish
+                executor.shutdownNow();
+                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                    Assertions.fail("Executor did not terminate");
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+        int totalThatWasEverListed = 50 * 30 + 30;
+        int couldBeSaved = 1 + 30;
+        int remaining = totalThatWasEverListed - couldBeSaved;
+
+        assertThat(ExceptionHandlerControllers.hiddenExceptionsLines.size()).isEqualTo(remaining);
+        verify(this.filesSyncUtils, times(1)).appendToFile(
+                any(),
+                argThat(content -> content.split("\n").length == couldBeSaved)
+        );
+
+        // clear invocations on the mock
+        clearInvocations(this.filesSyncUtils);
+
+        // save the remaining when 10 minutes passed since the last save ( simulated ) ( activate it calling the method )
+        ExceptionHandlerControllers.lastSavedToFile = ExceptionHandlerControllers.lastSavedToFile - (ExceptionHandlerControllers.MILLIS_EACH_SAVE + 1);
+
+        NullPointerException e = mock(NullPointerException.class);
+        when(e.toString()).thenReturn("NullPointerException: Unexpected exception");
+        this.exceptionHandlerControllers.handleException(e);
+        remaining = remaining + 1;
+
+        assertThat(ExceptionHandlerControllers.hiddenExceptionsLines.size()).isEqualTo(0);
+        final int finalRemaining = remaining;
+        verify(this.filesSyncUtils, times(1)).appendToFile(
+                eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                argThat(content -> content.split("\n").length == finalRemaining)
+        );
     }
 }
