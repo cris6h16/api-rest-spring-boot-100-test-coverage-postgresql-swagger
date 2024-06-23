@@ -21,10 +21,10 @@ import java.util.Vector;
 @Component
 public class AuthenticationListener {
     private final FilesUtils filesUtils;
-    private volatile long lastSuccessFlushed;
-    private volatile long lastFailureFlushed;
-    private final List<SuccessData> successData;
-    private final List<FailureData> failureData;
+    protected volatile long lastSuccessFlushed;
+    protected volatile long lastFailureFlushed;
+    protected final List<SuccessData> successData;
+    protected final List<FailureData> failureData;
     private final Object successLock = new Object();
     private final Object failureLock = new Object();
     private final long flushInterval = 10 * 60 * 1000; // 10 minutes
@@ -133,7 +133,7 @@ public class AuthenticationListener {
      * data for be saved, you can do it here.
      *
      * @param authentication The authentication object.
-     * @param instant       The instant when the event occurred.
+     * @param instant        The instant when the event occurred.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
@@ -145,8 +145,8 @@ public class AuthenticationListener {
      * data for be saved, you can do it here.
      *
      * @param authentication The authentication object.
-     * @param exception     The exception thrown.
-     * @param instant       The instant when the event occurred.
+     * @param exception      The exception thrown.
+     * @param instant        The instant when the event occurred.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */

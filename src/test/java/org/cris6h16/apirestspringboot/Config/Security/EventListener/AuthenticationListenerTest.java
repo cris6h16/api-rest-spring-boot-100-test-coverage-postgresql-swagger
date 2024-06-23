@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Config.Security.EventListener;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +15,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
 import java.nio.file.Path;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.InstanceOfAssertFactories.stream;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -35,6 +42,14 @@ class AuthenticationListenerTest {
     @InjectMocks
     private AuthenticationListener authenticationListener;
 
+    @BeforeEach
+    void setUp() {
+        authenticationListener.successData.clear();
+        authenticationListener.failureData.clear();
+
+        authenticationListener.lastSuccessFlushed = 0L;
+        authenticationListener.lastFailureFlushed = 0L;
+    }
 
     /**
      * Test for {@link AuthenticationListener#onSuccess(AuthenticationSuccessEvent)}
@@ -63,8 +78,7 @@ class AuthenticationListenerTest {
         assertTrue(authenticationListener.successData.isEmpty());
         verify(filesUtils, atLeastOnce()).appendToFile(
                 eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
-                anyString(),
-                eq(SychFor.SUCCESS_DATA)
+                anyString()
         );
     }
 
@@ -97,8 +111,7 @@ class AuthenticationListenerTest {
         assertTrue(authenticationListener.failureData.isEmpty());
         verify(filesUtils, atLeastOnce()).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                anyString(),
-                eq(SychFor.FAILURE_DATA)
+                anyString()
         );
     }
 
@@ -118,8 +131,7 @@ class AuthenticationListenerTest {
      * @since 1.0
      */
     @Test
-    @Tag("flushInFile")
-    void testFlushInFile_justCollected_successData() {
+    void flushSuccessInFile_justCollected_successData() {
         // Arrange
         AuthenticationListener.SuccessData successData =
                 new AuthenticationListener.SuccessData(
@@ -130,21 +142,19 @@ class AuthenticationListenerTest {
         authenticationListener.successData.add(successData);
 
         // Act
-        authenticationListener.flushInFile();
+        authenticationListener.flushSuccessInFile();
 
         // Assert
         // Verify that `appendToFile` is just 1 time with the exact provided content
         assertTrue(authenticationListener.successData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
-                argThat(content -> content.equals(successData.toString() + "\n")), // make sure that tha las char is a new line
-                eq(SychFor.SUCCESS_DATA)
+                argThat(content -> content.equals(successData.toString() + "\n"))// make sure that tha las char is a new line
         );
         // Verify that `appendToFile` is never called for failureData
         verify(filesUtils, never()).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                anyString(),
-                eq(SychFor.FAILURE_DATA)
+                anyString()
         );
     }
 
@@ -164,8 +174,7 @@ class AuthenticationListenerTest {
      * @since 1.0
      */
     @Test
-    @Tag("flushInFile")
-    void testFlushInFile_justCollected_failureData() {
+    void flushFailureInFile_justCollected_failureData() {
         // Arrange
         AuthenticationListener.FailureData failureData =
                 new AuthenticationListener.FailureData(
@@ -177,15 +186,20 @@ class AuthenticationListenerTest {
         authenticationListener.failureData.add(failureData);
 
         // Act
-        authenticationListener.flushInFile();
+        authenticationListener.flushFailureInFile();
 
         // Assert
         // Verify that `appendToFile` is just 1 time with the exact provided content
         assertTrue(authenticationListener.failureData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                argThat(content -> content.equals(failureData.toString() + "\n")), // make sure that tha las char is a new line
-                eq(SychFor.FAILURE_DATA)
+                argThat(content -> content.equals(failureData.toString() + "\n"))// make sure that tha las char is a new line
+        );
+
+        // Verify that `appendToFile` is never called for successData
+        verify(filesUtils, never()).appendToFile(
+                eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
+                anyString()
         );
     }
 
@@ -224,22 +238,21 @@ class AuthenticationListenerTest {
         authenticationListener.failureData.add(failureData);
 
         // Act
-        authenticationListener.flushInFile();
+        authenticationListener.flushFailureInFile();
+        authenticationListener.flushSuccessInFile();
 
         // Assert
         // Verify that `appendToFile` is called 2 times, one for successData and one for failureData
         assertTrue(authenticationListener.successData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
-                argThat(content -> content.equals(successData.toString() + "\n")),
-                eq(SychFor.SUCCESS_DATA)
+                argThat(content -> content.equals(successData.toString() + "\n"))
         );
 
         assertTrue(authenticationListener.failureData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                argThat(content -> content.equals(failureData.toString() + "\n")),
-                eq(SychFor.FAILURE_DATA)
+                argThat(content -> content.equals(failureData.toString() + "\n"))
         );
     }
 
@@ -282,22 +295,77 @@ class AuthenticationListenerTest {
         }
 
         // Act
-        authenticationListener.flushInFile();
+        authenticationListener.flushFailureInFile();
+        authenticationListener.flushSuccessInFile();
 
         // Assert
         // Verify that `appendToFile` is called 2 times, one for successData and one for failureData
         assertTrue(authenticationListener.successData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
-                argThat(content -> content.split("\n").length == 10),
-                eq(SychFor.SUCCESS_DATA)
+                argThat(content -> content.split("\n").length == 10)
         );
 
         assertTrue(authenticationListener.failureData.isEmpty());
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                argThat(content -> content.split("\n").length == 10),
-                eq(SychFor.FAILURE_DATA)
+                argThat(content -> content.split("\n").length == 10)
+        );
+    }
+
+
+    @Test
+    void testFlushInFile_bothCollected_Concurrent() {
+        // Arrange
+        ExecutorService executor = Executors.newFixedThreadPool(50);
+
+        for (int j = 0; j < 50; j++) {
+            executor.submit(() -> {
+                for (int i = 0; i < 30; i++) {
+                    AuthenticationSuccessEvent successEvent = mock(AuthenticationSuccessEvent.class);
+                    Authentication authentication = mock(Authentication.class);
+                    when(successEvent.getAuthentication()).thenReturn(authentication);
+
+                    AbstractAuthenticationFailureEvent failureEvent = mock(AbstractAuthenticationFailureEvent.class);
+                    AuthenticationException exception = mock(AuthenticationException.class);
+                    when(failureEvent.getAuthentication()).thenReturn(authentication);
+                    when(failureEvent.getException()).thenReturn(exception);
+
+                    authenticationListener.onSuccess(successEvent);
+                    authenticationListener.onFailure(failureEvent);
+                }
+            });
+        }
+
+
+        // Shutdown the executor and wait for all tasks to complete
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                    fail("Executor did not terminate");
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+
+
+        // todo: improve this part, it may fail if the for loop is too fast, but is more possible than it isn't
+        // e.g 4 threads hit the 2nd lock at the same time (then arr.length == 4), then the 1st lock is released (3 waiting), when it leaves the lock, It would have passed to be saved 4 list elements, then the expected value would be ( (50 * 30) - 4 )
+        assertThat(authenticationListener.successData.size()).isEqualTo((50 * 30) - 1);
+        assertThat(authenticationListener.failureData.size()).isEqualTo((50 * 30) - 1);
+
+        verify(filesUtils, times(1)).appendToFile(
+                eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
+                argThat(str -> str.split("\n").length == 1)
+        );
+
+        verify(filesUtils, times(1)).appendToFile(
+                eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
+                argThat(str -> str.split("\n").length == 1)
         );
     }
 }

@@ -38,7 +38,8 @@ public class AuthenticationListenerIntegrationTest {
     @BeforeEach
     void setUp() throws IOException {
         deleteLogFilesIfExist();
-        authenticationListener.lastFlushed = 0L; // avoid wait for 10 mins to flush
+        authenticationListener.lastSuccessFlushed = 0L; // avoid wait for 10 mins to flush
+        authenticationListener.lastFailureFlushed = 0L; // avoid wait for 10 mins to flush
     }
 
     @Test

@@ -295,7 +295,7 @@ class ExceptionHandlerControllersTest {
         this.mvc.perform(get(Cons.User.Controller.Path.USER_PATH))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-        verify(this.filesSyncUtils, never()).appendToFile(any(), any(), any());
+        verify(this.filesSyncUtils, never()).appendToFile(any(), any());
     }
 
     /**
@@ -316,8 +316,7 @@ class ExceptionHandlerControllersTest {
                         line.toString().contains("Unexpected exception in production") &&
                                 line.toString().contains("NullPointerException") &&
                                 line.toString().split("::").length == 3
-                ),
-                eq(SychFor.HIDDEN_EXCEPTIONS_OF_USERS)
+                )
         );
     }
 

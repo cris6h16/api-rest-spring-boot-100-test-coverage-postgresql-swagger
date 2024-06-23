@@ -17,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -99,6 +101,19 @@ public class ExceptionHandlerControllers {
     public ResponseEntity<String> handleProperExceptionForTheUser(ProperExceptionForTheUser e) {
         logHandledDebug(e);
         return buildAFailResponse(e.getStatus(), e.getReason());
+    }
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        logHandledDebug(e);
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
+
+        List<ObjectError> msgs = e.getAllErrors();
+        if (!msgs.isEmpty()) forClient = msgs.getFirst().getDefaultMessage();
+
+        return buildAFailResponse(status, forClient);
     }
 
     /**
@@ -256,7 +271,7 @@ public class ExceptionHandlerControllers {
      */
     private void saveHiddenExceptionForTheUserEveryDefinedMins(Exception e) {
         synchronized (lock) {
-            hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()));
+            hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()).substring(0, Math.min(e.getStackTrace().length, 100)));
         }
 
         if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;

@@ -9,6 +9,7 @@ import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -76,7 +77,6 @@ class AuthenticatedUserControllerTest {
     }
 
 
-
     @Test
     @WithMockUserWithId(id = 1L)
     void getById_OtherUserAccount_Then403_Forbidden() throws Exception {
@@ -89,52 +89,60 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void getById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+    void getById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
         this.mvc.perform(get(path + "/one"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-        verify(userService, never()).getById(any(Long.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).getById(any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void getById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+    void getById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
         this.mvc.perform(get(path + "/"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-        verify(userService, never()).getById(any(Long.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).getById(any());
     }
 
     @Test
     void getById_Unauthenticated_Then401_Unauthorized() throws Exception {
         this.mvc.perform(get(path + "/1"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
-        verify(userService, never()).getById(any(Long.class));
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).getById(any());
     }
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    @WithMockUserWithId(id = 1L)
     void getById_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+        when(userService.getById(any(Long.class)))
+                .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
+
+        this.mvc.perform(get(path + "/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+    }
+
+    @Test
+    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    void getById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
         when(userService.getById(any(Long.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
 
         this.mvc.perform(get(path + "/1"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
+                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
     }
 
 
     @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
+    @WithMockUserWithId(id = 1L)
     void getById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         when(userService.getById(any(Long.class)))
-                .thenThrow(new ResponseStatusException(HttpStatus.HTTP_VERSION_NOT_SUPPORTED, "cris6h16's message of my handled exception"));
+                .thenThrow(new ProperExceptionForTheUser(HttpStatus.HTTP_VERSION_NOT_SUPPORTED, "cris6h16's message of my handled exception"));
 
         this.mvc.perform(get(path + "/1"))
                 .andExpect(status().isHttpVersionNotSupported())
@@ -179,69 +187,59 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_InvalidIdIsAStr_Then400_BadRequest() throws Exception {
+    void patchUsernameById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/one")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.GENERIC_ERROR));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_requiredIdNotPassed_Then404_NotFound() throws Exception {
+    void patchUsernameById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/").with(csrf()))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void patchUsernameById_contentTypeNotSpecified_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchUsernameById_contentTypeNotSpecified_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
                         .content("{\"username\":\"cris6h16\"}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchUsernameById_contentTypeUnsupported_Then415_UNSUPPORTED_MEDIA_TYPE() throws Exception {
+    void patchUsernameById_contentTypeUnsupported_Then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .content("username=cris6h16"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.UNSUPPORTED_MEDIA_TYPE));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void patchUsernameById_contentEmpty_then400_BAD_REQUEST() throws Exception {
+    void patchUsernameById_contentEmpty_then403_Forbidden() throws Exception {
         this.mvc.perform(patch(path_patch_username + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.REQUEST_BODY_MISSING));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
+                .andExpect(status().isForbidden())
+                .andExpect(content().bytes(new byte[0]));
+        verify(userService, never()).patchUsernameById(any(), any());
     }
 
     @Test
@@ -255,7 +253,6 @@ class AuthenticatedUserControllerTest {
                 .andExpect(jsonPath("$.message").value(Cons.Auth.Fails.UNAUTHORIZED));
         verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
     }
-
 
 
     @Test
@@ -631,7 +628,6 @@ class AuthenticatedUserControllerTest {
     }
 
 
-
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchPasswordById_OtherUserAccount_Then404_NotFound() throws Exception {
@@ -764,8 +760,6 @@ class AuthenticatedUserControllerTest {
                 .andExpect(jsonPath("$.message").value(Cons.Response.ForClient.NO_RESOURCE_FOUND));
         verify(userService, never()).deleteById(anyLong());
     }
-
-
 
 
     @Test

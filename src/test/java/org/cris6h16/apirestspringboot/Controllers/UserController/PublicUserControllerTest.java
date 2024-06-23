@@ -16,7 +16,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCollection;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -170,91 +173,104 @@ class PublicUserControllerTest { // test that and its integration with the servi
     }
 
     @Test
-    void create_givenInvalidJsonAttributes_DTO_Then403_FORBIDDEN() throws Exception {
-        this.mvc.perform(post(path)
+    void create_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
+        String msg = this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"parameter\":\"cris6h16\",\"nonexistent\":\"12345678\", \"cris6h16\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(msg).containsAnyOf(
+                Cons.User.Validations.USERNAME_IS_BLANK_MSG,
+                Cons.User.Validations.EMAIL_IS_BLANK_MSG,
+                Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG
+        );
 
         verify(userService, never()).create(any(CreateUserDTO.class));
     }
 
     @Test
-    void create_givenEmptyUsername_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_givenEmptyUsername_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"\",\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
 
         verify(userService, never()).create(any());
     }
 
     @Test
-    void create_UsernameNotPassed_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_UsernameNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"12345678\", \"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
 
         verify(userService, never()).create(any());
     }
 
     @Test
-    void create_givenEmptyEmail_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_givenEmptyEmail_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"12345678\", \"email\":\"\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
 
         verify(userService, never()).create(any());
     }
 
     @Test
-    void create_EmailNotPassed_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_EmailNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"password\":\"12345678\", \"username\":\"cris6h16\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
 
         verify(userService, never()).create(any());
     }
 
     @Test
-    void create_givenEmptyPassword_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_givenEmptyPassword_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\",\"password\":\"\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
         verify(userService, never()).create(any());
     }
 
     @Test
-    void create_PasswordNotPassed_DTO_Then403_FORBIDDEN() throws Exception {
+    void create_PasswordNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(post(path)
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"cris6h16\", \"email\":\"cristianmherrera21@gmailc.om\"}"))
-                .andExpect(status().isForbidden())
+                .andExpect(status().isBadRequest())
                 .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().bytes(new byte[0]));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
         verify(userService, never()).create(any());
     }
 
