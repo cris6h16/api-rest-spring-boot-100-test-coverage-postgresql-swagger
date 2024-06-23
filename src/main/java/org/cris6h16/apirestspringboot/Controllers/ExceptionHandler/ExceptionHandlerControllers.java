@@ -10,7 +10,7 @@ import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
-import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.FilesUtils;
 import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -22,9 +22,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 
@@ -39,13 +37,15 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Slf4j
 public class ExceptionHandlerControllers {
 
-    private final FilesSyncUtils filesSyncUtils;
-    private static long lastTimeAnExceptionWasSavedToFile;
-    private static final long TIME_TO_SAVE_EXCEPTIONS = 10 * 60 * 1000; // 10 minutes
+    private final FilesUtils filesSyncUtils;
+    private static volatile long lastSavedToFile; // concurrent changed
+    private static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
+    public static List<String> hiddenExceptionsLine;
 
-    public ExceptionHandlerControllers(FilesSyncUtils filesSyncUtils) {
+    public ExceptionHandlerControllers(FilesUtils filesSyncUtils) {
         this.filesSyncUtils = filesSyncUtils;
-        this.lastTimeAnExceptionWasSavedToFile = 0;
+        lastSavedToFile = 0;
+        hiddenExceptionsLine = new Vector<>(); // for thread safety ( for avoid internally crashes [adding && removing] )
     }
 
     /**
@@ -116,7 +116,7 @@ public class ExceptionHandlerControllers {
         if (isAdmin()) return buildFailResponseForAdmin(e);
         else {
             saveHiddenExceptionForTheUserEveryDefinedMins(e);
-            return buildFailResponseSimulatingEmptyBody(HttpStatus.FORBIDDEN); // simulate a Response<Void>, I cannot put that as return type because if is admin, the response will contain a String, also returning something in the body for !admins this can be mapped for know the existent endpoints( i.g. if the bad user make a request to an /admin endpoint the response will be a 403 Forbidden with empty body, but if the user make a request to an endpoint that doesn't exist (NoResourceFoundException) it will be a 403 Forbidden with a body that I decide pass here. So, the user can know the existent endpoints)
+            return new ResponseEntity<>(null, new HttpHeaders(), HttpStatus.FORBIDDEN); // simulate a Response<Void>, I cannot put that as return type because if is admin, the response will contain a String, also returning something in the body for !admins this can be mapped for know the existent endpoints( i.g. if the bad user make a request to an /admin endpoint the response will be a 403 Forbidden with empty body, but if the user make a request to an endpoint that doesn't exist (NoResourceFoundException) it will be a 403 Forbidden with a body that I decide pass here. So, the user can know the existent endpoints)
         }
     }
 
@@ -172,12 +172,6 @@ public class ExceptionHandlerControllers {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         return new ResponseEntity<>(body, headers, status);
-    }
-
-    private ResponseEntity<String> buildFailResponseSimulatingEmptyBody(HttpStatus status) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(null, headers, status);
     }
 
 
@@ -261,16 +255,21 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     private void saveHiddenExceptionForTheUserEveryDefinedMins(Exception e) {
-        if (System.currentTimeMillis() - lastTimeAnExceptionWasSavedToFile < TIME_TO_SAVE_EXCEPTIONS)
-            return;
+        hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()));
+        if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
+        synchronized (this) { // todo: doc why I don't use the synchronized in the method && why I check twice the time
+            if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
+            StringBuilder content = new StringBuilder();
+            for (String str : hiddenExceptionsLine) content.append(e).append("\n");
 
-        Path path = Path.of(Cons.Logs.HiddenExceptionsOfUsers);
-        filesSyncUtils.appendToFile(
-                path,
-                new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()) + "\n",
-                SychFor.HIDDEN_EXCEPTIONS_OF_USERS
-        );
+            filesSyncUtils.appendToFile(
+                    Path.of(Cons.Logs.HiddenExceptionsOfUsers),
+                    content.toString(),
+                    SychFor.HIDDEN_EXCEPTIONS_OF_USERS
+            );
 
-        lastTimeAnExceptionWasSavedToFile = System.currentTimeMillis();
+            lastSavedToFile = System.currentTimeMillis();
+            hiddenExceptionsLine.clear();
+        }
     }
 }

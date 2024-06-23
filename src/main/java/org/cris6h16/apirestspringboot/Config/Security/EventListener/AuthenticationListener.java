@@ -1,7 +1,7 @@
 package org.cris6h16.apirestspringboot.Config.Security.EventListener;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.FilesUtils;
 import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
@@ -21,12 +21,12 @@ import java.util.Vector;
  */
 @Component
 public class AuthenticationListener {
-    private final FilesSyncUtils filesUtils;
+    private final FilesUtils filesUtils;
     protected volatile long lastFlushed;
     protected List<SuccessData> successData;
     protected List<FailureData> failureData;
 
-    public AuthenticationListener(FilesSyncUtils filesUtils) {
+    public AuthenticationListener(FilesUtils filesUtils) {
         this.lastFlushed = 0L;
         this.filesUtils = filesUtils;
         // using Vector for thraed safety

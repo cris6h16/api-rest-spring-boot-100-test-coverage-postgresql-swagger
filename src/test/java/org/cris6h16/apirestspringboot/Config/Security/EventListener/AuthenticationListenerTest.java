@@ -1,16 +1,13 @@
 package org.cris6h16.apirestspringboot.Config.Security.EventListener;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.FilesUtils;
 import org.cris6h16.apirestspringboot.Utils.SychFor;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -34,7 +31,7 @@ class AuthenticationListenerTest {
 
 
     @Mock
-    private FilesSyncUtils filesUtils;
+    private FilesUtils filesUtils;
 
     @InjectMocks
     private AuthenticationListener authenticationListener;
@@ -114,7 +111,7 @@ class AuthenticationListenerTest {
      * This test verifies that the method {@link AuthenticationListener#flushInFile()}
      * works correctly when the list {@link AuthenticationListener#failureData} is empty
      * and the list {@link AuthenticationListener#successData} has just 1 element.
-     * then the method {@link FilesSyncUtils#appendToFile(Path, String, SychFor)}
+     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
      * is called just 1 time with the correct parameters.
      * </p>
      *
@@ -160,7 +157,7 @@ class AuthenticationListenerTest {
      * This test verifies that the method {@link AuthenticationListener#flushInFile()}
      * works correctly when the list {@link AuthenticationListener#successData} is empty
      * and the list {@link AuthenticationListener#failureData} has just 1 element.
-     * then the method {@link FilesSyncUtils#appendToFile(Path, String, SychFor)}
+     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
      * is called just 1 time with the correct parameters.
      * </p>
      *
@@ -200,7 +197,7 @@ class AuthenticationListenerTest {
      * This test verifies that the method {@link AuthenticationListener#flushInFile()}
      * works correctly when the list {@link AuthenticationListener#failureData} &&
      * {@link AuthenticationListener#successData} has each one just 1 element.
-     * then the method {@link FilesSyncUtils#appendToFile(Path, String, SychFor)}
+     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
      * is called twice. One for successData and one for failureData
      * </p>
      *
@@ -254,7 +251,7 @@ class AuthenticationListenerTest {
      * This test verifies that the method {@link AuthenticationListener#flushInFile()}
      * works correctly when the list {@link AuthenticationListener#failureData} &&
      * {@link AuthenticationListener#successData} has 10 elements
-     * each one then the method {@link FilesSyncUtils#appendToFile(Path, String, SychFor)}
+     * each one then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
      * is called twice. One for successData and one for failureData
      * <br>
      * Also verify the lines of the content passed to the file by both, it should be 10 each one

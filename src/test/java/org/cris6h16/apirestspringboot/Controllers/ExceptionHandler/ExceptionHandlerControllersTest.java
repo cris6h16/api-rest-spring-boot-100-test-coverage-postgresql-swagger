@@ -8,7 +8,7 @@ import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWit
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
-import org.cris6h16.apirestspringboot.Utils.FilesSyncUtils;
+import org.cris6h16.apirestspringboot.Utils.FilesUtils;
 import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,7 @@ class ExceptionHandlerControllersTest {
     private UserServiceImpl userService;
 
     @MockBean
-    private FilesSyncUtils filesSyncUtils;
+    private FilesUtils filesSyncUtils;
 
     @Test
     void handleConstraintViolationException_withViolations_Then400_BAD_REQUEST_andCustomMsg() throws Exception {
