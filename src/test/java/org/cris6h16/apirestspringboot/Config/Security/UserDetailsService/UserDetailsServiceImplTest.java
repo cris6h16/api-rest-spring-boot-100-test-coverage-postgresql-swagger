@@ -6,6 +6,8 @@ import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +25,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Test class for {@link UserDetailsServiceImpl}
@@ -38,8 +40,15 @@ class UserDetailsServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
+
+    @BeforeEach
+    void setUp() {
+        clearInvocations(userRepository);
+        reset(userRepository);
+    }
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}

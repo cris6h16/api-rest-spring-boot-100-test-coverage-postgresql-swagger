@@ -8,10 +8,7 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -42,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("UnitTest") // @WebMvcTest doesn't work with spring security custom configuration
 class AdminUserControllerTest {
     @Autowired
     private MockMvc mvc;
@@ -54,6 +52,12 @@ class AdminUserControllerTest {
 
     private static String path = Cons.User.Controller.Path.USER_PATH;
 
+
+    @BeforeEach
+    void setUp() {
+        clearInvocations(userService);
+        reset(userService);
+    }
 
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})

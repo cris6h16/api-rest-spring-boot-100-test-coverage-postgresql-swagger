@@ -9,6 +9,8 @@ import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWit
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +41,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
 class ExceptionHandlerControllersTest {
 
     @InjectMocks
@@ -46,6 +49,14 @@ class ExceptionHandlerControllersTest {
 
     @Mock
     private FilesUtils filesSyncUtils;
+
+
+    @BeforeEach
+    void setUp() {
+        clearInvocations(filesSyncUtils);
+        reset(filesSyncUtils);
+    }
+
 
     @Test
     void handleConstraintViolationException_withViolations_Then400_BAD_REQUEST_andCustomMsg() throws Exception {

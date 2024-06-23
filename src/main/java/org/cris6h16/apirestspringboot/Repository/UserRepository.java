@@ -33,15 +33,15 @@ public interface UserRepository extends
 
 
     @Modifying
-    @Query("UPDATE UserEntity u SET u.email = :newEmail WHERE u.id = :userId")
+    @Query("UPDATE UserEntity u SET u.email = :newEmail, u.updatedAt = CURRENT DATE WHERE u.id = :userId")
     void updateEmailById(String newEmail, Long userId);
 
     @Modifying
-    @Query("UPDATE UserEntity u SET u.username = :newUsername WHERE u.id = :userId")
+    @Query("UPDATE UserEntity u SET u.username = :newUsername, u.updatedAt = CURRENT DATE WHERE u.id = :userId")
     void updateUsernameById(String newUsername, Long userId);
 
     @Modifying
-    @Query("UPDATE UserEntity u SET u.password = :newPassword WHERE u.id = :id")
+    @Query("UPDATE UserEntity u SET u.password = :newPassword, u.updatedAt = CURRENT DATE WHERE u.id = :id")
     void updatePasswordById(String newPassword, Long id);
 
     boolean existsByUsername(String username);

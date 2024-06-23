@@ -1,9 +1,7 @@
 package org.cris6h16.apirestspringboot.Service;
 
 import jakarta.validation.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
@@ -20,16 +18,12 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.
 import org.cris6h16.apirestspringboot.Repository.RoleRepository;
 import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.annotation.Validated;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -69,23 +63,14 @@ public class UserServiceImpl implements UserService {
     )
     public Long create(CreateUserDTO dto) {// assumes that the data entry has all attributes NotNull (additional: @Valid doesnt work here)
 
-        dto.setEmail(dto.getEmail().toLowerCase().trim());
-        dto.setPassword(dto.getPassword().toLowerCase().trim());
-        dto.setUsername(dto.getUsername().toLowerCase().trim());
-
-        //  after trim
-        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
+        dto = trimAndValidatePassword(dto);
 
         RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
                 .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
 
-        UserEntity saved = userRepository.saveAndFlush(UserEntity.builder()
-                .username(dto.getUsername())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .email(dto.getEmail())
-                .roles(new HashSet<>(Collections.singleton(role)))
-                .createdAt(new Date())
-                .build());
+        UserEntity saved = userRepository.saveAndFlush(
+                dtoToEntityForBeSaved(dto, role)
+        );
 
         return saved.getId();
     }
@@ -173,6 +158,45 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteAll() {
         userRepository.deleteAll();
+    }
+
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    @Override
+    public Long createAdmin(CreateUserDTO dto) {
+        dto = trimAndValidatePassword(dto);
+
+        RoleEntity role = roleRepository.findByName(ERole.ROLE_ADMIN)
+                .orElse(RoleEntity.builder().name(ERole.ROLE_ADMIN).build());
+
+        UserEntity saved = userRepository.saveAndFlush(
+                dtoToEntityForBeSaved(dto, role)
+        );
+
+        return saved.getId();
+    }
+
+
+    private CreateUserDTO trimAndValidatePassword(CreateUserDTO dto) {
+        dto.setEmail(dto.getEmail().toLowerCase().trim());
+        dto.setPassword(dto.getPassword().toLowerCase().trim());
+        dto.setUsername(dto.getUsername().toLowerCase().trim());
+
+        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
+
+        return dto;
+    }
+
+    private UserEntity dtoToEntityForBeSaved(CreateUserDTO dto, RoleEntity role) {
+        return UserEntity.builder()
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .email(dto.getEmail())
+                .roles(new HashSet<>(Collections.singleton(role)))
+                .createdAt(new Date())
+                .build();
     }
 
     /**

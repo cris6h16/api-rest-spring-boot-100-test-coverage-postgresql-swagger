@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("UnitTest") // @WebMvcTest doesn't work with spring security custom configuration
 class PublicUserControllerTest {
 
     @Autowired
@@ -39,8 +40,14 @@ class PublicUserControllerTest {
     private UserServiceImpl userService;
 
 
-
     private static String path = Cons.User.Controller.Path.USER_PATH;
+
+
+    @BeforeEach
+    void setUp() {
+        clearInvocations(userService);
+        reset(userService);
+    }
 
     @Test
     @Order(1)
@@ -63,8 +70,6 @@ class PublicUserControllerTest {
         ));
     }
 
-    //todo: doc why is created, all depends on the service
-    //todo: test this for all where a DTO is passed
     @Test
     void create_givenJsonAttributesUntrimmed_Then_201_Created() throws Exception {// depends on service
         when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);

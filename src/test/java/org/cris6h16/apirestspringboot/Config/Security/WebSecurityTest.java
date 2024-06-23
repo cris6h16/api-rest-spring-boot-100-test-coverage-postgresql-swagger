@@ -3,11 +3,11 @@ package org.cris6h16.apirestspringboot.Config.Security;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
  * @since 1.0
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
 class WebSecurityTest {
 
     @InjectMocks

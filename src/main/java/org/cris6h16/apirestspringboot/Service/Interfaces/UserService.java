@@ -72,4 +72,6 @@ public interface UserService {
     void patchPasswordById(Long id, PatchPasswordUserDTO dto);
 
     void deleteAll();
+
+    Long createAdmin(CreateUserDTO dto);
 }
