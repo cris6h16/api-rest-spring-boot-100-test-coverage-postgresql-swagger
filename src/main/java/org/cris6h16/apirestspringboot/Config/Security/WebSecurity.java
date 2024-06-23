@@ -6,9 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -20,7 +18,7 @@ public class WebSecurity {
     public boolean checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier<Authentication> supplier, String userId) {
         try {
             Authentication auth = supplier.get();
-            if (!hasRoles(auth, ERole.ROLE_ADMIN, ERole.ROLE_USER)) return false;
+            if (!hasAnyRole(auth, ERole.ROLE_ADMIN, ERole.ROLE_USER)) return false;
             return principalIdEqualsTo(auth, userId);
         } catch (Exception e) {
             log.debug("Debug Exception on checkIfIsAdminOrUserAndHasThisIdAsPrincipalId: {}", e.toString());
@@ -34,8 +32,9 @@ public class WebSecurity {
                 .getId().equals(Long.parseLong(userId));
     }
 
-    private boolean hasRoles(Authentication authentication, ERole... eRoles) {
-        return authentication.getAuthorities().stream()
+    private boolean hasAnyRole(Authentication authentication, ERole... eRoles) {
+//        return authentication.getAuthorities().stream() --> I have a custom implementation of UserDetails, then the authorities I should get from the principal
+        return ((UserWithId) authentication.getPrincipal()).getAuthorities().stream()
                 .anyMatch(r -> Stream.of(eRoles)
                         .map(ERole::toString)
                         .anyMatch(role -> role.equals(r.getAuthority())));
