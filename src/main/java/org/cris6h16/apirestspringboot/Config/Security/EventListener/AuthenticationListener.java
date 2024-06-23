@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Vector;
 
 /**
- * This class listens for authentication events and logs them in files
+ * Listener for authentication events.
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
@@ -21,103 +21,119 @@ import java.util.Vector;
 @Component
 public class AuthenticationListener {
     private final FilesUtils filesUtils;
-    protected volatile long lastFlushed;
-    protected List<SuccessData> successData;
-    protected List<FailureData> failureData;
+    private volatile long lastSuccessFlushed;
+    private volatile long lastFailureFlushed;
+    private final List<SuccessData> successData;
+    private final List<FailureData> failureData;
+    private final Object successLock = new Object();
+    private final Object failureLock = new Object();
+    private final long flushInterval = 10 * 60 * 1000; // 10 minutes
 
     public AuthenticationListener(FilesUtils filesUtils) {
-        this.lastFlushed = 0L;
+        this.lastSuccessFlushed = 0L;
+        this.lastFailureFlushed = 0L;
         this.filesUtils = filesUtils;
-        // using Vector for thraed safety
         this.successData = new Vector<>(10);
         this.failureData = new Vector<>(10);
     }
 
     /**
-     * Logs the successful authentication
+     * Listener for successful authentication events.
      *
-     * @param success the event containing the authentication
+     * @param success The event.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @EventListener
     public void onSuccess(AuthenticationSuccessEvent success) {
-        successData.add(new SuccessData(
-                success.getAuthentication(),
-                System.currentTimeMillis()
-        ));
-
-        flushInFile();
+        synchronized (successLock) {
+            successData.add(new SuccessData(
+                    success.getAuthentication(),
+                    System.currentTimeMillis()
+            ));
+        }
+        flushSuccessInFile();
     }
 
     /**
-     * Logs the failed authentication
+     * Listener for failed authentication events.
      *
-     * @param failure the event containing the authentication and the exception
+     * @param failure The event.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     @EventListener
     public void onFailure(AbstractAuthenticationFailureEvent failure) {
-        failureData.add(new FailureData(
-                failure.getAuthentication(),
-                failure.getException(),
-                System.currentTimeMillis()
-        ));
-
-        flushInFile();
+        synchronized (failureLock) {
+            failureData.add(new FailureData(
+                    failure.getAuthentication(),
+                    failure.getException(),
+                    System.currentTimeMillis()
+            ));
+        }
+        flushFailureInFile();
     }
 
     /**
-     * Flushes the data in the corresponding files
-     * <p>
-     * The data is flushed if the last flush was more than 10 minutes ago
-     * finally the lists are cleared
-     * </p>
+     * Flushes the successful authentication events in the file.
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void flushInFile() {
-        if (System.currentTimeMillis() - lastFlushed < (10 * 60 * 1000)) return; // if less than 10 minutes
+    void flushSuccessInFile() {
+        if (System.currentTimeMillis() - lastSuccessFlushed < flushInterval) return;
 
-        StringBuilder content;
+        synchronized (successLock) {
+            if (System.currentTimeMillis() - lastSuccessFlushed < flushInterval) return;
 
-        // Success
-        if (!successData.isEmpty()) {
-            content = new StringBuilder();
-            for (SuccessData data : successData) content.append(data.toString()).append("\n");
+            StringBuilder content = new StringBuilder();
+            for (SuccessData data : successData) {
+                content.append(data.toString()).append("\n");
+            }
 
             this.filesUtils.appendToFile(
                     Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE),
-                    content.toString(),
-                    SychFor.SUCCESS_DATA
+                    content.toString()
             );
+
             this.successData.clear();
+            lastSuccessFlushed = System.currentTimeMillis();
         }
-
-        // Failure
-        if (!failureData.isEmpty()) {
-            content = new StringBuilder();
-            for (FailureData data : failureData) content.append(data.toString()).append("\n");
-            this.filesUtils.appendToFile(
-                    Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE),
-                    content.toString(),
-                    SychFor.FAILURE_DATA
-            );
-            this.failureData.clear();
-        }
-
-        lastFlushed = System.currentTimeMillis();
     }
 
+    /**
+     * Flushes the failed authentication events in the file.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    void flushFailureInFile() {
+        if (System.currentTimeMillis() - lastFailureFlushed < flushInterval) return;
+
+        synchronized (failureLock) {
+            if (System.currentTimeMillis() - lastFailureFlushed < flushInterval) return;
+
+            StringBuilder content = new StringBuilder();
+            for (FailureData data : failureData) {
+                content.append(data.toString()).append("\n");
+            }
+
+            this.filesUtils.appendToFile(
+                    Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE),
+                    content.toString()
+            );
+
+            this.failureData.clear();
+            lastFailureFlushed = System.currentTimeMillis();
+        }
+    }
 
     /**
-     * Container for the data extracted from the successful authentication
-     * event, if we want log more data simply add it here
+     * Wrapper for successful authentication data. If you want to add more
+     * data for be saved, you can do it here.
      *
-     * @param authentication the authentication object
-     * @param instant        the instant when the event was triggered
+     * @param authentication The authentication object.
+     * @param instant       The instant when the event occurred.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
@@ -125,11 +141,12 @@ public class AuthenticationListener {
     }
 
     /**
-     * Container for the data extracted from the failed authentication
+     * Wrapper for failed authentication data. If you want to add more
+     * data for be saved, you can do it here.
      *
-     * @param authentication the authentication object
-     * @param exception      the exception thrown
-     * @param instant        the instant when the event was triggered
+     * @param authentication The authentication object.
+     * @param exception     The exception thrown.
+     * @param instant       The instant when the event occurred.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
