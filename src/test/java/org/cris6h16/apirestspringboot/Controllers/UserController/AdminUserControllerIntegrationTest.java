@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThatCollection;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Controller.Path.USER_PATH;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag("IntegrationTest")
 @ActiveProfiles(profiles = "test")
 class AdminUserControllerIntegrationTest {
