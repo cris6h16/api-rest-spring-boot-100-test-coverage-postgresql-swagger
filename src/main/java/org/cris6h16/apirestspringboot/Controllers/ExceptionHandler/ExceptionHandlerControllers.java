@@ -11,7 +11,6 @@ import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;
-import org.cris6h16.apirestspringboot.Utils.SychFor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,6 +36,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Slf4j
 public class ExceptionHandlerControllers {
 
+    private final Object lock = new Object();
     private final FilesUtils filesSyncUtils;
     private static volatile long lastSavedToFile; // concurrent changed
     private static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
@@ -255,21 +255,26 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     private void saveHiddenExceptionForTheUserEveryDefinedMins(Exception e) {
-        hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()));
+        synchronized (lock) {
+            hiddenExceptionsLine.add(new Date().toString() + "::" + e.toString() + "::" + Arrays.toString(e.getStackTrace()));
+        }
+
         if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
-        synchronized (this) { // todo: doc why I don't use the synchronized in the method && why I check twice the time
+
+        synchronized (lock) {
             if (System.currentTimeMillis() - lastSavedToFile < MILLIS_EACH_SAVE) return;
+
             StringBuilder content = new StringBuilder();
-            for (String str : hiddenExceptionsLine) content.append(e).append("\n");
+            for (String str : hiddenExceptionsLine) {
+                content.append(str).append("\n");
+            }
+            hiddenExceptionsLine.clear();
+            lastSavedToFile = System.currentTimeMillis();
 
             filesSyncUtils.appendToFile(
                     Path.of(Cons.Logs.HiddenExceptionsOfUsers),
-                    content.toString(),
-                    SychFor.HIDDEN_EXCEPTIONS_OF_USERS
+                    content.toString()
             );
-
-            lastSavedToFile = System.currentTimeMillis();
-            hiddenExceptionsLine.clear();
         }
     }
 }

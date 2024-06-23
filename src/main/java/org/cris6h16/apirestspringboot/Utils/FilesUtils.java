@@ -12,7 +12,7 @@ import java.nio.file.StandardOpenOption;
 @Slf4j
 public class FilesUtils {
 
-    public void appendToFile(Path path, String content, SychFor syncFor) {
+    public void appendToFile(Path path, String content) {
         try {
             if (Files.notExists(path.getParent())) Files.createDirectories(path.getParent());
 
