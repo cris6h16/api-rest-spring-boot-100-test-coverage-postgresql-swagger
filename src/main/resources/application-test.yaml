@@ -9,7 +9,7 @@ spring:
     username: ${PSQL_USER}
     password: ${PSQL_PASS}
     hikari:
-      schema: production
+      schema: test
 
   jpa:
     show-sql: true

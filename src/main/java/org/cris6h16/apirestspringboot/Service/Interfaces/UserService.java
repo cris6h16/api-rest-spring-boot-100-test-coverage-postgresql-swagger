@@ -70,4 +70,6 @@ public interface UserService {
     void patchEmailById(Long id, PatchEmailUserDTO dto);
 
     void patchPasswordById(Long id, PatchPasswordUserDTO dto);
+
+    void deleteAll();
 }

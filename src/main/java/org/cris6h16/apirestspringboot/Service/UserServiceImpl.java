@@ -166,6 +166,15 @@ public class UserServiceImpl implements UserService {
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }
 
+    @Transactional(
+            isolation = Isolation.READ_COMMITTED,
+            rollbackFor = Exception.class
+    )
+    @Override
+    public void deleteAll() {
+        userRepository.deleteAll();
+    }
+
     /**
      * Create a {@link PublicUserDTO} from a {@link UserEntity}<br>
      * - If {@code user == null} return {@code dto} empty.<br>
