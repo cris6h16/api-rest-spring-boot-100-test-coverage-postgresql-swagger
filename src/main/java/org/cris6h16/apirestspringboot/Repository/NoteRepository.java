@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,5 +36,10 @@ public interface NoteRepository extends
     // todo: deleteById this and see how use the examples<s>
 
     <S extends NoteEntity> Page<S> findByUserId(Long userId, Pageable pageable);
+
+
+    default void deleteAll(){
+        deleteAllInBatch();
+    }
 }
 

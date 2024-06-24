@@ -26,6 +26,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 public class CreateNoteDTO {
 
     @NotBlank(message = TITLE_IS_BLANK_MSG)

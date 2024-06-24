@@ -139,6 +139,15 @@ public class NoteServiceImpl implements NoteService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(
+            isolation = Isolation.SERIALIZABLE,
+            rollbackFor = Exception.class
+    )
+    @Override
+    public void deleteAll() {
+        noteRepository.deleteAll();
+    }
+
 
     private PublicNoteDTO createPublicNoteDTO(NoteEntity n) {
         if (n == null) return PublicNoteDTO.builder().build();

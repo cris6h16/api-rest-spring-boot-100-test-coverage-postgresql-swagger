@@ -6,6 +6,7 @@ import org.cris6h16.apirestspringboot.Repository.NoteRepository;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -81,5 +82,8 @@ public interface NoteService {
      * @since 1.0
      */
     List<PublicNoteDTO> getPage(Pageable pageable, Long userId);
+
+
+    void deleteAll();
 
 }

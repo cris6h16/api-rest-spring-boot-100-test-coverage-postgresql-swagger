@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Controllers.UserController.Integration;
+package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
