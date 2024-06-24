@@ -74,4 +74,5 @@ public interface UserService {
     void deleteAll();
 
     Long createAdmin(CreateUserDTO dto);
+
 }

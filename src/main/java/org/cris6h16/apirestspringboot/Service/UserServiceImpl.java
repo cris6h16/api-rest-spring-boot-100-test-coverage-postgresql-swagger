@@ -145,20 +145,21 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
-        dto.setPassword(dto.getPassword().toLowerCase().trim());
+        dto.setPassword(dto.getPassword().trim());
         if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }
 
+    @Override
     @Transactional(
-            isolation = Isolation.READ_COMMITTED,
+            isolation = Isolation.SERIALIZABLE,
             rollbackFor = Exception.class
     )
-    @Override
     public void deleteAll() {
-        userRepository.deleteAll();
+        userRepository.deleteAll(); // default
     }
+
 
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
@@ -226,6 +227,7 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .roles(roles)
+                .notes(new HashSet<>(0))
                 .build();
     }
 }

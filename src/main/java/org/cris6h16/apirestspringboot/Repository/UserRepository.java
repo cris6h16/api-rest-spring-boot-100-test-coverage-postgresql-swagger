@@ -48,4 +48,9 @@ public interface UserRepository extends
 
     boolean existsByEmail(String email);
 
+    default void deleteAll() {
+        deleteAllInBatch();
+    }
+
+
 }

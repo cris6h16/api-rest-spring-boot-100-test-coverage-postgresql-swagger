@@ -1,8 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController.Integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
@@ -10,33 +8,24 @@ import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Repository.UserRepository;
 import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,16 +35,21 @@ class AuthenticatedUserControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private UserRepository userRepository;
+
     Long id;
     CreateUserDTO dto;
 
-    @MockBean
+    @Autowired
     private UserServiceImpl userService;
 
     private static final String path = Cons.User.Controller.Path.USER_PATH;
     private static final String path_patch_username = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_USERNAME;
     private static final String path_patch_email = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_EMAIL;
     private static final String path_patch_password = path + Cons.User.Controller.Path.COMPLEMENT_PATCH_PASSWORD;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
 
     @BeforeEach
@@ -67,6 +61,7 @@ class AuthenticatedUserControllerIntegrationTest {
                 .password("12345678")
                 .build();
         id = userService.create(dto);
+        assertThat(userRepository.existsById(id)).isTrue();
     }
 
     // -------------------------------------------------- GET --------------------------------------------------
@@ -97,476 +92,117 @@ class AuthenticatedUserControllerIntegrationTest {
 
     @Test
     void patchUsernameById_successful_Then204_NoContent() throws Exception {
-        PatchUsernameUserDTO dto = PatchUsernameUserDTO.builder().username("cris6h16").build();
-        this.restTemplate
+        UserEntity inDb = userRepository.findById(id).orElse(null);
+
+        PatchUsernameUserDTO patchDTO = PatchUsernameUserDTO.builder().username("githubcomcris6h16").build();
+        HttpEntity<PatchUsernameUserDTO> entity = new HttpEntity<>(patchDTO, new HttpHeaders());
+
+        ResponseEntity<Void> res = this.restTemplate
                 .withBasicAuth("cris6h16", "12345678")
-                .exchange(path_patch_username + "/1", HttpMethod.PATCH, , Void.class);
+                .exchange(path_patch_username + "/" + id, HttpMethod.PATCH, entity, Void.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        UserEntity updated = userRepository.findById(id).orElse(null);
+        assertThat(inDb).isNotNull();
+        assertThat(updated)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("id", inDb.getId())
+                .hasFieldOrPropertyWithValue("username", "githubcomcris6h16")
+                .hasFieldOrPropertyWithValue("email", inDb.getEmail())
+                .hasFieldOrPropertyWithValue("createdAt", inDb.getCreatedAt())
+                .hasFieldOrPropertyWithValue("roles", inDb.getRoles()); //eager
+
+        //update at
+        assertThat(inDb.getUpdatedAt()).isNull();
+        assertThat(updated.getUpdatedAt()).isNotNull();
+
+        //password
+        assertThat(updated.getPassword()).isEqualTo(inDb.getPassword()); // comparing encrypted passwords
     }
 
 
     // -------------------------------------------------- PATCH EMAIL --------------------------------------------------\\
 
+
     @Test
-    @Order(2)
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchEmailById_successful_Then204_NoContent() throws Exception {
-        doNothing().when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
+        UserEntity inDb = userRepository.findById(id).orElse(null);
 
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isNoContent());
+        PatchEmailUserDTO patchDTO = PatchEmailUserDTO.builder().email("hello" + "cristianmherrera21@gmail.com").build();
+        HttpEntity<PatchEmailUserDTO> entity = new HttpEntity<>(patchDTO, new HttpHeaders());
 
-        verify(userService, times(1)).patchEmailById(eq(1L),
-                argThat(dto -> dto.getEmail().equals("cristianmherrera21@gmail.com")));
+        ResponseEntity<Void> res = this.restTemplate
+                .withBasicAuth("cris6h16", "12345678")
+                .exchange(path_patch_email + "/" + id, HttpMethod.PATCH, entity, Void.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        UserEntity updated = userRepository.findById(id).orElse(null);
+        assertThat(inDb).isNotNull();
+        assertThat(updated)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("id", inDb.getId())
+                .hasFieldOrPropertyWithValue("username", inDb.getUsername())
+                .hasFieldOrPropertyWithValue("email", "hello" + "cristianmherrera21@gmail.com")
+                .hasFieldOrPropertyWithValue("createdAt", inDb.getCreatedAt())
+                .hasFieldOrPropertyWithValue("roles", inDb.getRoles()); //eager
+
+        //update at
+        assertThat(inDb.getUpdatedAt()).isNull();
+        assertThat(updated.getUpdatedAt()).isNotNull();
+
+        //password
+        assertThat(updated.getPassword()).isEqualTo(inDb.getPassword()); // comparing encrypted passwords
+
     }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/one")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/").with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId
-    void patchEmailById_contentTypeNotSpecified_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId
-    void patchEmailById_contentTypeUnsupported_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId
-    void patchEmailById_contentEmpty_then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    void patchEmailById_Unauthenticated_Then401_Unauthorized() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_OtherUserAccount_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/2")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchEmailById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_givenEmptyEmail_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_EmailNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
-    void patchEmailById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
-                .when(userService).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isEarlyHints())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("cris6h16's message of my handled exception"));
-    }
-
-
     // -------------------------------------------------- PATCH PASSWORD --------------------------------------------------\\
 
     @Test
-    @Order(3)
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchPasswordById_successful_Then204_NoContent() throws Exception {
-        doNothing()
-                .when(userService)
-                .patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
+        UserEntity inDb = userRepository.findById(id).orElse(null);
 
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isNoContent());
+        PatchPasswordUserDTO patchDTO = PatchPasswordUserDTO.builder().password("newPassword12345").build();
+        HttpEntity<PatchPasswordUserDTO> entity = new HttpEntity<>(patchDTO, new HttpHeaders());
 
-        verify(userService, times(1)).patchPasswordById(eq(1L),
-                argThat(dto -> dto.getPassword().equals("1234567")));
+        ResponseEntity<Void> res = this.restTemplate
+                .withBasicAuth("cris6h16", "12345678")
+                .exchange(path_patch_password + "/" + id, HttpMethod.PATCH, entity, Void.class);
+
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+
+        UserEntity updated = userRepository.findById(id).orElse(null);
+        assertThat(inDb).isNotNull();
+        assertThat(updated)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("id", inDb.getId())
+                .hasFieldOrPropertyWithValue("username", inDb.getUsername())
+                .hasFieldOrPropertyWithValue("email", inDb.getEmail())
+                .hasFieldOrPropertyWithValue("createdAt", inDb.getCreatedAt())
+                .hasFieldOrPropertyWithValue("roles", inDb.getRoles()); //eager
+
+        //update at
+        assertThat(inDb.getUpdatedAt()).isNull();
+        assertThat(updated.getUpdatedAt()).isNotNull();
+
+        //password
+        assertThat(updated.getPassword()).isNotEqualTo(inDb.getPassword()); // comparing encrypted passwords
+        assertThat(passwordEncoder.matches("newPassword12345", updated.getPassword())).isTrue();
     }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/one")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/").with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId
-    void patchPasswordById_contentTypeNotSpecified_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId
-    void patchPasswordById_contentTypeUnsupported_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId
-    void patchPasswordById_contentEmpty_then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-    @Test
-    void patchPasswordById_Unauthenticated_Then401_Unauthorized() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_OtherUserAccount_Then403_Forbidden() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/2")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"1234567\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_givenEmptyPassword_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_PasswordNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
-    void patchPasswordById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
-                .when(userService).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"1234567\"}"))
-                .andExpect(status().isEarlyHints())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("cris6h16's message of my handled exception"));
-    }
-
 
     // -------------------------------------------------- DELETE --------------------------------------------------\\
 
+
     @Test
-    @Order(4)
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void deleteById_successful_Then204_NoContent() throws Exception {
-        doNothing().when(userService).deleteById(any(Long.class));
+        ResponseEntity<Void> res = this.restTemplate
+                .withBasicAuth("cris6h16", "12345678")
+                .exchange(path + "/" + id, HttpMethod.DELETE, null, Void.class);
 
-        this.mvc.perform(delete(path + "/1")
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
-
-        verify(userService, times(1)).deleteById(1L);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+        assertThat(userRepository.existsById(id)).isFalse();
+        assertThat(userRepository.count()).isZero();
     }
 
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_InvalidIdIsAStr_Then403_Forbidden() throws Exception {
-        this.mvc.perform(delete(path + "/one")
-                        .with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).deleteById(anyLong());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_requiredIdNotPassed_Then403_Forbidden() throws Exception {
-        this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).deleteById(anyLong());
-    }
-
-    @Test
-    void deleteById_Unauthenticated_Then401_Unauthorized() throws Exception {
-        this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).deleteById(anyLong());
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_OtherUserAccount_Then403_Forbidden() throws Exception {
-        this.mvc.perform(delete(path + "/").with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-        verify(userService, never()).deleteById(anyLong());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).deleteById(any(Long.class));
-
-        this.mvc.perform(delete(path + "/1")
-                        .with(csrf()))
-                .andExpect(status().isForbidden())
-                .andExpect(content().bytes(new byte[0]));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_ADMIN"})
-    void deleteById_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringToTheClient() throws Exception {
-        doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
-                .when(userService).deleteById(any(Long.class));
-
-        this.mvc.perform(delete(path + "/1")
-                        .with(csrf()))
-                .andExpect(status().isInternalServerError())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("java.lang.NullPointerException: Unhandled Exception cris6h16's"));
-    }
-
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void deleteById_handledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        doThrow(new ProperExceptionForTheUser(HttpStatus.EARLY_HINTS, "cris6h16's message of my handled exception"))
-                .when(userService).deleteById(any(Long.class));
-
-        this.mvc.perform(delete(path + "/1")
-                        .with(csrf()))
-                .andExpect(status().isEarlyHints())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value("cris6h16's message of my handled exception"));
-    }
 
 }
