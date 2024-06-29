@@ -163,11 +163,11 @@ class ExceptionHandlerControllersTest {
         assertThat(res.getBody()).isNull();
         verify(this.filesSyncUtils, times(1))
                 .appendToFile(
-                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)), // use the correct file
                         argThat(line ->
-                                line.contains(e.toString()) &&
-                                        line.split("::").length == 3 &&
-                                        line.charAt(line.length() - 1) == '\n'
+                                line.contains(e.toString()) && // contains the exception
+                                        line.split("::").length == 3 && // the line has 3 parts
+                                        line.charAt(line.length() - 1) == '\n' // the line ends with a new line
                         )
                 );
     }
