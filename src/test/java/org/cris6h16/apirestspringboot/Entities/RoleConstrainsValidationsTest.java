@@ -34,7 +34,7 @@ public class RoleConstrainsValidationsTest {
      * @since 1.0
      */
     @Test
-    void RoleConstrainsValidationsTest_nameIsNull_thenThrowsConstraintViolationException() {
+    void nameIsNull_thenThrowsConstraintViolationException() {
         // Arrange
         RoleEntity role = RoleEntity.builder()
                 .name(null)

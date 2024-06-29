@@ -71,7 +71,7 @@ public class NoteConstrainsValidationsTest {
     @Test
     @Order(1)
     @Tag("correct")
-    void NoteConstrainsValidationsTest_correctInsertion() {
+    void correctInsertion() {
         // Arrange
         userRepository.saveAndFlush(usr);
 
@@ -84,7 +84,7 @@ public class NoteConstrainsValidationsTest {
     }
 
     /**
-     * Test for {@link ConstraintViolationException} -> {@code title} is blank.
+     * Test for {@link ConstraintViolationException} -> {@code  title} is blank.
      * <br>
      * it violates {@code @NotBlank(message = <>)}
      *
@@ -94,7 +94,7 @@ public class NoteConstrainsValidationsTest {
     @Test
     @Order(2)
     @Tag("ConstraintViolationException")
-    void NoteConstrainsValidationsTest_ConstraintViolationException_titleIsBlank() {
+    void ConstraintViolationException_titleIsBlank() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle(" ");
@@ -114,7 +114,7 @@ public class NoteConstrainsValidationsTest {
     @Test
     @Order(3)
     @Tag("ConstraintViolationException")
-    void NoteConstrainsValidationsTest_ConstraintViolationException_titleIsNull() {
+    void ConstraintViolationException_titleIsNull() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle(null);
@@ -134,7 +134,7 @@ public class NoteConstrainsValidationsTest {
     @Test
     @Order(4)
     @Tag("ConstraintViolationException")
-    void NoteConstrainsValidationsTest_ConstraintViolationException_titleTooLong() {
+    void ConstraintViolationException_titleTooLong() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
@@ -145,7 +145,7 @@ public class NoteConstrainsValidationsTest {
 
 
     /**
-     * Initialize the {@code usr} and {@code note} attributes,
+     * Initialize the {@link  #usr} and {@link  #note} attributes,
      * it'll use to avoid code repetition of initialization
      * of this in each method.
      *

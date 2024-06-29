@@ -29,11 +29,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserConstrainsValidationsTest {
-    //    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private RoleRepository roleRepository;
+
     private UserEntity usr;
 
     /**
@@ -68,7 +70,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(1)
     @Tag(value = "correct")
-    void UserConstrainsValidationsTest_correctInsertion() {
+    void correctInsertion() {
         // Arrange
         // Act
         userRepository.saveAndFlush(usr);
@@ -89,7 +91,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(2)
     @Tag(value = "DataIntegrityViolationException")
-    void UserConstrainsValidationsTest_DataIntegrityViolationException_usernameAlreadyExists() {
+    void DataIntegrityViolationException_usernameAlreadyExists() {
         // Arrange
         userRepository.saveAndFlush(usr);
         UserEntity usr2 = UserEntity.builder()
@@ -113,7 +115,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(3)
     @Tag(value = "DataIntegrityViolationException")
-    void UserConstrainsValidationsTest_DataIntegrityViolationException_emailAlreadyExists() {
+    void DataIntegrityViolationException_emailAlreadyExists() {
         // Arrange
         userRepository.saveAndFlush(usr);
         UserEntity usr2 = UserEntity.builder()
@@ -138,7 +140,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(4)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_usernameTooLong() {
+    void ConstraintViolationException_usernameTooLong() {
         // Arrange
         usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1));
         // Act & Assert
@@ -157,7 +159,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(5)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsBlank() {
+    void ConstraintViolationException_usernameIsBlank() {
         // Arrange
         usr.setUsername("             ");
         // Act & Assert
@@ -175,7 +177,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(6)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_usernameIsNull() {
+    void ConstraintViolationException_usernameIsNull() {
         // Arrange
         usr.setUsername(null);
         // Act & Assert
@@ -194,7 +196,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(7)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsBlank() {
+    void ConstraintViolationException_passwordIsBlank() {
         // Arrange
         usr.setPassword("             ");
         // Act & Assert
@@ -212,7 +214,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(8)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_passwordIsNull() {
+    void ConstraintViolationException_passwordIsNull() {
         // Arrange
         usr.setPassword(null);
         // Act & Assert
@@ -230,7 +232,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(9)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailInvalid() {
+    void ConstraintViolationException_emailInvalid() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
@@ -248,7 +250,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(10)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsNull() {
+    void ConstraintViolationException_emailIsNull() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
@@ -267,7 +269,7 @@ public class UserConstrainsValidationsTest {
     @Test
     @Order(11)
     @Tag(value = "ConstraintViolationException")
-    void UserConstrainsValidationsTest_ConstraintViolationException_emailIsBlank() {
+    void ConstraintViolationException_emailIsBlank() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
@@ -276,7 +278,7 @@ public class UserConstrainsValidationsTest {
 
 
     /**
-     * Initialize and prepare the {@code usr} attribute. it's used
+     * Initialize and prepare the {@link #usr} attribute. it's used
      * in the tests, to avoid boilerplate initializations on each method.
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
