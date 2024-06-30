@@ -1,11 +1,11 @@
-package org.cris6h16.apirestspringboot.Service.Interfaces;
+package org.cris6h16.apirestspringboot.Services.Interfaces;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

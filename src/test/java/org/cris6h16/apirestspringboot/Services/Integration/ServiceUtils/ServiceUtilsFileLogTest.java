@@ -1,10 +1,10 @@
-package org.cris6h16.apirestspringboot.Service.Integration.ServiceUtils;
+package org.cris6h16.apirestspringboot.Services.Integration.ServiceUtils;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
-import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Services.NoteServiceImpl;
+import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.hibernate.LazyInitializationException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;

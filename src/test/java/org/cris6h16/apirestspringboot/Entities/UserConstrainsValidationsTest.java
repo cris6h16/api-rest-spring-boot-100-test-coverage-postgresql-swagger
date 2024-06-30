@@ -2,8 +2,8 @@ package org.cris6h16.apirestspringboot.Entities;
 
 import jakarta.validation.ConstraintViolationException;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Repository.RoleRepository;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;

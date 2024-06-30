@@ -2,8 +2,8 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;

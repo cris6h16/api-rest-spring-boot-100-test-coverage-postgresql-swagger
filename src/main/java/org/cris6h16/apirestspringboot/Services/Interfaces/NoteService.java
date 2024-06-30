@@ -1,12 +1,11 @@
-package org.cris6h16.apirestspringboot.Service.Interfaces;
+package org.cris6h16.apirestspringboot.Services.Interfaces;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
-import org.cris6h16.apirestspringboot.Repository.NoteRepository;
+import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 
 
 /**

@@ -1,13 +1,10 @@
 package org.cris6h16.apirestspringboot.DTOs.Creation;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_IS_BLANK_MSG;

@@ -1,12 +1,8 @@
-package org.cris6h16.apirestspringboot.Entities.Integration;
+package org.cris6h16.apirestspringboot.Entities;
 
-import org.cris6h16.apirestspringboot.Entities.ERole;
-import org.cris6h16.apirestspringboot.Entities.NoteEntity;
-import org.cris6h16.apirestspringboot.Entities.RoleEntity;
-import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Repository.NoteRepository;
-import org.cris6h16.apirestspringboot.Repository.RoleRepository;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
+import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
+import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;

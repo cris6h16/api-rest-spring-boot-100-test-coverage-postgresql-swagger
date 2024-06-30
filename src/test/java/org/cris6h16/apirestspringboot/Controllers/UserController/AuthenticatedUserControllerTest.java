@@ -10,7 +10,7 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;

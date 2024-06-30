@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Repository;
+package org.cris6h16.apirestspringboot.Repositories;
 
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
@@ -77,7 +77,7 @@ public class RoleRepositoryTest {
         assertThat(roleRepository.count()).isEqualTo(2);
 
         //Act
-        roles.forEach(role -> {
+        this.roles.forEach(role -> {
             RoleEntity fromDB = roleRepository.findByName(role.getName()).orElse(null);
 
             //Assert

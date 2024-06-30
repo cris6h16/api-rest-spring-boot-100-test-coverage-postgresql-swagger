@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Repository;
+package org.cris6h16.apirestspringboot.Repositories;
 
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;

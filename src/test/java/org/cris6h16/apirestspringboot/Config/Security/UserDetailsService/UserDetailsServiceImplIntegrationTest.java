@@ -2,8 +2,8 @@ package org.cris6h16.apirestspringboot.Config.Security.UserDetailsService;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
-import org.cris6h16.apirestspringboot.Service.UserServiceImpl;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

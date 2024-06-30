@@ -1,6 +1,5 @@
 //package org.cris6h16.apirestspringboot.Suites;
 //
-//import org.cris6h16.apirestspringboot.Entities.Integration.CascadingUserEntityTest;
 //import org.cris6h16.apirestspringboot.Entities.NoteConstrainsValidationsTest;
 //import org.cris6h16.apirestspringboot.Entities.UserConstrainsValidationsTest;
 //import org.junit.platform.suite.api.IncludeTags;

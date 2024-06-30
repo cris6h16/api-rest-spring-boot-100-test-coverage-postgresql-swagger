@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Service;
+package org.cris6h16.apirestspringboot.Services;
 
 import jakarta.validation.*;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +15,9 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
-import org.cris6h16.apirestspringboot.Repository.RoleRepository;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
-import org.cris6h16.apirestspringboot.Service.Interfaces.UserService;
+import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;

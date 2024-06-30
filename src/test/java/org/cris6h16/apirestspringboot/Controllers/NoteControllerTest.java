@@ -6,7 +6,7 @@ import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWit
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
-import org.cris6h16.apirestspringboot.Service.NoteServiceImpl;
+import org.cris6h16.apirestspringboot.Services.NoteServiceImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;

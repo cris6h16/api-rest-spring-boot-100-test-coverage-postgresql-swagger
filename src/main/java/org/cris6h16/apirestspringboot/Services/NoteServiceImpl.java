@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Service;
+package org.cris6h16.apirestspringboot.Services;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -10,9 +10,9 @@ import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.NoteNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
-import org.cris6h16.apirestspringboot.Repository.NoteRepository;
-import org.cris6h16.apirestspringboot.Repository.UserRepository;
-import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.cris6h16.apirestspringboot.Services.Interfaces.NoteService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -1,13 +1,10 @@
 package org.cris6h16.apirestspringboot.DTOs.Creation;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
-import org.cris6h16.apirestspringboot.Service.Interfaces.NoteService;
-import org.hibernate.validator.constraints.Length;
+import org.cris6h16.apirestspringboot.Services.Interfaces.NoteService;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 
