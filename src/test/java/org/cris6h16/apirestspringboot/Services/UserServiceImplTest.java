@@ -6,6 +6,7 @@ import jakarta.validation.Validator;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
@@ -607,31 +608,48 @@ public class UserServiceImplTest {
 
     @Test
     @Tag("patchUsernameById")
-    void patchUsernameById_DTONull_ThenIllegalArgumentException() {
+    void patchUsernameById_DTONull_ThenAnyUserDTOIsNullException() {
         // Arrange
         Long id = 1L;
         PatchUsernameUserDTO dto = null;
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AnyUserDTOIsNullException.class)
+                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_usernameNull_ThenUsernameIsBlankException() {
+        // Arrange
+        Long id = 1L;
+        PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
+        when(dto.getUsername()).thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
     @Test
     @Tag("patchUsernameById")
-    void patchUsernameById_violatesConstraints_ThenConstraintViolationException() {
+    void patchUsernameById_usernameBlank_ThenUsernameIsBlankException() {
         // Arrange
         Long id = 1L;
         PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
-        Set<ConstraintViolation<PatchUsernameUserDTO>> violations = mock(Set.class);
-
-        when(violations.isEmpty()).thenReturn(false);
+        when(dto.getUsername()).thenReturn("   ");
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
-                .isInstanceOf(ConstraintViolationException.class)
-                .isEqualTo(violations);
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
@@ -732,33 +750,50 @@ public class UserServiceImplTest {
 
     @Test
     @Tag("patchEmailById")
-    void patchEmailById_DTONull_ThenIllegalArgumentException() {
+    void patchEmailById_DTONull_ThenAnyUserDTOIsNullException() {
         // Arrange
         Long id = 1L;
         PatchEmailUserDTO dto = null;
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(AnyUserDTOIsNullException.class)
+                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
 
     @Test
     @Tag("patchEmailById")
-    void patchEmailById_violatesConstraints_ThenConstraintViolationException() {
+    void patchEmailById_emailNull_ThenEmailIsBlankException() {
         // Arrange
         Long id = 1L;
         PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
-        Set<ConstraintViolation<PatchEmailUserDTO>> violations = mock(Set.class);
-
-        when(violations.isEmpty()).thenReturn(false);
+        when(dto.getEmail()).thenReturn(null);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(ConstraintViolationException.class)
-                .isEqualTo(violations);
+                .isInstanceOf(EmailIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_emailBlank_EmailIsBlankException() {
+        // Arrange
+        Long id = 1L;
+        PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
+        when(dto.getEmail()).thenReturn("   ");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(EmailIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
 
     @Test
     @Tag("patchEmailById")
@@ -826,6 +861,27 @@ public class UserServiceImplTest {
                 .hasMessageContaining(Cons.User.Constrains.EMAIL_UNIQUE_MSG)
                 .hasFieldOrPropertyWithValue("status", 409);
         verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+
+    @Test
+    @Tag("patchPasswordById")
+    void patchPasswordById_Successful() {
+        // Arrange
+        Long id = 1L;
+        String newPassword = "12345678";
+        PatchPasswordUserDTO dto = new PatchPasswordUserDTO(newPassword);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(passwordEncoder.encode(newPassword)).thenReturn("{bcrypt}$2a81..."
+        doNothing().when(userRepository).updatePasswordById(newPassword, id);
+
+        // Act
+        userService.patchPasswordById(id, dto);
+
+        // Assert
+        verify(userRepository).existsById(id);
+        verify(userRepository).updatePasswordById(newPassword, id);
     }
 
     @Test

@@ -233,4 +233,25 @@ public class UserServiceImpl implements UserService {
         if (passwordBlank) throw new PasswordTooShortException();
         if (usernameBlank) throw new UsernameIsBlankException();
     }
+
+    private void attributesNotBlankNotNull(PatchUsernameUserDTO dto) {
+        if (dto == null) throw new AnyUserDTOIsNullException();
+
+        boolean usernameBlank = dto.getUsername() == null || dto.getUsername().isBlank();
+        if (usernameBlank) throw new UsernameIsBlankException();
+    }
+
+    private void attributesNotBlankNotNull(PatchEmailUserDTO dto) {
+        if (dto == null) throw new AnyUserDTOIsNullException();
+
+        boolean emailBlank = dto.getEmail() == null || dto.getEmail().isBlank();
+        if (emailBlank) throw new EmailIsBlankException();
+    }
+
+    private void attributesNotBlankNotNull(PatchPasswordUserDTO dto) {
+        if (dto == null) throw new AnyUserDTOIsNullException();
+
+        boolean passwordBlank = dto.getPassword() == null || dto.getPassword().isBlank();
+        if (passwordBlank) throw new PasswordTooShortException();
+    }
 }
