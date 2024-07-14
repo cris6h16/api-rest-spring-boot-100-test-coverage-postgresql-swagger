@@ -12,10 +12,7 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.EmailAlreadyExistException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.*;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.Tag;
@@ -98,97 +95,6 @@ public class UserServiceImplTest {
                         passedToDb.getRoles().iterator().next().getName().equals(ERole.ROLE_USER)));
     }
 
-    @Test
-    @Tag("create")
-    void create_nullDTO_ThenIllegalArgumentException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(IllegalArgumentException.class); // unhandled
-    }
-
-
-    @Test
-    @Tag("create")
-    void create_violationConstraintInDTO_ConstraintViolationException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        Set<ConstraintViolation<CreateUserDTO>> violations = mock(Set.class);
-        when(violations.isEmpty()).thenReturn(false);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(ConstraintViolationException.class)
-                .isEqualTo(violations);
-
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    // the unique validation in the service due that it leave the layer encrypted
-    @Test
-    @Tag("create")
-    void create_passwordLengthLessThan8_ThenPasswordTooShortException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-
-        when(dtoToCreate.getPassword().length())
-                .thenReturn(7);
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(PasswordTooShortException.class)
-                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-
-    @Test
-    @Tag("create")
-    void create_TrimFields() {
-        // Arrange
-        CreateUserDTO dtoToCreate = CreateUserDTO.builder()
-                .username("  cris6h16  ")
-                .password("  12345678  ")
-                .email("    cristianmherrera21@gmail.com ")
-                .build();
-
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
-        when(passwordEncoder.encode(any(String.class)))
-                .thenReturn("{bcrypt}$2a81...");
-        when(userRepository.saveAndFlush(any(UserEntity.class)))
-                .thenReturn(createUserEntityWithIdAndRolesWithId());
-
-        // Act
-        userService.create(dtoToCreate);
-
-        // Assert
-        verify(passwordEncoder).encode("12345678");
-        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-                passedToDb.getUsername().equals("cris6h16") &&
-                        passedToDb.getEmail().equals("cristianmherrera21@gmail.com") &&
-                        passedToDb.getPassword().equals("{bcrypt}$2a81..."))
-        );
-    }
-
-
-    private UserEntity createUserEntityWithIdAndRolesWithId() {
-        return UserEntity.builder()
-                .id(1L)
-                .username("cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password("{bcrypt}$2a81...")
-                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(1L).name(ERole.ROLE_USER).build())))
-                .createdAt(new Date())
-                .build();
-    }
-
 
     /**
      * Test {@link UserServiceImpl#create(CreateUserDTO)} when is successful.
@@ -219,13 +125,9 @@ public class UserServiceImplTest {
         CreateUserDTO dtoToCreate = createValidDTO();
 
         // Act
-        Long id = userService.create(dtoToCreate);
+        userService.create(dtoToCreate);
 
         // Assert
-        assertThat(id).isEqualTo(user.getId());
-        verify(validator).validate(dtoToCreate);
-        verify(roleRepository).findByName(ERole.ROLE_USER);
-        verify(passwordEncoder).encode(user.getPassword());
         verify(userRepository).saveAndFlush(argThat(passedToDb ->
                 passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
                         passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
@@ -237,6 +139,243 @@ public class UserServiceImplTest {
                         passedToDb.getRoles().iterator().next().getName().equals(role.getName())
         ));
     }
+
+    @Test
+    @Tag("create")
+    void create_withMultiplesRoles_Successful() {
+        // Arrange
+        UserEntity user = createUserEntityWithIdAndRolesWithId();
+        ERole[] eRoles = ERole.values();
+
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+        when(roleRepository.findByName(any()))
+                .thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any(String.class)))
+                .thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class)))
+                .thenReturn(user);
+
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        // Act
+        userService.create(dtoToCreate, eRoles);
+
+        // Assert
+        verify(userRepository).saveAndFlush(argThat(passedToDb -> {
+
+                    ERole[] rolesPassedToDb = passedToDb.getRoles().stream()
+                            .map(RoleEntity::getName)
+                            .toArray(ERole[]::new);
+
+                    return passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
+                            passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
+                            passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
+                            passedToDb.getRoles().size() == 1 &&
+                            passedToDb.getCreatedAt() != null &&
+                            passedToDb.getUpdatedAt() == null &&
+                            passedToDb.getRoles().size() == ERole.values().length &&
+                            rolesPassedToDb.length == ERole.values().length &&
+                            Arrays.equals(rolesPassedToDb, eRoles);
+                }
+        ));
+    }
+
+    @Test
+    @Tag("create")
+    void create_nullDTO_ThenAnyUserDTOIsNullException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(AnyUserDTOIsNullException.class)
+                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_rolesNull_ThenIllegalArgumentException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        ERole[] roles = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, roles))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_rolesEmpty_ThenIllegalArgumentException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        ERole[] roles = new ERole[0];
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, roles))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_usernameNull_ThenUsernameIsBlankException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getUsername()).thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_usernameBlank_ThenUsernameIsBlankException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getUsername()).thenReturn("   ");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_emailNull_ThenUEmailIsBlankException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getEmail()).thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_emailBlank_ThenEmailIsBlankException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getEmail()).thenReturn("   ");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_passwordNull_ThenPasswordTooShortException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getPassword()).thenReturn(null);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_TrimAndLowerFields() {
+        // Arrange
+        CreateUserDTO dtoToCreate = CreateUserDTO.builder()
+                .username("  Cris6H16  ")
+                .password("  12345678  ")
+                .email("    cristianmHErrera21@gmail.com ")
+                .build();
+
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+        when(passwordEncoder.encode(any(String.class)))
+                .thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class)))
+                .thenReturn(createUserEntityWithIdAndRolesWithId());
+
+        // Act
+        userService.create(dtoToCreate);
+
+        // Assert
+        verify(passwordEncoder).encode("12345678");
+        verify(userRepository).saveAndFlush(argThat(passedToDb ->
+                passedToDb.getUsername().equals("cris6h16") &&
+                        passedToDb.getEmail().equals("cristianmherrera21@gmail.com") &&
+                        passedToDb.getPassword().equals("{bcrypt}$2a81..."))
+        );
+    }
+
+    @Test
+    @Tag("create")
+    void create_passwordBlank_ThenPasswordTooShortException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        when(dtoToCreate.getPassword()).thenReturn("   ");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(UsernameIsBlankException.class)
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    // the unique validation in the service due that it leave the layer encrypted
+    @Test
+    @Tag("create")
+    void create_passwordLengthLessThan8_ThenPasswordTooShortException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+
+        when(dtoToCreate.getPassword().length())
+                .thenReturn(7);
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(PasswordTooShortException.class)
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    private UserEntity createUserEntityWithIdAndRolesWithId() {
+        return UserEntity.builder()
+                .id(1L)
+                .username("cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(1L).name(ERole.ROLE_USER).build())))
+                .createdAt(new Date())
+                .build();
+    }
+
 
     /**
      * Create a {@link CreateUserDTO} with valid data.

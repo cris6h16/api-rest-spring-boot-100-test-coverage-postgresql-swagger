@@ -1,6 +1,5 @@
 package org.cris6h16.apirestspringboot.Services;
 
-import jakarta.validation.*;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
@@ -40,15 +39,13 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     PasswordEncoder passwordEncoder;
-    private final Validator validator;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder, Validator validator) {
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
-        this.validator = validator;
     }
 
 
@@ -58,7 +55,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public Long create(CreateUserDTO dto, ERole... roles) { // @Valid doesn't work here
-        if (roles.length == 0) throw new IllegalArgumentException("Roles can't be empty");
+        if (roles.length == 0) throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
 
         UserEntity user;
         Set<RoleEntity> rolesEntities = new HashSet<>(roles.length);
@@ -232,7 +229,7 @@ public class UserServiceImpl implements UserService {
         boolean passwordBlank = dto.getPassword() == null || dto.getPassword().isBlank();
         boolean usernameBlank = dto.getUsername() == null || dto.getUsername().isBlank();
 
-        if (emailBlank) throw new UserEmailIsBlankException();
+        if (emailBlank) throw new EmailIsBlankException();
         if (passwordBlank) throw new PasswordTooShortException();
         if (usernameBlank) throw new UsernameIsBlankException();
     }
