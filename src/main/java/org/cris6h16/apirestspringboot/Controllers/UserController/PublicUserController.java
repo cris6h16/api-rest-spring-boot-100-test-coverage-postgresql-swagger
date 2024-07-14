@@ -37,7 +37,7 @@ public class PublicUserController {
      * @since 1.0
      */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateUserDTO user) {
+    public ResponseEntity<Void> create(@RequestBody(required = true) CreateUserDTO user) {
         Long id = userService.create(user);
         URI uri = URI.create(path + "/" + id);
         return ResponseEntity.created(uri).build();

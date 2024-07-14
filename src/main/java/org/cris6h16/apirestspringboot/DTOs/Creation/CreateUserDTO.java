@@ -37,7 +37,7 @@ public class CreateUserDTO {
     private String username;
 
     @NotBlank(message = PASS_IS_TOO_SHORT_MSG)
-    private String password; // pass is passed encrypted, then always is > 8
+    private String password;
 
     @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;

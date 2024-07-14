@@ -1,443 +1,656 @@
-//package org.cris6h16.apirestspringboot.Service;
-//
-//import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
-//import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
-//import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
-//import org.cris6h16.apirestspringboot.Entities.ERole;
-//import org.cris6h16.apirestspringboot.Entities.RoleEntity;
-//import org.cris6h16.apirestspringboot.Entities.UserEntity;
-//import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserServiceTransversalException;
-//import org.cris6h16.apirestspringboot.Repository.RoleRepository;
-//import org.cris6h16.apirestspringboot.Repository.UserRepository;
-//import org.junit.jupiter.api.Tag;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import org.springframework.data.domain.PageImpl;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.domain.Sort;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//
-//import java.util.*;
-//
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.ArgumentMatchers.argThat;
-//import static org.mockito.Mockito.*;
-//
-//
-///**
-// * Test class for {@link UserServiceImpl}, here I just test when
-// * the test is successful, due to all methods in the mentioned
-// * service are wrapped in a try-catch block, in the catch
-// * we delegate a creation of {@link UserServiceTransversalException}
-// * to {@link ServiceUtils}, then any exception threw in the methods of
-// * {@link UserServiceImpl} should be tested as integration with {@link ServiceUtils}.
-// *
-// * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-// * @implNote {@link UserServiceImpl} are tested in isolation, mocking the dependencies.
-// * @since 1.0
-// */
-//@ExtendWith(MockitoExtension.class)
-//public class UserServiceImplTest {
-//
-//
-//    @Mock
-//    private RoleRepository roleRepository;
-//    @Mock
-//    private UserRepository userRepository;
-//    @Mock
-//    private PasswordEncoder passwordEncoder;
-//    @InjectMocks
-//    private UserServiceImpl userService;
-//
-//
-//    /**
-//     * Test for {@link UserServiceImpl#create(CreateUserDTO)} when is successful.
-//     * <br>
-//     * Test: Create a user with a {@link ERole#ROLE_USER} role, the role is not found in the database,
-//     * then the role is created ( {@code id==null} ) and assigned to the user.
-//     * after the user is persisted in the database also in cascade the role.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("create")
-//    void ServiceUtils_create_RoleNonexistentInDBCascade_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithIdAndRolesWithId();
-//        CreateUserDTO dtoToCreate = createValidDTO();
-//
-//        when(roleRepository.findByName(ERole.ROLE_USER)).thenReturn(Optional.empty());
-//        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
-//        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(user);
-//
-//        // Act
-//        Long id = userService.create(dtoToCreate);
-//
-//        // Assert
-//        assertThat(id).isEqualTo(user.getId());
-//        verify(roleRepository).findByName(ERole.ROLE_USER);
-//        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-//                passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
-//                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
-//                        passedToDb.getPassword().startsWith("{bcrypt}$") &&
-//                        passedToDb.getRoles().size() == 1 &&
-//                        passedToDb.getRoles().iterator().next().getName().equals(ERole.ROLE_USER)));
-//    }
-//
-//    /**
-//     * Create a {@link UserEntity} with an id, and containing a {@link RoleEntity} with an id.
-//     * <br>
-//     * It'll be used in the tests to simulate a user with a role persisted in the database..
-//     * <br>
-//     * The role is {@link ERole#ROLE_USER}
-//     *
-//     * @return {@link UserEntity} with an id, and containing a {@link RoleEntity} with an id.
-//     * @implNote The role is not persisted in the database, it's just a mock.
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    private UserEntity createUserEntityWithIdAndRolesWithId() {
-//        return UserEntity.builder()
-//                .id(1L)
-//                .username("cris6h16")
-//                .email("cristianmherrera21@gmail.com")
-//                .password("{bcrypt}$2a81...")
-//                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(1L).name(ERole.ROLE_USER).build())))
-//                .createdAt(new Date())
-//                .build();
-//    }
-//
-//
-//    /**
-//     * Test {@link UserServiceImpl#create(CreateUserDTO)} when is successful.
-//     * <br>
-//     * Test: Create a user with a {@link ERole#ROLE_USER} role, the role is found in the database,
-//     * then the role is assigned to the user.
-//     * after the user is persisted in the database.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("create")
-//    void ServiceUtils_create_RoleExistentInDBThenAssignIt_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithIdAndRolesWithId();
-//        RoleEntity role = user.getRoles().iterator().next();
-//
-//        when(roleRepository.findByName(ERole.ROLE_USER))
-//                .thenReturn(Optional.ofNullable(role));
-//        when(passwordEncoder.encode(any(String.class)))
-//                .thenReturn("{bcrypt}$2a81...");
-//        when(userRepository.saveAndFlush(any(UserEntity.class)))
-//                .thenReturn(user);
-//
-//        CreateUserDTO dtoToCreate = createValidDTO();
-//
-//        // Act
-//        Long id = userService.create(dtoToCreate);
-//
-//        // Assert
-//        assertThat(id).isEqualTo(user.getId());
-//        verify(roleRepository).findByName(ERole.ROLE_USER);
-//        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-//                passedToDb.getUsername().equals(
-//                        dtoToCreate.getUsername()) &&
-//                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
-//                        passedToDb.getPassword().startsWith("{bcrypt}$") &&
-//                        passedToDb.getRoles().size() == 1 &&
-//                        passedToDb.getCreatedAt() != null &&
-//                        passedToDb.getRoles().iterator().next().getId().equals(role.getId())));
-//
-//    }
-//
-//    /**
-//     * Create a {@link CreateUserDTO} with valid data.
-//     *
-//     * @return {@link CreateUserDTO}
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    private CreateUserDTO createValidDTO() {
-//        return CreateUserDTO.builder()
-//                .username("cris6h16")
-//                .password("12345678")
-//                .email("cris6h16@gmail.com")
-//                .build();
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#getById(Long)} when is successful.
-//     * <br>
-//     * Test: Get a user by id, the user is found in DB with {@code roles==null}
-//     * then the roles in the response should be an empty set.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("getById")
-//    void ServiceUtils_get_UserFoundWithRolesNull_thenInRolesReturnEmptySet_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//        entity.setRoles(null);
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//
-//        // Act
-//        PublicUserDTO dto = userService.getById(entity.getId());
-//
-//        // Assert
-//        assertThat(dto)
-//                .isNotNull()
-//                .hasFieldOrPropertyWithValue("id", entity.getId())
-//                .hasFieldOrPropertyWithValue("username", entity.getUsername())
-//                .hasFieldOrPropertyWithValue("email", entity.getEmail())
-//                .hasFieldOrPropertyWithValue("createdAt", entity.getCreatedAt())
-//                .hasFieldOrPropertyWithValue("updatedAt", entity.getUpdatedAt())
-//                .hasFieldOrPropertyWithValue("roles", new HashSet<>(0));
-//
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#getById(Long)} when is successful.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("getById")
-//    void ServiceUtils_get_UserFoundWithRoles_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//
-//        // Act
-//        PublicUserDTO dto = userService.getById(entity.getId());
-//
-//        // Assert
-//        assertThat(dto)
-//                .isNotNull()
-//                .hasFieldOrPropertyWithValue("id", entity.getId())
-//                .hasFieldOrPropertyWithValue("username", entity.getUsername())
-//                .hasFieldOrPropertyWithValue("email", entity.getEmail())
-//                .hasFieldOrPropertyWithValue("createdAt", entity.getCreatedAt())
-//                .hasFieldOrPropertyWithValue("updatedAt", entity.getUpdatedAt())
-//                .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
-//
-//    }
-//
-//
-//    /**
-//     * Test {@link UserServiceImpl#update(Long, CreateUserDTO)} when is successful.
-//     * <br>
-//     * Test: Used in PATCH; We want update just the {@code username}
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("update")
-//    void ServiceUtils_update_DTO_WantUpdateUsername_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//        CreateUserDTO dto = CreateUserDTO.builder()
-//                .username("cris6h16" + "helloword")
-//                .build();
-//        UserEntity updated = createUserEntityWithIdAndRolesWithId();
-//        updated.setUsername(dto.getUsername());
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(updated);
-//
-//        // Act
-//        userService.update(entity.getId(), dto);
-//
-//        // Assert
-//        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-//                passedToDb.getId().equals(entity.getId()) &&
-//                        passedToDb.getUsername().equals(dto.getUsername()) &&
-//                        passedToDb.getEmail().equals(entity.getEmail()) &&
-//                        passedToDb.getPassword().equals(entity.getPassword()) &&
-//                        passedToDb.getRoles().equals(entity.getRoles()) &&
-//                        passedToDb.getCreatedAt().equals(entity.getCreatedAt()) &&
-//                        passedToDb.getUpdatedAt() != null));
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#update(Long, CreateUserDTO)} when is successful.
-//     * <br>
-//     * Test: Used in PATCH; We want update just the {@code email}
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("update")
-//    void ServiceUtils_update_DTO_WantUpdateEmail_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//        CreateUserDTO dto = CreateUserDTO.builder()
-//                .email("helloword" + "cristianmherrera21@gmail.com")
-//                .build();
-//        UserEntity updated = createUserEntityWithIdAndRolesWithId();
-//        updated.setEmail(dto.getEmail());
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(updated);
-//
-//        // Act
-//        userService.update(entity.getId(), dto);
-//
-//        // Assert
-//        verify(userRepository).findById(entity.getId());
-//        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-//                passedToDb.getId().equals(entity.getId()) &&
-//                        passedToDb.getUsername().equals(entity.getUsername()) &&
-//                        passedToDb.getEmail().equals(dto.getEmail()) &&
-//                        passedToDb.getPassword().equals(entity.getPassword()) &&
-//                        passedToDb.getRoles().equals(entity.getRoles()) &&
-//                        passedToDb.getCreatedAt().equals(entity.getCreatedAt()) &&
-//                        passedToDb.getUpdatedAt() != null));
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#update(Long, CreateUserDTO)} when is successful.
-//     * <br>
-//     * Test: Used in PATCH; We want update just the {@code password}
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("update")
-//    void ServiceUtils_update_DTO_WantUpdatePassword_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//        CreateUserDTO dto = CreateUserDTO.builder()
-//                .password("12345678")
-//                .build();
-//        UserEntity updated = createUserEntityWithIdAndRolesWithId();
-//        updated.setPassword("{bcrypt}$2a81...");
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
-//        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(updated);
-//
-//// Act
-//        userService.update(entity.getId(), dto);
-//
-//// Assert
-//        verify(userRepository).findById(entity.getId());
-//        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-//                passedToDb.getId().equals(entity.getId()) &&
-//                        passedToDb.getUsername().equals(entity.getUsername()) &&
-//                        passedToDb.getEmail().equals(entity.getEmail()) &&
-//                        passedToDb.getPassword().startsWith("{bcrypt}$") &&
-//                        passedToDb.getRoles().equals(entity.getRoles()) &&
-//                        passedToDb.getCreatedAt().equals(entity.getCreatedAt()) &&
-//                        passedToDb.getUpdatedAt() != null));
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#deleteById(Long)} when is successful.
-//     * <br>
-//     * Test: deleteById a user
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("deleteById")
-//    void ServiceUtils_delete_UserFound_Successful() {
-//        // Arrange
-//        UserEntity entity = createUserEntityWithIdAndRolesWithId();
-//
-//        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        doNothing().when(userRepository).deleteById(entity);
-//
-//        // Act
-//        userService.deleteById(entity.getId());
-//
-//        // Assert
-//        verify(userRepository).deleteById(argThat(passedToDb ->
-//                passedToDb.getId().equals(entity.getId())));
-//
-//    }
-//
-//    /**
-//     * Test {@link UserServiceImpl#getById(Pageable)} when is successful.
-//     * <br>
-//     * Test: getById a page of notes
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("getById(pageable)")
-//    void ServiceUtils_getPageable_ReturnList_Successful() {
-//        // Arrange
-//        int amount = 10;
-//        List<UserEntity> entities = getUserEntities(amount);
-//        Pageable pag = PageRequest.of(
-//                0,
-//                10,
-//                Sort.by(Sort.Direction.ASC, "id")
-//        );
-//
-//        when(userRepository.findAll(any(Pageable.class)))
-//                .thenReturn(new PageImpl<>(entities));
-//
-//        // Act
-//        List<PublicUserDTO> dtos = userService.getById(pag);
-//
-//        // Assert
-//        for (int i = 0; i < entities.size(); i++) {
-//            assertThat(dtos.getById(i))
-//                    .isNotNull()
-//                    .hasFieldOrPropertyWithValue("id", entities.getById(i).getId())
-//                    .hasFieldOrPropertyWithValue("username", entities.getById(i).getUsername())
-//                    .hasFieldOrPropertyWithValue("email", entities.getById(i).getEmail())
-//                    .hasFieldOrPropertyWithValue("createdAt", entities.getById(i).getCreatedAt())
-//                    .hasFieldOrPropertyWithValue("updatedAt", entities.getById(i).getUpdatedAt())
-//                    .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
-//        }
-//
-//    }
-//
-//    /**
-//     * Create a list of {@link UserEntity} with roles, for simulate
-//     * a page of persisted users with their roles.
-//     *
-//     * @param amount amount of users to create
-//     * @return list of {@link UserEntity} with roles
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    private List<UserEntity> getUserEntities(int amount) {
-//        List<UserEntity> entities = new ArrayList<>();
-//        for (long i = 0; i < amount; i++) {
-//            entities.add(UserEntity.builder()
-//                    .id(i)
-//                    .username("cris6h16" + i)
-//                    .email(i + "cristianmherrera21@gmail.com")
-//                    .password("{bcrypt}$2a81..." + i)
-//                    .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(i).name(ERole.ROLE_USER).build())))
-//                    .createdAt(new Date())
-//                    .build());
-//        }
-//        return entities;
-//
-//    }
-//}
+package org.cris6h16.apirestspringboot.Services;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
+import org.cris6h16.apirestspringboot.Entities.ERole;
+import org.cris6h16.apirestspringboot.Entities.RoleEntity;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
+import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
+
+
+/**
+ * Test class for {@link UserServiceImpl}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
+@ExtendWith(MockitoExtension.class)
+public class UserServiceImplTest {
+
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private Validator validator;
+
+    @InjectMocks
+    private UserServiceImpl userService;
+
+
+    @Test
+    @Tag("create")
+    void create_RoleNonexistentInDB_ThenCreateBoth_Successful() {
+        // Arrange
+        UserEntity user = createUserEntityWithIdAndRolesWithId();
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        when(validator.validate(any(CreateUserDTO.class))).thenReturn(Collections.emptySet());
+        when(roleRepository.findByName(ERole.ROLE_USER)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(user);
+
+        // Act
+        Long id = userService.create(dtoToCreate);
+
+        // Assert
+        assertThat(id).isEqualTo(user.getId());
+        verify(validator).validate(argThat(dto -> {
+            CreateUserDTO dtoCasted = (CreateUserDTO) dto;
+            return dtoCasted.getUsername().equals(dtoToCreate.getUsername()) &&
+                    dtoCasted.getEmail().equals(dtoToCreate.getEmail()) &&
+                    dtoCasted.getPassword().equals(dtoToCreate.getPassword());
+        }));
+        verify(roleRepository).findByName(ERole.ROLE_USER);
+        verify(passwordEncoder).encode(user.getPassword());
+        verify(userRepository).saveAndFlush(argThat(passedToDb ->
+                passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
+                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
+                        passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
+                        passedToDb.getRoles().size() == 1 &&
+                        passedToDb.getRoles().iterator().next().getName().equals(ERole.ROLE_USER)));
+    }
+
+    @Test
+    @Tag("create")
+    void create_nullDTO_ThenIllegalArgumentException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(IllegalArgumentException.class); // unhandled
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_violationConstraintInDTO_ConstraintViolationException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+        Set<ConstraintViolation<CreateUserDTO>> violations = mock(Set.class);
+        when(violations.isEmpty()).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(ConstraintViolationException.class)
+                .isEqualTo(violations);
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    // the unique validation in the service due that it leave the layer encrypted
+    @Test
+    @Tag("create")
+    void create_passwordLengthLessThan8_ThenPasswordTooShortException() {
+        // Arrange
+        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
+
+        when(dtoToCreate.getPassword().length())
+                .thenReturn(7);
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate))
+                .isInstanceOf(PasswordTooShortException.class)
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", 400);
+
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_TrimFields() {
+        // Arrange
+        CreateUserDTO dtoToCreate = CreateUserDTO.builder()
+                .username("  cris6h16  ")
+                .password("  12345678  ")
+                .email("    cristianmherrera21@gmail.com ")
+                .build();
+
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+        when(passwordEncoder.encode(any(String.class)))
+                .thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class)))
+                .thenReturn(createUserEntityWithIdAndRolesWithId());
+
+        // Act
+        userService.create(dtoToCreate);
+
+        // Assert
+        verify(passwordEncoder).encode("12345678");
+        verify(userRepository).saveAndFlush(argThat(passedToDb ->
+                passedToDb.getUsername().equals("cris6h16") &&
+                        passedToDb.getEmail().equals("cristianmherrera21@gmail.com") &&
+                        passedToDb.getPassword().equals("{bcrypt}$2a81..."))
+        );
+    }
+
+
+    private UserEntity createUserEntityWithIdAndRolesWithId() {
+        return UserEntity.builder()
+                .id(1L)
+                .username("cris6h16")
+                .email("cristianmherrera21@gmail.com")
+                .password("{bcrypt}$2a81...")
+                .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(1L).name(ERole.ROLE_USER).build())))
+                .createdAt(new Date())
+                .build();
+    }
+
+
+    /**
+     * Test {@link UserServiceImpl#create(CreateUserDTO)} when is successful.
+     * <br>
+     * Test: Create a user with a {@link ERole#ROLE_USER} role, the role is found in the database,
+     * then the role is assigned to the user.
+     * after the user is persisted in the database.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("create")
+    void create_RoleExistentInDBThenAssignIt_Successful() {
+        // Arrange
+        UserEntity user = createUserEntityWithIdAndRolesWithId();
+        RoleEntity role = user.getRoles().iterator().next();
+
+        when(validator.validate(any(CreateUserDTO.class)))
+                .thenReturn(Collections.emptySet());
+        when(roleRepository.findByName(ERole.ROLE_USER))
+                .thenReturn(Optional.ofNullable(role));
+        when(passwordEncoder.encode(any(String.class)))
+                .thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class)))
+                .thenReturn(user);
+
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        // Act
+        Long id = userService.create(dtoToCreate);
+
+        // Assert
+        assertThat(id).isEqualTo(user.getId());
+        verify(validator).validate(dtoToCreate);
+        verify(roleRepository).findByName(ERole.ROLE_USER);
+        verify(passwordEncoder).encode(user.getPassword());
+        verify(userRepository).saveAndFlush(argThat(passedToDb ->
+                passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
+                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
+                        passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
+                        passedToDb.getRoles().size() == 1 &&
+                        passedToDb.getCreatedAt() != null &&
+                        passedToDb.getUpdatedAt() == null &&
+                        passedToDb.getRoles().iterator().next().getId().equals(role.getId()) &&
+                        passedToDb.getRoles().iterator().next().getName().equals(role.getName())
+        ));
+    }
+
+    /**
+     * Create a {@link CreateUserDTO} with valid data.
+     *
+     * @return {@link CreateUserDTO}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private CreateUserDTO createValidDTO() {
+        return CreateUserDTO.builder()
+                .username("cris6h16")
+                .password("12345678")
+                .email("cris6h16@gmail.com")
+                .build();
+    }
+
+
+    /**
+     * Test {@link UserServiceImpl#getById(Long)} when is successful.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("getById")
+    void getById_UserFoundWithRoles_Successful() {
+        // Arrange
+        UserEntity entity = createUserEntityWithIdAndRolesWithId();
+        Set<PublicRoleDTO> rolesOwned = entity.getRoles().stream()
+                .map(role -> new PublicRoleDTO(role.getName()))
+                .collect(Collectors.toSet());
+
+        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
+
+        // Act
+        PublicUserDTO dto = userService.getById(entity.getId());
+
+        // Assert
+        assertThat(dto)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("id", entity.getId())
+                .hasFieldOrPropertyWithValue("username", entity.getUsername())
+                .hasFieldOrPropertyWithValue("email", entity.getEmail())
+                .hasFieldOrPropertyWithValue("createdAt", entity.getCreatedAt())
+                .hasFieldOrPropertyWithValue("updatedAt", entity.getUpdatedAt())
+                .hasFieldOrPropertyWithValue("roles", new HashSet<>(rolesOwned));
+        verify(userRepository).findById(entity.getId());
+    }
+
+    @Test
+    @Tag("getById")
+    void getById_nullId_ThenIllegalArgumentException() {
+        // Arrange
+        Long id = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.getById(id))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).findById(any());
+    }
+
+    @Test
+    @Tag("getById")
+    void getById_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long id = 1L;
+        Optional<UserEntity> entity = mock(Optional.class);
+
+        when(entity.isPresent()).thenReturn(false);
+        when(userRepository.findById(id)).thenReturn(entity);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.getById(id))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", 404);
+
+        verify(userRepository).findById(id);
+    }
+
+    /**
+     * Test {@link UserServiceImpl#getById(Long)} when is successful.
+     * <br>
+     * Test: Get a user by id, the user is found in DB with {@code roles==null}
+     * then the roles in the response should be an empty set.
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("getById")
+    void getById_UserFoundWithRolesNull_thenInRolesReturnEmptySet_Successful() {
+        // Arrange
+        UserEntity entity = createUserEntityWithIdAndRolesWithId();
+        entity.setRoles(null);
+
+        when(userRepository.findById(entity.getId())).thenReturn(Optional.of(entity));
+
+        // Act
+        PublicUserDTO dto = userService.getById(entity.getId());
+
+        // Assert
+        assertThat(dto)
+                .isNotNull()
+                .hasFieldOrPropertyWithValue("id", entity.getId())
+                .hasFieldOrPropertyWithValue("username", entity.getUsername())
+                .hasFieldOrPropertyWithValue("email", entity.getEmail())
+                .hasFieldOrPropertyWithValue("createdAt", entity.getCreatedAt())
+                .hasFieldOrPropertyWithValue("updatedAt", entity.getUpdatedAt())
+                .hasFieldOrPropertyWithValue("roles", new HashSet<>(0));
+        verify(userRepository).findById(entity.getId());
+    }
+
+
+    /**
+     * Test {@link UserServiceImpl#deleteById(Long)} when is successful.
+     * <br>
+     * Test: deleteById a user
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    @Test
+    @Tag("deleteById")
+    void deleteById_Successful() {
+        // Arrange
+        Long id = 1L;
+        doNothing().when(userRepository).deleteById(id);
+
+        // Act
+        userService.deleteById(id);
+
+        // Assert
+        verify(userRepository).deleteById(id);
+    }
+
+    @Test
+    @Tag("deleteById")
+    void deleteById_nullId_ThenIllegalArgumentException() {
+        // Arrange
+        Long id = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.deleteById(id))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).deleteById(any());
+    }
+
+    @Test
+    @Tag("deleteById")
+    void deleteById_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long id = 1L;
+        Optional<UserEntity> entity = mock(Optional.class);
+
+        when(entity.isPresent()).thenReturn(false);
+        when(userRepository.findById(id)).thenReturn(entity);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.deleteById(id))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", 404);
+        verify(userRepository).findById(id);
+    }
+
+
+    @Test
+    @Tag("getPage")
+    void getPage_ReturnList_Successful() {
+        // Arrange
+        int amount = 10;
+        List<UserEntity> entities = getUserEntities(amount);
+        Pageable pag = mock(Pageable.class);
+
+        when(userRepository.findAll(any(Pageable.class)))
+                .thenReturn(new PageImpl<>(entities));
+
+        // Act
+        List<PublicUserDTO> list = userService.getPage(pag);
+
+        // Assert
+        for (int i = 0; i < entities.size(); i++) {
+            assertThat(list.get(i))
+                    .isNotNull()
+                    .hasFieldOrPropertyWithValue("id", entities.get(i).getId())
+                    .hasFieldOrPropertyWithValue("username", entities.get(i).getUsername())
+                    .hasFieldOrPropertyWithValue("email", entities.get(i).getEmail())
+                    .hasFieldOrPropertyWithValue("createdAt", entities.get(i).getCreatedAt())
+                    .hasFieldOrPropertyWithValue("updatedAt", entities.get(i).getUpdatedAt())
+                    .hasFieldOrPropertyWithValue("roles", new HashSet<>(Collections.singleton(new PublicRoleDTO(ERole.ROLE_USER))));
+        }
+        verify(userRepository).findAll(pag);
+    }
+
+    @Test
+    @Tag("getPage")
+    void getPage_nullPageable_ThenIllegalArgumentException() {
+        // Arrange
+        Pageable pag = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.getPage(pag))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).findAll(any(Pageable.class));
+    }
+
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_Successful() {
+        // Arrange
+        Long id = 1L;
+        String newUsername = "newUsername";
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByUsername(newUsername)).thenReturn(false);
+        doNothing().when(userRepository).updateUsernameById(newUsername, id);
+
+        // Act
+        userService.patchUsernameById(id, dto);
+
+        // Assert
+        verify(userRepository).existsById(id);
+        verify(userRepository).existsByUsername(newUsername);
+        verify(userRepository).updateUsernameById(newUsername, id);
+    }
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_DTONull_ThenIllegalArgumentException() {
+        // Arrange
+        Long id = 1L;
+        PatchUsernameUserDTO dto = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_violatesConstraints_ThenConstraintViolationException() {
+        // Arrange
+        Long id = 1L;
+        PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
+        Set<ConstraintViolation<PatchUsernameUserDTO>> violations = mock(Set.class);
+
+        when(violations.isEmpty()).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(ConstraintViolationException.class)
+                .isEqualTo(violations);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_TrimFields() {
+        // Arrange
+        Long id = 1L;
+        String newUsername = "  newUsername    ";
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByUsername(newUsername)).thenReturn(false);
+        doNothing().when(userRepository).updateUsernameById(newUsername, id);
+
+        // Act
+        userService.patchUsernameById(id, dto);
+
+        // Assert
+        verify(userRepository).updateUsernameById("newUsername", id);
+    }
+
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_nullId_ThenIllegalArgumentException() {
+        // Arrange
+        Long id = null;
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO("newUsername");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long id = 1L;
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO("newUsername");
+
+        when(userRepository.existsById(id)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", 404);
+        verify(userRepository).existsById(id);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+
+    @Test
+    @Tag("patchUsernameById")
+    void patchUsernameById_UsernameAlreadyExists_ThenUsernameAlreadyExistsException() {
+        // Arrange
+        Long id = 1L;
+        String newUsername = "newUsername";
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByUsername(newUsername)).thenReturn(true);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(UsernameAlreadyExistsException.class)
+                .hasMessageContaining(Cons.User.Constrains.USERNAME_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", 409);
+        verify(userRepository).existsById(id);
+        verify(userRepository).existsByUsername(newUsername);
+        verify(userRepository, never()).updateUsernameById(any(), any());
+    }
+
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_Successful() {
+        // Arrange
+        Long id = 1L;
+        String newEmail = "cristianmherrera21@gmail.com";
+        PatchEmailUserDTO dto = new PatchEmailUserDTO(newEmail);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByEmail(newEmail)).thenReturn(false);
+        doNothing().when(userRepository).updateEmailById(newEmail, id);
+
+        // Act
+        userService.patchEmailById(id, dto);
+
+        // Assert
+        verify(userRepository).existsById(id);
+        verify(userRepository).existsByEmail(newEmail);
+        verify(userRepository).updateEmailById(newEmail, id);
+    }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_DTONull_ThenIllegalArgumentException() {
+        // Arrange
+        Long id = 1L;
+        PatchEmailUserDTO dto = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_violatesConstraints_ThenConstraintViolationException() {
+        // Arrange
+        Long id = 1L;
+        PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
+        Set<ConstraintViolation<PatchEmailUserDTO>> violations = mock(Set.class);
+
+        when(violations.isEmpty()).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(ConstraintViolationException.class)
+                .isEqualTo(violations);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+    @Test
+    @Tag("patchEmailById")
+void patchEmailById_TrimFields() {
+        // Arrange
+        Long id = 1L;
+        String newEmail = "  cristianmherrera21@gmail.com  ";
+
+
+
+    /**
+     * Create a list of {@link UserEntity} with roles, for simulate
+     * a page of persisted users with their roles.
+     *
+     * @param amount amount of users to create
+     * @return list of {@link UserEntity} with roles
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
+    private List<UserEntity> getUserEntities(int amount) {
+        List<UserEntity> entities = new ArrayList<>();
+        for (long i = 0; i < amount; i++) {
+            entities.add(UserEntity.builder()
+                    .id(i)
+                    .username("cris6h16" + i)
+                    .email(i + "cristianmherrera21@gmail.com")
+                    .password("{bcrypt}$2a81..." + i)
+                    .roles(new HashSet<>(Collections.singleton(RoleEntity.builder().id(i).name(ERole.ROLE_USER).build())))
+                    .createdAt(new Date())
+                    .build());
+        }
+        return entities;
+
+    }
+}

@@ -20,6 +20,7 @@ import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -38,7 +39,6 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.MIN
  * @since 1.0
  */
 @Service
-//@Validated
 @Slf4j
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
@@ -61,7 +61,8 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(CreateUserDTO dto) {// assumes that the data entry has all attributes NotNull (additional: @Valid doesnt work here)
+    public Long create(CreateUserDTO dto) { // @Valid doesn't work here
+        validateConstraints(dto);
 
         dto = trimAndValidatePassword(dto);
 
@@ -104,6 +105,9 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public List<PublicUserDTO> getPage(Pageable pageable) {
+        if (pageable == null) throw new IllegalArgumentException("Pageable can't be null");
+
+        // all elements are verified in the creation of the PageRequest then it is not necessary to verify them again
         Pageable pag = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -120,7 +124,9 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void patchUsernameById(Long id, PatchUsernameUserDTO dto) {
+    public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
+        validateConstraints(dto);
+
         dto.setUsername(dto.getUsername().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByUsername(dto.getUsername())) throw new UsernameAlreadyExistsException();
@@ -132,7 +138,9 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public void patchEmailById(Long id, PatchEmailUserDTO dto) { // todo: see if @Valid can replace the @not null
+    public void patchEmailById(Long id, PatchEmailUserDTO dto) {
+        validateConstraints(dto);
+
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
@@ -145,6 +153,8 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
+        validateConstraints(dto);
+
         dto.setPassword(dto.getPassword().trim());
         if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
@@ -167,6 +177,8 @@ public class UserServiceImpl implements UserService {
     )
     @Override
     public Long createAdmin(CreateUserDTO dto) {
+        validateConstraints(dto);
+
         dto = trimAndValidatePassword(dto);
 
         RoleEntity role = roleRepository.findByName(ERole.ROLE_ADMIN)
@@ -186,7 +198,6 @@ public class UserServiceImpl implements UserService {
         dto.setUsername(dto.getUsername().toLowerCase().trim());
 
         if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
-
         return dto;
     }
 
@@ -229,5 +240,11 @@ public class UserServiceImpl implements UserService {
                 .roles(roles)
                 .notes(new HashSet<>(0))
                 .build();
+    }
+
+
+    private <T> void validateConstraints(T dto) {
+        Set<ConstraintViolation<T>> violations = validator.validate(dto);
+        if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
     }
 }
