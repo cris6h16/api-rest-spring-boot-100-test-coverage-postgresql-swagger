@@ -30,7 +30,10 @@ public class AuthenticatedUserController {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(
+            value = "/{id}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
     public ResponseEntity<PublicUserDTO> getById(@PathVariable(required = true) Long id) {
         PublicUserDTO u = userService.getById(id);
         return ResponseEntity.ok(u);
