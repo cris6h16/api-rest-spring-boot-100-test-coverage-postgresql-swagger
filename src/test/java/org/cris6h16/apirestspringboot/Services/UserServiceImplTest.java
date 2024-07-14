@@ -1,8 +1,5 @@
 package org.cris6h16.apirestspringboot.Services;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validator;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
@@ -13,12 +10,15 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.*;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,6 +26,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -35,6 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 
@@ -45,6 +47,7 @@ import static org.mockito.Mockito.*;
  * @since 1.0
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("UnitTest")
 public class UserServiceImplTest {
 
     @Mock
@@ -55,9 +58,6 @@ public class UserServiceImplTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private Validator validator;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -70,24 +70,17 @@ public class UserServiceImplTest {
         UserEntity user = createUserEntityWithIdAndRolesWithId();
         CreateUserDTO dtoToCreate = createValidDTO();
 
-        when(validator.validate(any(CreateUserDTO.class))).thenReturn(Collections.emptySet());
         when(roleRepository.findByName(ERole.ROLE_USER)).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
         when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(user);
 
         // Act
-        Long id = userService.create(dtoToCreate);
+        Long id = userService.create(dtoToCreate, ERole.ROLE_USER);
 
         // Assert
         assertThat(id).isEqualTo(user.getId());
-        verify(validator).validate(argThat(dto -> {
-            CreateUserDTO dtoCasted = (CreateUserDTO) dto;
-            return dtoCasted.getUsername().equals(dtoToCreate.getUsername()) &&
-                    dtoCasted.getEmail().equals(dtoToCreate.getEmail()) &&
-                    dtoCasted.getPassword().equals(dtoToCreate.getPassword());
-        }));
         verify(roleRepository).findByName(ERole.ROLE_USER);
-        verify(passwordEncoder).encode(user.getPassword());
+        verify(passwordEncoder).encode(dtoToCreate.getPassword());
         verify(userRepository).saveAndFlush(argThat(passedToDb ->
                 passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
                         passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
@@ -97,16 +90,6 @@ public class UserServiceImplTest {
     }
 
 
-    /**
-     * Test {@link UserServiceImpl#create(CreateUserDTO)} when is successful.
-     * <br>
-     * Test: Create a user with a {@link ERole#ROLE_USER} role, the role is found in the database,
-     * then the role is assigned to the user.
-     * after the user is persisted in the database.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     @Tag("create")
     void create_RoleExistentInDBThenAssignIt_Successful() {
@@ -114,8 +97,6 @@ public class UserServiceImplTest {
         UserEntity user = createUserEntityWithIdAndRolesWithId();
         RoleEntity role = user.getRoles().iterator().next();
 
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
         when(roleRepository.findByName(ERole.ROLE_USER))
                 .thenReturn(Optional.ofNullable(role));
         when(passwordEncoder.encode(any(String.class)))
@@ -126,7 +107,7 @@ public class UserServiceImplTest {
         CreateUserDTO dtoToCreate = createValidDTO();
 
         // Act
-        userService.create(dtoToCreate);
+        userService.create(dtoToCreate, ERole.ROLE_USER);
 
         // Assert
         verify(userRepository).saveAndFlush(argThat(passedToDb ->
@@ -145,11 +126,9 @@ public class UserServiceImplTest {
     @Tag("create")
     void create_withMultiplesRoles_Successful() {
         // Arrange
-        UserEntity user = createUserEntityWithIdAndRolesWithId();
+        UserEntity user = createUserEntityWithIdAndRolesWithId(); // ignored
         ERole[] eRoles = ERole.values();
 
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
         when(roleRepository.findByName(any()))
                 .thenReturn(Optional.empty());
         when(passwordEncoder.encode(any(String.class)))
@@ -172,7 +151,6 @@ public class UserServiceImplTest {
                     return passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
                             passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
                             passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
-                            passedToDb.getRoles().size() == 1 &&
                             passedToDb.getCreatedAt() != null &&
                             passedToDb.getUpdatedAt() == null &&
                             passedToDb.getRoles().size() == ERole.values().length &&
@@ -189,19 +167,21 @@ public class UserServiceImplTest {
         CreateUserDTO dtoToCreate = null;
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
                 .isInstanceOf(AnyUserDTOIsNullException.class)
-                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL)
-                .hasFieldOrPropertyWithValue("status", 400);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
 
-    @Test
+    //    @Test
     @Tag("create")
-    void create_rolesNull_ThenIllegalArgumentException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "empty"})
+    void create_rolesNullOrEmpty_ThenIllegalArgumentException(String role) {
         // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        ERole[] roles = null;
+        CreateUserDTO dtoToCreate = createValidDTO();
+        ERole[] roles = role.equals("null") ? null : new ERole[0];
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dtoToCreate, roles))
@@ -209,93 +189,60 @@ public class UserServiceImplTest {
         verify(userRepository, never()).saveAndFlush(any());
     }
 
-    @Test
     @Tag("create")
-    void create_rolesEmpty_ThenIllegalArgumentException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank"})
+    void create_usernameNullOrBlank_ThenUsernameIsBlankException(String str) {
         // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        ERole[] roles = new ERole[0];
+        CreateUserDTO dtoToCreate = createValidDTO();
+        String username = str.equals("null") ? null : "   ";
+        dtoToCreate.setUsername(username);
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate, roles))
-                .isInstanceOf(IllegalArgumentException.class);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    @Tag("create")
-    void create_usernameNull_ThenUsernameIsBlankException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getUsername()).thenReturn(null);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
+        assertThatThrownBy(() -> userService.create(dtoToCreate, new ERole[]{ERole.ROLE_USER, ERole.ROLE_ADMIN}))
                 .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    @Tag("create")
-    void create_usernameBlank_ThenUsernameIsBlankException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getUsername()).thenReturn("   ");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
 
 
-    @Test
     @Tag("create")
-    void create_emailNull_ThenUEmailIsBlankException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank"})
+    void create_emailNullOrBlank_ThenEmailIsBlankException(String str) {
         // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getEmail()).thenReturn(null);
+        CreateUserDTO dtoToCreate = createValidDTO();
+        String email = str.equals("null") ? null : "   ";
+        dtoToCreate.setEmail(email);
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    @Tag("create")
-    void create_emailBlank_ThenEmailIsBlankException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getEmail()).thenReturn("   ");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(EmailIsBlankException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
 
 
-    @Test
     @Tag("create")
-    void create_passwordNull_ThenPasswordTooShortException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "tooShort"})
+    void create_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
         // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getPassword()).thenReturn(null);
+        CreateUserDTO dtoToCreate = createValidDTO();
+        String password = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+        };
+        dtoToCreate.setPassword(password);
 
         // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(PasswordTooShortException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
 
@@ -310,15 +257,13 @@ public class UserServiceImplTest {
                 .email("    cristianmHErrera21@gmail.com ")
                 .build();
 
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
-        when(passwordEncoder.encode(any(String.class)))
-                .thenReturn("{bcrypt}$2a81...");
+        when(roleRepository.findByName(ERole.ROLE_USER)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
         when(userRepository.saveAndFlush(any(UserEntity.class)))
                 .thenReturn(createUserEntityWithIdAndRolesWithId());
 
         // Act
-        userService.create(dtoToCreate);
+        userService.create(dtoToCreate, ERole.ROLE_USER);
 
         // Assert
         verify(passwordEncoder).encode("12345678");
@@ -327,42 +272,6 @@ public class UserServiceImplTest {
                         passedToDb.getEmail().equals("cristianmherrera21@gmail.com") &&
                         passedToDb.getPassword().equals("{bcrypt}$2a81..."))
         );
-    }
-
-    @Test
-    @Tag("create")
-    void create_passwordBlank_ThenPasswordTooShortException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-        when(dtoToCreate.getPassword()).thenReturn("   ");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-    // the unique validation in the service due that it leave the layer encrypted
-    @Test
-    @Tag("create")
-    void create_passwordLengthLessThan8_ThenPasswordTooShortException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = mock(CreateUserDTO.class);
-
-        when(dtoToCreate.getPassword().length())
-                .thenReturn(7);
-        when(validator.validate(any(CreateUserDTO.class)))
-                .thenReturn(Collections.emptySet());
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate))
-                .isInstanceOf(PasswordTooShortException.class)
-                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-
-        verify(userRepository, never()).saveAndFlush(any());
     }
 
 
@@ -389,17 +298,11 @@ public class UserServiceImplTest {
         return CreateUserDTO.builder()
                 .username("cris6h16")
                 .password("12345678")
-                .email("cris6h16@gmail.com")
+                .email("cristianmherrera21@gmail.com")
                 .build();
     }
 
 
-    /**
-     * Test {@link UserServiceImpl#getById(Long)} when is successful.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     @Tag("getById")
     void getById_UserFoundWithRoles_Successful() {
@@ -426,15 +329,19 @@ public class UserServiceImplTest {
         verify(userRepository).findById(entity.getId());
     }
 
-    @Test
     @Tag("getById")
-    void getById_nullId_ThenIllegalArgumentException() {
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})
+        // -999 == null
+    void getById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
-        Long id = null;
+        Long id = longs == -999 ? null : longs;
 
         // Act & Assert
         assertThatThrownBy(() -> userService.getById(id))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).findById(any());
     }
 
@@ -443,29 +350,20 @@ public class UserServiceImplTest {
     void getById_UserNotFound_ThenUserNotFoundException() {
         // Arrange
         Long id = 1L;
-        Optional<UserEntity> entity = mock(Optional.class);
+        Optional<UserEntity> entity = Optional.empty();
 
-        when(entity.isPresent()).thenReturn(false);
         when(userRepository.findById(id)).thenReturn(entity);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.getById(id))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
-                .hasFieldOrPropertyWithValue("status", 404);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
 
         verify(userRepository).findById(id);
     }
 
-    /**
-     * Test {@link UserServiceImpl#getById(Long)} when is successful.
-     * <br>
-     * Test: Get a user by id, the user is found in DB with {@code roles==null}
-     * then the roles in the response should be an empty set.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag("getById")
     void getById_UserFoundWithRolesNull_thenInRolesReturnEmptySet_Successful() {
@@ -491,19 +389,13 @@ public class UserServiceImplTest {
     }
 
 
-    /**
-     * Test {@link UserServiceImpl#deleteById(Long)} when is successful.
-     * <br>
-     * Test: deleteById a user
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     @Tag("deleteById")
     void deleteById_Successful() {
         // Arrange
         Long id = 1L;
+
+        given(userRepository.existsById(id)).willReturn(true);
         doNothing().when(userRepository).deleteById(id);
 
         // Act
@@ -513,15 +405,19 @@ public class UserServiceImplTest {
         verify(userRepository).deleteById(id);
     }
 
-    @Test
     @Tag("deleteById")
-    void deleteById_nullId_ThenIllegalArgumentException() {
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})
+        // -999 == null
+    void deleteById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
-        Long id = null;
+        Long id = longs == -999 ? null : longs;
 
         // Act & Assert
         assertThatThrownBy(() -> userService.deleteById(id))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).deleteById(any());
     }
 
@@ -530,17 +426,14 @@ public class UserServiceImplTest {
     void deleteById_UserNotFound_ThenUserNotFoundException() {
         // Arrange
         Long id = 1L;
-        Optional<UserEntity> entity = mock(Optional.class);
-
-        when(entity.isPresent()).thenReturn(false);
-        when(userRepository.findById(id)).thenReturn(entity);
+        when(userRepository.existsById(id)).thenReturn(false);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.deleteById(id))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
-                .hasFieldOrPropertyWithValue("status", 404);
-        verify(userRepository).findById(id);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).existsById(id);
     }
 
 
@@ -550,7 +443,7 @@ public class UserServiceImplTest {
         // Arrange
         int amount = 10;
         List<UserEntity> entities = getUserEntities(amount);
-        Pageable pag = mock(Pageable.class);
+        Pageable pag = PageRequest.of(999, 99999, Sort.by(Sort.Order.asc("id")));
 
         when(userRepository.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(entities));
@@ -593,17 +486,36 @@ public class UserServiceImplTest {
         String newUsername = "newUsername";
         PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
 
+        String cleanUsername = newUsername.trim().toLowerCase();
+
         when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByUsername(newUsername)).thenReturn(false);
-        doNothing().when(userRepository).updateUsernameById(newUsername, id);
+        when(userRepository.existsByUsername(cleanUsername)).thenReturn(false);
+        doNothing().when(userRepository).updateUsernameById(cleanUsername, id);
 
         // Act
         userService.patchUsernameById(id, dto);
 
         // Assert
         verify(userRepository).existsById(id);
-        verify(userRepository).existsByUsername(newUsername);
-        verify(userRepository).updateUsernameById(newUsername, id);
+        verify(userRepository).existsByUsername(cleanUsername);
+        verify(userRepository).updateUsernameById(cleanUsername, id);
+    }
+
+    @Tag("patchUsernameById")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})
+        // -999 == null
+    void patchUsernameById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
+        // Arrange
+        Long id = longs == -999 ? null : longs;
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO("newUsername");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
     @Test
@@ -616,40 +528,27 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
                 .isInstanceOf(AnyUserDTOIsNullException.class)
-                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
 
-    @Test
     @Tag("patchUsernameById")
-    void patchUsernameById_usernameNull_ThenUsernameIsBlankException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank"})
+    void patchUsernameById_usernameNullOrBlank_ThenUsernameIsBlankException(String str) {
         // Arrange
         Long id = 1L;
         PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
-        when(dto.getUsername()).thenReturn(null);
+        String username = str.equals("null") ? null : "   ";
+
+        when(dto.getUsername()).thenReturn(username);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
                 .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-        verify(userRepository, never()).updateUsernameById(any(), any());
-    }
-
-    @Test
-    @Tag("patchUsernameById")
-    void patchUsernameById_usernameBlank_ThenUsernameIsBlankException() {
-        // Arrange
-        Long id = 1L;
-        PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
-        when(dto.getUsername()).thenReturn("   ");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
@@ -661,29 +560,17 @@ public class UserServiceImplTest {
         String newUsername = "  newUsername    ";
         PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
 
+        String cleanUsername = newUsername.trim().toLowerCase();
+
         when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByUsername(newUsername)).thenReturn(false);
-        doNothing().when(userRepository).updateUsernameById(newUsername, id);
+        when(userRepository.existsByUsername(cleanUsername)).thenReturn(false);
+        doNothing().when(userRepository).updateUsernameById(cleanUsername, id);
 
         // Act
         userService.patchUsernameById(id, dto);
 
         // Assert
-        verify(userRepository).updateUsernameById("newUsername", id);
-    }
-
-
-    @Test
-    @Tag("patchUsernameById")
-    void patchUsernameById_nullId_ThenIllegalArgumentException() {
-        // Arrange
-        Long id = null;
-        PatchUsernameUserDTO dto = new PatchUsernameUserDTO("newUsername");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
-                .isInstanceOf(IllegalArgumentException.class);
-        verify(userRepository, never()).updateUsernameById(any(), any());
+        verify(userRepository).updateUsernameById(cleanUsername, id);
     }
 
     @Test
@@ -698,8 +585,8 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
-                .hasFieldOrPropertyWithValue("status", 404);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
         verify(userRepository).existsById(id);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
@@ -713,16 +600,18 @@ public class UserServiceImplTest {
         String newUsername = "newUsername";
         PatchUsernameUserDTO dto = new PatchUsernameUserDTO(newUsername);
 
+        String cleanUsername = newUsername.trim().toLowerCase();
+
         when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByUsername(newUsername)).thenReturn(true);
+        when(userRepository.existsByUsername(cleanUsername)).thenReturn(true);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
                 .isInstanceOf(UsernameAlreadyExistsException.class)
-                .hasMessageContaining(Cons.User.Constrains.USERNAME_UNIQUE_MSG)
-                .hasFieldOrPropertyWithValue("status", 409);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Constrains.USERNAME_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
         verify(userRepository).existsById(id);
-        verify(userRepository).existsByUsername(newUsername);
+        verify(userRepository).existsByUsername(cleanUsername);
         verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
@@ -748,6 +637,23 @@ public class UserServiceImplTest {
         verify(userRepository).updateEmailById(newEmail, id);
     }
 
+    @Tag("patchEmailById")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})
+        // -999 == null
+    void patchEmailById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
+        // Arrange
+        Long id = longs == -999 ? null : longs;
+        PatchEmailUserDTO dto = new PatchEmailUserDTO("cristianmherrera21@gmail.com");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
     @Test
     @Tag("patchEmailById")
     void patchEmailById_DTONull_ThenAnyUserDTOIsNullException() {
@@ -758,74 +664,50 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
                 .isInstanceOf(AnyUserDTOIsNullException.class)
-                .hasMessageContaining(Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
 
-    @Test
     @Tag("patchEmailById")
-    void patchEmailById_emailNull_ThenEmailIsBlankException() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank"})
+    void patchEmailById_emailNullOrBlank_ThenEmailIsBlankException(String str) {
         // Arrange
         Long id = 1L;
         PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
-        when(dto.getEmail()).thenReturn(null);
+        String email = str.equals("null") ? null : "   ";
+
+        when(dto.getEmail()).thenReturn(email);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
                 .isInstanceOf(EmailIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
-
-    @Test
-    @Tag("patchEmailById")
-    void patchEmailById_emailBlank_EmailIsBlankException() {
-        // Arrange
-        Long id = 1L;
-        PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
-        when(dto.getEmail()).thenReturn("   ");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(EmailIsBlankException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", 400);
-        verify(userRepository, never()).updateEmailById(any(), any());
-    }
-
 
     @Test
     @Tag("patchEmailById")
     void patchEmailById_TrimFields() {
         // Arrange
         Long id = 1L;
-        String newEmail = "  cristianmherrera21@gmail.com  ";
+        String newEmail = "  cristianmherrera21@gmail.com    ";
         PatchEmailUserDTO dto = new PatchEmailUserDTO(newEmail);
 
+        String cleanEmail = newEmail.trim().toLowerCase();
+
         when(userRepository.existsById(id)).thenReturn(true);
-        when(userRepository.existsByEmail(newEmail)).thenReturn(false);
-        doNothing().when(userRepository).updateEmailById(newEmail, id);
+        when(userRepository.existsByEmail(cleanEmail)).thenReturn(false);
+        doNothing().when(userRepository).updateEmailById(cleanEmail, id);
 
         // Act
         userService.patchEmailById(id, dto);
 
         // Assert
-        verify(userRepository).updateEmailById("cristianmherrera21@gmail.com", id);
+        verify(userRepository).updateEmailById(cleanEmail, id);
     }
 
-    @Test
-    @Tag("patchEmailById")
-    void patchEmailById_nullId_ThenIlegalArgumentException() {
-        // Arrange
-        Long id = null;
-        PatchEmailUserDTO dto = new PatchEmailUserDTO("cristianmherrera21@gmail.com");
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(IllegalArgumentException.class);
-        verify(userRepository, never()).updateEmailById(any(), any());
-    }
 
     @Test
     @Tag("patchEmailById")
@@ -839,8 +721,8 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
-                .hasFieldOrPropertyWithValue("status", 404);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
 
@@ -858,8 +740,8 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
                 .isInstanceOf(EmailAlreadyExistException.class)
-                .hasMessageContaining(Cons.User.Constrains.EMAIL_UNIQUE_MSG)
-                .hasFieldOrPropertyWithValue("status", 409);
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Constrains.EMAIL_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
         verify(userRepository, never()).updateEmailById(any(), any());
     }
 
@@ -873,16 +755,112 @@ public class UserServiceImplTest {
         PatchPasswordUserDTO dto = new PatchPasswordUserDTO(newPassword);
 
         when(userRepository.existsById(id)).thenReturn(true);
-        when(passwordEncoder.encode(newPassword)).thenReturn("{bcrypt}$2a81..."
-        doNothing().when(userRepository).updatePasswordById(newPassword, id);
+        when(passwordEncoder.encode(newPassword)).thenReturn("{bcrypt}$2a81...");
+        doNothing().when(userRepository).updatePasswordById("{bcrypt}$2a81...", id);
 
         // Act
         userService.patchPasswordById(id, dto);
 
         // Assert
         verify(userRepository).existsById(id);
-        verify(userRepository).updatePasswordById(newPassword, id);
+        verify(passwordEncoder).encode(newPassword);
+        verify(userRepository).updatePasswordById("{bcrypt}$2a81...", id);
     }
+
+    @Tag("patchPasswordById")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})
+        // -999 == null
+    void patchPasswordById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
+        // Arrange
+        Long id = longs == -999 ? null : longs;
+        PatchPasswordUserDTO dto = new PatchPasswordUserDTO("12345678");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updatePasswordById(any(), any());
+    }
+
+    @Test
+    @Tag("patchPasswordById")
+    void patchPasswordById_DTONull_ThenAnyUserDTOIsNullException() {
+        // Arrange
+        Long id = 1L;
+        PatchPasswordUserDTO dto = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
+                .isInstanceOf(AnyUserDTOIsNullException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL);
+        verify(userRepository, never()).updatePasswordById(any(), any());
+    }
+
+    @Tag("patchPasswordById")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank"})
+    void patchPasswordById_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
+        // Arrange
+        Long id = 1L;
+        PatchPasswordUserDTO dto = mock(PatchPasswordUserDTO.class);
+        String password = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+        };
+
+        when(dto.getPassword()).thenReturn(password);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
+                .isInstanceOf(PasswordTooShortException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updatePasswordById(any(), any());
+    }
+
+    @Test
+    @Tag("patchPasswordById")
+    void patchPasswordById_TrimFields() {
+        // Arrange
+        Long id = 1L;
+        String newPassword = "  12345678H   ";
+        PatchPasswordUserDTO dto = new PatchPasswordUserDTO(newPassword);
+
+        String cleanPassword = newPassword.trim();
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(passwordEncoder.encode(cleanPassword)).thenReturn("{bcrypt}$2a81...");
+        doNothing().when(userRepository).updatePasswordById("{bcrypt}$2a81...", id);
+
+        // Act
+        userService.patchPasswordById(id, dto);
+
+        // Assert
+        verify(passwordEncoder).encode(cleanPassword);
+        verify(userRepository).updatePasswordById("{bcrypt}$2a81...", id);
+    }
+
+
+    @Test
+    @Tag("patchPasswordById")
+    void patchPasswordById_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long id = 1L;
+        PatchPasswordUserDTO dto = new PatchPasswordUserDTO("12345678");
+
+        when(userRepository.existsById(id)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository, never()).updatePasswordById(any(), any());
+    }
+
 
     @Test
     @Tag("deleteAll")
@@ -890,39 +868,6 @@ public class UserServiceImplTest {
         doNothing().when(userRepository).deleteAll();
         userService.deleteAll();
         verify(userRepository).deleteAll();
-    }
-
-    @Test
-    @Tag("createAdmin")
-    void createAdmin_Successful() {
-        // Arrange
-        UserEntity user = createUserEntityWithIdAndRolesWithId();
-        CreateUserDTO dtoToCreate = createValidDTO();
-
-        when(validator.validate(any(CreateUserDTO.class))).thenReturn(Collections.emptySet());
-        when(roleRepository.findByName(ERole.ROLE_ADMIN)).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
-        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(user);
-
-        // Act
-        Long id = userService.createAdmin(dtoToCreate);
-
-        // Assert
-        assertThat(id).isEqualTo(user.getId());
-        verify(validator).validate(argThat(dto -> {
-            CreateUserDTO dtoCasted = (CreateUserDTO) dto;
-            return dtoCasted.getUsername().equals(dtoToCreate.getUsername()) &&
-                    dtoCasted.getEmail().equals(dtoToCreate.getEmail()) &&
-                    dtoCasted.getPassword().equals(dtoToCreate.getPassword());
-        }));
-        verify(roleRepository).findByName(ERole.ROLE_ADMIN);
-        verify(passwordEncoder).encode(user.getPassword());
-        verify(userRepository).saveAndFlush(argThat(passedToDb ->
-                passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
-                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
-                        passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
-                        passedToDb.getRoles().size() == 1 &&
-                        passedToDb.getRoles().iterator().next().getName().equals(ERole.ROLE_ADMIN)));
     }
 
 

@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,16 +69,18 @@ class AdminUserControllerIntegrationTest {
                             .username("cris6h16" + i)
                             .email("cris6h16" + i + "@gmail.com")
                             .password("password" + i)
-                            .build()
+                            .build(),
+                    ERole.ROLE_USER
             );
         }
 
-        userService.createAdmin(
+        userService.create(
                 CreateUserDTO.builder()
                         .username("cris6h16")
                         .email("cristianmherrera21@gmail.com")
                         .password("12345678")
-                        .build()
+                        .build(),
+                ERole.ROLE_ADMIN
         );
     }
 }

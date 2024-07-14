@@ -10,6 +10,7 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.*;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
@@ -24,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.MIN_PASSWORD_LENGTH;
 
 
 /**
@@ -55,7 +56,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public Long create(CreateUserDTO dto, ERole... roles) { // @Valid doesn't work here
-        if (roles.length == 0) throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
+        if (roles == null || roles.length == 0) throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
 
         UserEntity user;
         Set<RoleEntity> rolesEntities = new HashSet<>(roles.length);
@@ -78,7 +79,7 @@ public class UserServiceImpl implements UserService {
                 .roles(rolesEntities)
                 .createdAt(new Date())
                 .build();
-        userRepository.saveAndFlush(user);
+        user = userRepository.saveAndFlush(user); // reassigned for testing purposes
 
         return user.getId();
     }
@@ -89,6 +90,8 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public PublicUserDTO getById(Long id) {
+        verifyId(id);
+
         Optional<UserEntity> userO = userRepository.findById(id);
         if (userO.isEmpty()) throw new UserNotFoundException();
 
@@ -102,6 +105,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void deleteById(Long id) {
+        verifyId(id);
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.deleteById(id);
     }
@@ -114,7 +118,7 @@ public class UserServiceImpl implements UserService {
     public List<PublicUserDTO> getPage(Pageable pageable) {
         if (pageable == null) throw new IllegalArgumentException("Pageable can't be null");
 
-        // all elements are verified in the creation of the PageRequest then it is not necessary to verify them again
+        // all elements are verified in the creation of the PageRequest then it is not necessary to verify them again ( IllegalArgumentException )
         Pageable pag = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
@@ -132,6 +136,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
+        verifyId(id);
         attributesNotBlankNotNull(dto);
 
         dto.setUsername(dto.getUsername().toLowerCase().trim());
@@ -140,12 +145,17 @@ public class UserServiceImpl implements UserService {
         userRepository.updateUsernameById(dto.getUsername(), id);
     }
 
+    private void verifyId(Long id) {
+        if (id == null || id <= 0) throw new InvalidIdException();
+    }
+
     @Override
     @Transactional(
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
+        verifyId(id);
         attributesNotBlankNotNull(dto);
 
         dto.setEmail(dto.getEmail().toLowerCase().trim());
@@ -160,10 +170,11 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
+       verifyId(id);
         attributesNotBlankNotNull(dto);
 
         dto.setPassword(dto.getPassword().trim());
-        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
+        validatePassword(dto.getPassword());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }
@@ -185,7 +196,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private void validatePassword(String password) {
-        boolean passFailLength = password != null && password.length() >= MIN_PASSWORD_LENGTH;
+        boolean passFailLength = password != null && password.length() < MIN_PASSWORD_LENGTH;
         if (passFailLength) throw new PasswordTooShortException();
     }
 

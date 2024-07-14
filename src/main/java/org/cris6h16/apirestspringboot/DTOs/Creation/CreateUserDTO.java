@@ -33,12 +33,12 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InS
  */
 @JsonFormat
 public class CreateUserDTO {
-    @NotBlank(message = USERNAME_IS_BLANK_MSG)
+//    @NotBlank(message = USERNAME_IS_BLANK_MSG)
     private String username;
 
-    @NotBlank(message = PASS_IS_TOO_SHORT_MSG)
+//    @NotBlank(message = PASS_IS_TOO_SHORT_MSG)
     private String password;
 
-    @NotBlank(message = EMAIL_IS_BLANK_MSG)
+//    @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 }
