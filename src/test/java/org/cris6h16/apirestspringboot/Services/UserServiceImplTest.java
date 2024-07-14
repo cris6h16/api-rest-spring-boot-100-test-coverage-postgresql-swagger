@@ -12,6 +12,7 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.EmailAlreadyExistException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
@@ -622,11 +623,112 @@ public class UserServiceImplTest {
 
     @Test
     @Tag("patchEmailById")
-void patchEmailById_TrimFields() {
+    void patchEmailById_TrimFields() {
         // Arrange
         Long id = 1L;
         String newEmail = "  cristianmherrera21@gmail.com  ";
+        PatchEmailUserDTO dto = new PatchEmailUserDTO(newEmail);
 
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByEmail(newEmail)).thenReturn(false);
+        doNothing().when(userRepository).updateEmailById(newEmail, id);
+
+        // Act
+        userService.patchEmailById(id, dto);
+
+        // Assert
+        verify(userRepository).updateEmailById("cristianmherrera21@gmail.com", id);
+    }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_nullId_ThenIlegalArgumentException() {
+        // Arrange
+        Long id = null;
+        PatchEmailUserDTO dto = new PatchEmailUserDTO("cristianmherrera21@gmail.com");
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long id = 1L;
+        PatchEmailUserDTO dto = new PatchEmailUserDTO("cristianmherrera21@gmail.com");
+
+        when(userRepository.existsById(id)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", 404);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+    @Test
+    @Tag("patchEmailById")
+    void patchEmailById_EmailAlreadyExists_ThenEmailAlreadyExistException() {
+        // Arrange
+        Long id = 1L;
+        String newEmail = "cristianmherrera21@gmail.com";
+        PatchEmailUserDTO dto = new PatchEmailUserDTO(newEmail);
+
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(userRepository.existsByEmail(newEmail)).thenReturn(true);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(EmailAlreadyExistException.class)
+                .hasMessageContaining(Cons.User.Constrains.EMAIL_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", 409);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
+
+    @Test
+    @Tag("deleteAll")
+    void deleteAll_Successful() {
+        doNothing().when(userRepository).deleteAll();
+        userService.deleteAll();
+        verify(userRepository).deleteAll();
+    }
+
+    @Test
+    @Tag("createAdmin")
+    void createAdmin_Successful() {
+        // Arrange
+        UserEntity user = createUserEntityWithIdAndRolesWithId();
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        when(validator.validate(any(CreateUserDTO.class))).thenReturn(Collections.emptySet());
+        when(roleRepository.findByName(ERole.ROLE_ADMIN)).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any(String.class))).thenReturn("{bcrypt}$2a81...");
+        when(userRepository.saveAndFlush(any(UserEntity.class))).thenReturn(user);
+
+        // Act
+        Long id = userService.createAdmin(dtoToCreate);
+
+        // Assert
+        assertThat(id).isEqualTo(user.getId());
+        verify(validator).validate(argThat(dto -> {
+            CreateUserDTO dtoCasted = (CreateUserDTO) dto;
+            return dtoCasted.getUsername().equals(dtoToCreate.getUsername()) &&
+                    dtoCasted.getEmail().equals(dtoToCreate.getEmail()) &&
+                    dtoCasted.getPassword().equals(dtoToCreate.getPassword());
+        }));
+        verify(roleRepository).findByName(ERole.ROLE_ADMIN);
+        verify(passwordEncoder).encode(user.getPassword());
+        verify(userRepository).saveAndFlush(argThat(passedToDb ->
+                passedToDb.getUsername().equals(dtoToCreate.getUsername()) &&
+                        passedToDb.getEmail().equals(dtoToCreate.getEmail()) &&
+                        passedToDb.getPassword().equals("{bcrypt}$2a81...") &&
+                        passedToDb.getRoles().size() == 1 &&
+                        passedToDb.getRoles().iterator().next().getName().equals(ERole.ROLE_ADMIN)));
+    }
 
 
     /**

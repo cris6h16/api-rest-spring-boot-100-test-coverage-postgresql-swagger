@@ -11,16 +11,12 @@ import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.RoleEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.EmailAlreadyExistException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.PasswordTooShortException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UsernameAlreadyExistsException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.*;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -29,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.MIN_PASSWORD_LENGTH;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
 
 /**
@@ -61,19 +57,33 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public Long create(CreateUserDTO dto) { // @Valid doesn't work here
-        validateConstraints(dto);
+    public Long create(CreateUserDTO dto, ERole... roles) { // @Valid doesn't work here
+        if (roles.length == 0) throw new IllegalArgumentException("Roles can't be empty");
 
-        dto = trimAndValidatePassword(dto);
+        UserEntity user;
+        Set<RoleEntity> rolesEntities = new HashSet<>(roles.length);
 
-        RoleEntity role = roleRepository.findByName(ERole.ROLE_USER)
-                .orElse(RoleEntity.builder().name(ERole.ROLE_USER).build());
+        attributesNotBlankNotNull(dto);
+        trimAndToLower(dto);
+        validatePassword(dto.getPassword());
 
-        UserEntity saved = userRepository.saveAndFlush(
-                dtoToEntityForBeSaved(dto, role)
-        );
+        for (ERole role : roles) {
+            RoleEntity roleDB = roleRepository
+                    .findByName(role)
+                    .orElse(RoleEntity.builder().name(role).build());
+            rolesEntities.add(roleDB);
+        }
 
-        return saved.getId();
+        user = UserEntity.builder()
+                .username(dto.getUsername())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .email(dto.getEmail())
+                .roles(rolesEntities)
+                .createdAt(new Date())
+                .build();
+        userRepository.saveAndFlush(user);
+
+        return user.getId();
     }
 
     @Override
@@ -125,7 +135,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
-        validateConstraints(dto);
+        attributesNotBlankNotNull(dto);
 
         dto.setUsername(dto.getUsername().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
@@ -139,7 +149,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
-        validateConstraints(dto);
+        attributesNotBlankNotNull(dto);
 
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
@@ -153,7 +163,7 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
-        validateConstraints(dto);
+        attributesNotBlankNotNull(dto);
 
         dto.setPassword(dto.getPassword().trim());
         if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
@@ -167,49 +177,21 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void deleteAll() {
-        userRepository.deleteAll(); // default
+        userRepository.deleteAll(); // n + 1
     }
 
 
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
-    @Override
-    public Long createAdmin(CreateUserDTO dto) {
-        validateConstraints(dto);
-
-        dto = trimAndValidatePassword(dto);
-
-        RoleEntity role = roleRepository.findByName(ERole.ROLE_ADMIN)
-                .orElse(RoleEntity.builder().name(ERole.ROLE_ADMIN).build());
-
-        UserEntity saved = userRepository.saveAndFlush(
-                dtoToEntityForBeSaved(dto, role)
-        );
-
-        return saved.getId();
-    }
-
-
-    private CreateUserDTO trimAndValidatePassword(CreateUserDTO dto) {
+    private void trimAndToLower(CreateUserDTO dto) {
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         dto.setPassword(dto.getPassword().toLowerCase().trim());
         dto.setUsername(dto.getUsername().toLowerCase().trim());
-
-        if (dto.getPassword().length() < MIN_PASSWORD_LENGTH) throw new PasswordTooShortException();
-        return dto;
     }
 
-    private UserEntity dtoToEntityForBeSaved(CreateUserDTO dto, RoleEntity role) {
-        return UserEntity.builder()
-                .username(dto.getUsername())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .email(dto.getEmail())
-                .roles(new HashSet<>(Collections.singleton(role)))
-                .createdAt(new Date())
-                .build();
+    private void validatePassword(String password) {
+        boolean passFailLength = password != null && password.length() >= MIN_PASSWORD_LENGTH;
+        if (passFailLength) throw new PasswordTooShortException();
     }
+
 
     /**
      * Create a {@link PublicUserDTO} from a {@link UserEntity}<br>
@@ -243,8 +225,15 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private <T> void validateConstraints(T dto) {
-        Set<ConstraintViolation<T>> violations = validator.validate(dto);
-        if (!violations.isEmpty()) throw new ConstraintViolationException(violations);
+    private void attributesNotBlankNotNull(CreateUserDTO dto) {
+        if (dto == null) throw new AnyUserDTOIsNullException();
+
+        boolean emailBlank = dto.getEmail() == null || dto.getEmail().isBlank();
+        boolean passwordBlank = dto.getPassword() == null || dto.getPassword().isBlank();
+        boolean usernameBlank = dto.getUsername() == null || dto.getUsername().isBlank();
+
+        if (emailBlank) throw new UserEmailIsBlankException();
+        if (passwordBlank) throw new PasswordTooShortException();
+        if (usernameBlank) throw new UsernameIsBlankException();
     }
 }
