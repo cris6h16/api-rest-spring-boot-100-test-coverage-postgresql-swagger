@@ -7,6 +7,7 @@ import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.AnyNoteDTOIsNullException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.NoteNotFoundException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleIsBlankException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
@@ -140,7 +141,6 @@ public class NoteServiceImplTest {
         };
 
         when(toCreate.getTitle()).thenReturn(title);
-        when(toCreate.getContent()).thenReturn("github.com/cris6h16");
 
         // Act & Assert
         assertThatThrownBy(() -> noteService.create(toCreate, userId))
@@ -159,15 +159,16 @@ public class NoteServiceImplTest {
         Long noteId = 11L;
         UserEntity uDB = mock(UserEntity.class);
         NoteEntity nDB = mock(NoteEntity.class);
-        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
         content = switch (content) {
             case "null" -> null;
             case "blank" -> "   ";
             default -> "";
         };
+        CreateNoteDTO toCreate = CreateNoteDTO.builder()
+                .title("cris6h16's note")
+                .content(content)
+                .build();
 
-        when(toCreate.getTitle()).thenReturn("cris6h16's note");
-        when(toCreate.getContent()).thenReturn(content);
         when(nDB.getId()).thenReturn(noteId);
 
         when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
@@ -181,9 +182,9 @@ public class NoteServiceImplTest {
                 .isNotNull()
                 .isEqualTo(noteId);
         verify(userRepository).findById(userId);
-        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
-                noteEntity.getTitle().equals(toCreate.getTitle()) &&
-                        noteEntity.getContent().equals("")
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getTitle().equals(toCreate.getTitle()) &&
+                        passedToDB.getContent().equals(toCreate.getContent())
         ));
     }
 
@@ -194,7 +195,7 @@ public class NoteServiceImplTest {
         Long userId = 1L;
         CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
 
-        when(toCreate.getTitle().isBlank()).thenReturn(false);
+        when(toCreate.getTitle()).thenReturn("title");
         when(userRepository.findById(any())).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -211,16 +212,13 @@ public class NoteServiceImplTest {
         // Arrange
         Long userId = 1L;
         Long noteId = 11L;
-        UserEntity uDB = mock(UserEntity.class);
-        NoteEntity nDB = mock(NoteEntity.class);
-        PublicNoteDTO expected = mock(PublicNoteDTO.class);
+        NoteEntity nDB = NoteEntity.builder()
+                .id(noteId)
+                .title("cris6h16's note")
+                .content("note content")
+                .updatedAt(new Date())
+                .build();
 
-        when(nDB.getId()).thenReturn(noteId);
-        when(nDB.getUser()).thenReturn(uDB);
-        when(nDB.getTitle()).thenReturn("cris6h16's note");
-        when(nDB.getContent()).thenReturn("note content");
-
-        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
         when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
 
         // Act
@@ -228,7 +226,6 @@ public class NoteServiceImplTest {
 
         // Assert
         assertThat(dto).isNotNull();
-        verify(userRepository).findById(userId);
         verify(noteRepository).findByIdAndUserId(noteId, userId);
     }
 
@@ -260,14 +257,14 @@ public class NoteServiceImplTest {
         Long userId = 1L;
         Long noteId = 11L;
 
-        when(userRepository.findById(any())).thenReturn(Optional.empty());
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> noteService.getByIdAndUserId(noteId, userId))
-                .isInstanceOf(UserNotFoundException.class)
+                .isInstanceOf(NoteNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
-        verify(userRepository).findById(userId);
-        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
     }
 
 
@@ -309,8 +306,14 @@ public class NoteServiceImplTest {
         Long userId = 1L;
         Long noteId = 11L;
         UserEntity uDB = mock(UserEntity.class);
-        NoteEntity nDB = mock(NoteEntity.class);
-        CreateNoteDTO dto = CreateNoteDTO.builder()
+        NoteEntity nDB = NoteEntity.builder()
+                .id(noteId)
+                .title("title")
+                .content("content")
+                .updatedAt(new Date())
+                .user(uDB)
+                .build();
+        CreateNoteDTO toPutDto = CreateNoteDTO.builder()
                 .title("cris6h16's note")
                 .content("github.com/cris6h16")
                 .build();
@@ -319,15 +322,15 @@ public class NoteServiceImplTest {
         when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
 
         // Act
-        noteService.putByIdAndUserId(noteId, userId, dto);
+        noteService.putByIdAndUserId(noteId, userId, toPutDto);
 
         // Assert
         verify(userRepository).findById(userId);
         verify(noteRepository).findByIdAndUserId(noteId, userId);
         verify(noteRepository).saveAndFlush(argThat(passedToDB ->
-                passedToDB.getId().equals(noteId) &&
-                        passedToDB.getTitle().equals(dto.getTitle()) &&
-                        passedToDB.getContent().equals(dto.getContent()) &&
+                        passedToDB.getId().equals(noteId) &&
+                        passedToDB.getTitle().equals(toPutDto.getTitle()) &&
+                        passedToDB.getContent().equals(toPutDto.getContent()) &&
                         passedToDB.getUser().equals(uDB) &&
                         passedToDB.getUpdatedAt() != null &&
                         passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis()
@@ -381,15 +384,15 @@ public class NoteServiceImplTest {
         // Arrange
         Long userId = 1L;
         Long noteId = 11L;
-        CreateNoteDTO dto = mock(CreateNoteDTO.class);
         title = switch (title) {
             case "null" -> null;
             case "blank" -> "   ";
             default -> "";
         };
-
-        when(dto.getTitle()).thenReturn(title);
-        when(dto.getContent()).thenReturn("github.com/cris6h16");
+        CreateNoteDTO dto = CreateNoteDTO.builder()
+                .title(title)
+                .content("github.com/cris6h16")
+                .build();
 
         // Act & Assert
         assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, userId, dto))
@@ -400,19 +403,30 @@ public class NoteServiceImplTest {
         verify(noteRepository, never()).saveAndFlush(any());
     }
 
-    @Test
     @Tag("putByIdAndUserId")
-    void putByIdAndUserId_ByIdAndUserId_contentNullOrBlank_ThenSuccessfulWithContentEmpty() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty"})
+    void putByIdAndUserId_ByIdAndUserId_contentNullOrBlank_ThenSuccessfulWithContentEmpty(String content) {
         // Arrange
         Long userId = 1L;
         Long noteId = 11L;
+        content = switch (content) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "";
+        };
         UserEntity uDB = mock(UserEntity.class);
-        NoteEntity nDB = mock(NoteEntity.class);
-        CreateNoteDTO dto = mock(CreateNoteDTO.class);
-
-        when(dto.getTitle()).thenReturn("cris6h16's note");
-        when(dto.getContent()).thenReturn(null);
-        when(nDB.getId()).thenReturn(noteId);
+        NoteEntity nDB = NoteEntity.builder()
+                .id(noteId)
+                .title("title")
+                .content("content")
+                .updatedAt(new Date())
+                .user(uDB)
+                .build();
+        CreateNoteDTO dto = CreateNoteDTO.builder()
+                .title("cris6h16's note")
+                .content(content)
+                .build();
 
         when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
         when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
@@ -424,9 +438,13 @@ public class NoteServiceImplTest {
         // Assert
         verify(userRepository).findById(userId);
         verify(noteRepository).findByIdAndUserId(noteId, userId);
-        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
-                noteEntity.getTitle().equals(dto.getTitle()) &&
-                        noteEntity.getContent().equals("")
+        verify(noteRepository).saveAndFlush(argThat(passedToDB -> {
+                    return passedToDB.getTitle().equals(dto.getTitle()) &&
+                            passedToDB.getContent().equals(dto.getContent()) &&
+                            passedToDB.getUser().equals(uDB) &&
+                            passedToDB.getUpdatedAt() != null &&
+                            passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis();
+                }
         ));
     }
 
@@ -527,7 +545,7 @@ public class NoteServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> noteService.deleteByIdAndUserId(noteId, userId))
-                .isInstanceOf(UserNotFoundException.class)
+                .isInstanceOf(NoteNotFoundException.class)
                 .hasFieldOrPropertyWithValue("reason", Cons.Note.Fails.NOT_FOUND)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
         verify(userRepository).existsById(userId);
