@@ -1,335 +1,656 @@
-//package org.cris6h16.apirestspringboot.Service;
-//
-//import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
-//import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
-//import org.cris6h16.apirestspringboot.Entities.NoteEntity;
-//import org.cris6h16.apirestspringboot.Entities.UserEntity;
-//import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteServiceTransversalException;
-//import org.cris6h16.apirestspringboot.Repository.NoteRepository;
-//import org.junit.jupiter.api.Tag;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//import org.springframework.data.domain.PageImpl;
-//import org.springframework.data.domain.PageRequest;
-//import org.springframework.data.domain.Pageable;
-//import org.springframework.data.domain.Sort;
-//
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Optional;
-//
-//import static org.assertj.core.api.Assertions.assertThat;
-//import static org.mockito.ArgumentMatchers.any;
-//import static org.mockito.ArgumentMatchers.argThat;
-//import static org.mockito.Mockito.*;
-//
-///**
-// * Test class for {@link NoteServiceImpl}, here I just test when
-// * the test is successful, due to all methods in the mentioned
-// * service are wrapped in a try-catch block, in the catch
-// * we delegate a creation of {@link NoteServiceTransversalException}
-// * to {@link ServiceUtils}, then any exception threw in the methods of
-// * {@link NoteServiceImpl} should be tested as integration with {@link ServiceUtils}.
-// *
-// * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-// * @implNote {@link NoteServiceImpl} are tested in isolation, mocking the dependencies.
-// * @since 1.0
-// */
-//@ExtendWith(MockitoExtension.class)
-//public class NoteServiceImplTest {
-//
-//    @Mock
-//    NoteRepository noteRepository;
-//    @Mock
-//    UserServiceImpl userService;
-//
-//    @InjectMocks
-//    NoteServiceImpl noteService;
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#create(CreateNoteDTO, Long)}  when is successful.
-//     * <br>
-//     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a null content
-//     * then the {@link NoteEntity} passed to DB for be saved should have an empty content, not a null.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("create")
-//    void NoteServiceImplTest_create_DTO_ContentNull_Successful() {
-//        // Arrange
-//        UserEntity savedUMock = createUserEntityWithId();
-//        NoteEntity savedNMock = createNoteEntityWithId(savedUMock);
-//
-//        when(userService.validateIdAndGetUser(any(Long.class)))
-//                .thenReturn(savedUMock);
-//        when(noteRepository.saveAndFlush(any()))
-//                .thenReturn(savedNMock);
-//
-//        CreateNoteDTO toCreate = new CreateNoteDTO(savedNMock.getTitle(), null);
-//
-//        // Act
-//        Long savedNoteId = noteService.create(toCreate, savedUMock.getId());
-//
-//        // Assert
-//        assertThat(savedNoteId).isNotNull();
-//        assertThat(savedNMock.getId()).isEqualTo(savedNoteId);
-//
-//        verify(userService).validateIdAndGetUser(any(Long.class));
-//        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
-//                noteEntity.getTitle().equals(toCreate.getTitle()) &&
-//                        noteEntity.getContent().equals("")
-//        ));
-//    }
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#create(CreateNoteDTO, Long)}  when is successful.
-//     * <br>
-//     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a blank content
-//     * then the {@link NoteEntity} passed to DB for be saved should have a blank content, not a null.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("create")
-//    void NoteServiceImplTest_create_DTO_ContentBlank_Successful() {
-//        // Arrange
-//        UserEntity savedUMock = createUserEntityWithId();
-//        NoteEntity savedNMock = createNoteEntityWithId(savedUMock);
-//        savedNMock.setContent("");
-//
-//        when(userService.validateIdAndGetUser(any(Long.class)))
-//                .thenReturn(savedUMock);
-//        when(noteRepository.saveAndFlush(any()))
-//                .thenReturn(savedNMock);
-//
-//        CreateNoteDTO toCreate = new CreateNoteDTO(savedNMock.getTitle(), null);
-//
-//        // Act
-//        Long savedNoteId = noteService.create(toCreate, savedUMock.getId());
-//
-//        // Assert
-//        assertThat(savedNoteId).isNotNull();
-//        assertThat(savedNMock.getId()).isEqualTo(savedNoteId);
-//
-//        verify(userService).validateIdAndGetUser(any(Long.class));
-//        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
-//                noteEntity.getTitle().equals(toCreate.getTitle()) &&
-//                        noteEntity.getContent().equals("")
-//        ));
-//    }
-//
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#getById(Long, Long)} when is successful.
-//     * <br>
-//     * Test: Create a note passing in {@link CreateNoteDTO} a correct title, but a null content
-//     * then the {@link NoteEntity} passed to DB for be saved should have an empty content, not a null.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("getById")
-//    void NoteServiceImplTest_get_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithId();
-//        NoteEntity note = createNoteEntityWithId(user);
-//
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        when(userService.validateIdAndGetUser(user.getId()))
-//                .thenReturn(user);
-//        when(noteRepository.findByIdAndUser(note.getId(), user))
-//                .thenReturn(Optional.of(note));
-//
-//        // Act
-//        PublicNoteDTO publicNote = noteService.getById(note.getId(), user.getId());
-//
-//        // Assert
-//        assertThat(publicNote)
-//                .hasFieldOrPropertyWithValue("id", note.getId())
-//                .hasFieldOrPropertyWithValue("title", note.getTitle())
-//                .hasFieldOrPropertyWithValue("content", note.getContent())
-//                .hasFieldOrPropertyWithValue("updatedAt", note.getUpdatedAt());
-//    }
-//
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)}  when is successful.
-//     * <br>
-//     * Test: Replace a note based on the id.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("put")
-//    void NoteServiceImplTest_put_ValidDTO_Replaces_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithId();
-//        NoteEntity toUpdate = createNoteEntityWithId(user);
-//        NoteEntity noteUpdated = createNoteEntityWithId(user);
-//        noteUpdated.setTitle("new title");
-//
-//        when(userService.validateIdAndGetUser(any(Long.class)))
-//                .thenReturn(user);
-//        when(noteRepository.findByIdAndUser(any(Long.class), any(UserEntity.class))
-//        ).thenReturn(Optional.of(noteUpdated));
-//
-//        CreateNoteDTO putDTO = new CreateNoteDTO("new title", "new content");
-//
-//        // Act
-//        noteService.put(toUpdate.getId(), putDTO, user.getId());
-//
-//        // Assert
-//        verify(userService).validateIdAndGetUser(any(Long.class));
-//        verify(noteRepository).findByIdAndUser(any(Long.class), any(UserEntity.class));
-//        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
-//                passedToDB.getTitle().equals(putDTO.getTitle()) &&
-//                        passedToDB.getContent().equals(putDTO.getContent()) &&
-//                        passedToDB.getId().equals(toUpdate.getId()) &&
-//                        passedToDB.getUser().equals(user)
-//        ));
-//    }
-//
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#deleteById(Long, Long)} when is successful.
-//     * <br>
-//     * Test: Delete a note based on the id.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("deleteById")
-//    void NoteServiceImplTest_delete_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithId();
-//        NoteEntity note = createNoteEntityWithId(user);
-//
-//        doNothing().when(serviceUtils).validateId(any(Long.class));
-//        when(userService.validateIdAndGetUser(any(Long.class)))
-//                .thenReturn(user);
-//        when(noteRepository.findByIdAndUser(note.getId(), user))
-//                .thenReturn(Optional.of(note));
-//        doNothing().when(noteRepository).deleteById(note);
-//
-//        // Act
-//        noteService.deleteById(note.getId(), user.getId());
-//
-//        // Assert
-//        verify(serviceUtils).validateId(any(Long.class));
-//        verify(userService).validateIdAndGetUser(user.getId());
-//        verify(noteRepository).findByIdAndUser(note.getId(), user);
-//        verify(noteRepository).deleteById(note);
-//    }
-//
-//
-//    /**
-//     * Test for {@link NoteServiceImpl#getPage(Pageable, Long)} when is successful.
-//     * <br>
-//     * Test: Get a page of notes based on the user id.
-//     *
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    @Test
-//    @Tag("getById(pageable)")
-//    void NoteServiceImplTest_getPageable_Successful() {
-//        // Arrange
-//        UserEntity user = createUserEntityWithId();
-//        List<NoteEntity> list = createNoteEntities(user);
-//        Pageable pageable = PageRequest.of(
-//                0,
-//                17,
-//                Sort.by(Sort.Direction.ASC, "id")
-//        );
-//
-//        when(userService.validateIdAndGetUser(user.getId()))
-//                .thenReturn(user);
-//        when(noteRepository.findByUser(user, pageable))
-//                .thenReturn(new PageImpl<>(list));
-//
-//        // Act
-//        List<PublicNoteDTO> publicNotes = noteService.getPage(pageable, user.getId());
-//
-//        // Assert
-//        assertThat(publicNotes).hasSize(list.size());
-//
-//        for (int i = 0; i < list.size(); i++) {
-//            assertThat(publicNotes.getById(i))
-//                    .hasFieldOrPropertyWithValue("id", list.getById(i).getId())
-//                    .hasFieldOrPropertyWithValue("title", list.getById(i).getTitle())
-//                    .hasFieldOrPropertyWithValue("content", list.getById(i).getContent())
-//                    .hasFieldOrPropertyWithValue("updatedAt", list.getById(i).getUpdatedAt());
-//        }
-//
-//    }
-//
-//
-//    /**
-//     * Create a {@link UserEntity} with id {@code 1}.
-//     *
-//     * @return the created one.
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    UserEntity createUserEntityWithId() {
-//        return UserEntity.builder()
-//                .id(1L)
-//                .username("cris6h16")
-//                .password("12345678")
-//                .email("cris6h16@gmail.com")
-//                .build();
-//    }
-//
-//
-//    /**
-//     * Create a list of {@link NoteEntity} with 2 elements.
-//     *
-//     * @param user the user to set in the notes.
-//     * @return the created list of notes.
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    List<NoteEntity> createNoteEntities(UserEntity user) {
-//        List<NoteEntity> notes = new ArrayList<>(2);
-//        notes.add(NoteEntity.builder()
-//                .title("title1")
-//                .content("content1")
-//                .user(user)
-//                .build());
-//        notes.add(NoteEntity.builder()
-//                .title("title2")
-//                .content("content2")
-//                .user(user)
-//                .build());
-//
-//        return notes;
-//    }
-//
-//    /**
-//     * Create a {@link NoteEntity} with id {@code 1}.
-//     *
-//     * @param user the user to set in the note.
-//     * @return the created one.
-//     * @implNote The id is set to {@code 1}.
-//     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-//     * @since 1.0
-//     */
-//    NoteEntity createNoteEntityWithId(UserEntity user) {
-//        return NoteEntity.builder()
-//                .id(1L)
-//                .title("title1")
-//                .content("content1")
-//                .user(user)
-//                .build();
-//    }
-//
-//}
+package org.cris6h16.apirestspringboot.Services;
+
+import org.cris6h16.apirestspringboot.Constants.Cons;
+import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.Entities.NoteEntity;
+import org.cris6h16.apirestspringboot.Entities.UserEntity;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.AnyNoteDTOIsNullException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleIsBlankException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
+import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.*;
+
+
+@ExtendWith(MockitoExtension.class)
+public class NoteServiceImplTest {
+
+    @Mock
+    NoteRepository noteRepository;
+
+    @Mock
+    UserRepository userRepository;
+
+    @Mock
+    UserServiceImpl userService;
+
+    @InjectMocks
+    NoteServiceImpl noteService;
+
+    @BeforeEach
+    void setUp() {
+        Mockito.reset(noteRepository, userRepository, userService);
+    }
+
+    @Test
+    @Tag("create")
+    void create_Successful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
+
+        when(toCreate.getTitle()).thenReturn("cris6h16's note");
+        when(toCreate.getContent()).thenReturn("note content");
+        when(nDB.getId()).thenReturn(noteId);
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.saveAndFlush(any())).thenReturn(nDB);
+
+        // Act
+        Long savedNoteId = noteService.create(toCreate, userId);
+
+        // Assert
+        assertThat(savedNoteId)
+                .isNotNull()
+                .isEqualTo(noteId);
+        verify(userRepository).findById(userId);
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getTitle().equals(toCreate.getTitle()) &&
+                        passedToDB.getContent().equals(toCreate.getContent()) &&
+                        passedToDB.getUser().equals(uDB) &&
+                        passedToDB.getUpdatedAt() != null &&
+                        passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis()
+        ));
+    }
+
+
+    @Test
+    @Tag("create")
+    void create_DTONull_ThenAnyNoteDTOIsNullException() {
+        // Arrange
+        Long userId = 1L;
+        CreateNoteDTO toCreate = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.create(toCreate, userId))
+                .isInstanceOf(AnyNoteDTOIsNullException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.Note.DTO.NULL)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
+    void create_userIdNullOrLessThanOne_ThenInvalidIdException(Long userId) {
+        // Arrange
+        userId = userId == -999 ? null : userId;
+        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
+
+        // Act & Assert
+        final Long finalUserId = userId;
+        assertThatThrownBy(() -> noteService.create(toCreate, finalUserId))
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty"})
+    void create_titleNullOrBlankOrEmpty_ThenTitleIsBlankException(String title) {
+        // Arrange
+        Long userId = 1L;
+        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
+        title = switch (title) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "";
+        };
+
+        when(toCreate.getTitle()).thenReturn(title);
+        when(toCreate.getContent()).thenReturn("github.com/cris6h16");
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.create(toCreate, userId))
+                .isInstanceOf(TitleIsBlankException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty"})
+    void create_contentNullOrBlankOrEmpty_ThenSuccessfulWithContentEmpty(String content) {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
+        content = switch (content) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "";
+        };
+
+        when(toCreate.getTitle()).thenReturn("cris6h16's note");
+        when(toCreate.getContent()).thenReturn(content);
+        when(nDB.getId()).thenReturn(noteId);
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.saveAndFlush(any())).thenReturn(nDB);
+
+        // Act
+        Long savedNoteId = noteService.create(toCreate, userId);
+
+        // Assert
+        assertThat(savedNoteId)
+                .isNotNull()
+                .isEqualTo(noteId);
+        verify(userRepository).findById(userId);
+        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
+                noteEntity.getTitle().equals(toCreate.getTitle()) &&
+                        noteEntity.getContent().equals("")
+        ));
+    }
+
+    @Test
+    @Tag("create")
+    void create_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
+
+        when(toCreate.getTitle().isBlank()).thenReturn(false);
+        when(userRepository.findById(any())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.create(toCreate, userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).findById(userId);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("getByIdAndUserId")
+    void getByIdAndUserId_Successful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        PublicNoteDTO expected = mock(PublicNoteDTO.class);
+
+        when(nDB.getId()).thenReturn(noteId);
+        when(nDB.getUser()).thenReturn(uDB);
+        when(nDB.getTitle()).thenReturn("cris6h16's note");
+        when(nDB.getContent()).thenReturn("note content");
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
+
+        // Act
+        PublicNoteDTO dto = noteService.getByIdAndUserId(noteId, userId);
+
+        // Assert
+        assertThat(dto).isNotNull();
+        verify(userRepository).findById(userId);
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
+    }
+
+    @Tag("getByIdAndUserId")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
+    void getByIdAndUserId_userIdOrNoteId_NullOrLessThanOne_ThenInvalidIdException(Long invalidId) {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        invalidId = (invalidId == -999) ? null : invalidId;
+
+        // Act & Assert
+        for (int i = 0; i < 2; i++) {
+            final Long finalUserId = (i == 0) ? invalidId : userId;
+            final Long finalNoteId = (i == 1) ? invalidId : noteId;
+            assertThatThrownBy(() -> noteService.getByIdAndUserId(finalNoteId, finalUserId))
+                    .isInstanceOf(InvalidIdException.class)
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        }
+        verify(userRepository, never()).findById(any());
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+    }
+
+    @Test
+    @Tag("getByIdAndUserId")
+    void getByIdAndUserId_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+
+        when(userRepository.findById(any())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.getByIdAndUserId(noteId, userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).findById(userId);
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+    }
+
+
+    @Test
+    @Tag("putByIdAndUserId")
+    void putByIdAndUserId_ByIdAndUserId_NoteNotFound_ThenCreateSuccessful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        CreateNoteDTO dto = CreateNoteDTO.builder()
+                .title("cris6h16's note")
+                .content("github.com/cris6h16")
+                .build();
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.empty());
+
+        // Act
+        noteService.putByIdAndUserId(noteId, userId, dto);
+
+        // Assert
+        verify(userRepository).findById(userId);
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getId().equals(noteId) &&
+                        passedToDB.getTitle().equals(dto.getTitle()) &&
+                        passedToDB.getContent().equals(dto.getContent()) &&
+                        passedToDB.getUser().equals(uDB) &&
+                        passedToDB.getUpdatedAt() != null &&
+                        passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis()
+        ));
+    }
+
+    @Test
+    @Tag("putByIdAndUserId")
+    void putByIdAndUserId_ByIdAndUserId_NoteFound_ThenUpdateSuccessful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        CreateNoteDTO dto = CreateNoteDTO.builder()
+                .title("cris6h16's note")
+                .content("github.com/cris6h16")
+                .build();
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
+
+        // Act
+        noteService.putByIdAndUserId(noteId, userId, dto);
+
+        // Assert
+        verify(userRepository).findById(userId);
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getId().equals(noteId) &&
+                        passedToDB.getTitle().equals(dto.getTitle()) &&
+                        passedToDB.getContent().equals(dto.getContent()) &&
+                        passedToDB.getUser().equals(uDB) &&
+                        passedToDB.getUpdatedAt() != null &&
+                        passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis()
+        ));
+    }
+
+    @Tag("putByIdAndUserId")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
+    void putByIdAndUserId_ByIdAndUserId_userIdOrNoteIdNullOrLessThanOne_ThenInvalidIdException(Long invalidId) {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        invalidId = (invalidId == -999) ? null : invalidId;
+        CreateNoteDTO dto = mock(CreateNoteDTO.class);
+
+        // Act & Assert
+        for (int i = 0; i < 2; i++) {
+            final Long finalUserId = (i == 0) ? invalidId : userId;
+            final Long finalNoteId = (i == 1) ? invalidId : noteId;
+            assertThatThrownBy(() -> noteService.putByIdAndUserId(finalNoteId, finalUserId, dto))
+                    .isInstanceOf(InvalidIdException.class)
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        }
+        verify(userRepository, never()).findById(any());
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+        verify(noteRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("putByIdAndUserId")
+    void putByIdAndUserId_ByIdAndUserId_DTONull_ThenAnyNoteDTOIsNullException() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, userId, null))
+                .isInstanceOf(AnyNoteDTOIsNullException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.Note.DTO.NULL)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+        verify(noteRepository, never()).saveAndFlush(any());
+    }
+
+    @Tag("putByIdAndUserId")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty"})
+    void putByIdAndUserId_ByIdAndUserId_titleNullOrBlankOrEmpty_ThenTitleIsBlankException(String title) {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        CreateNoteDTO dto = mock(CreateNoteDTO.class);
+        title = switch (title) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "";
+        };
+
+        when(dto.getTitle()).thenReturn(title);
+        when(dto.getContent()).thenReturn("github.com/cris6h16");
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, userId, dto))
+                .isInstanceOf(TitleIsBlankException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+        verify(noteRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("putByIdAndUserId")
+    void putByIdAndUserId_ByIdAndUserId_contentNullOrBlank_ThenSuccessfulWithContentEmpty() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        CreateNoteDTO dto = mock(CreateNoteDTO.class);
+
+        when(dto.getTitle()).thenReturn("cris6h16's note");
+        when(dto.getContent()).thenReturn(null);
+        when(nDB.getId()).thenReturn(noteId);
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
+        when(noteRepository.saveAndFlush(any())).thenReturn(nDB);
+
+        // Act
+        noteService.putByIdAndUserId(noteId, userId, dto);
+
+        // Assert
+        verify(userRepository).findById(userId);
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
+        verify(noteRepository).saveAndFlush(argThat(noteEntity ->
+                noteEntity.getTitle().equals(dto.getTitle()) &&
+                        noteEntity.getContent().equals("")
+        ));
+    }
+
+    @Test
+    @Tag("putByIdAndUserId")
+    void putByIdAndUserId_ByIdAndUserId_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        CreateNoteDTO dto = CreateNoteDTO.builder()
+                .title("cris6h16's note")
+                .content("github.com/cris6h16")
+                .build();
+
+        when(userRepository.findById(any())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, userId, dto))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).findById(userId);
+        verify(noteRepository, never()).findByIdAndUserId(any(), any());
+        verify(noteRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Test
+    @Tag("deleteByIdAndUserId")
+    void deleteByIdAndUserId_Successful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(noteRepository.existsByIdAndUserId(noteId, userId)).thenReturn(true);
+
+        // Act
+        noteService.deleteByIdAndUserId(noteId, userId);
+
+        // Assert
+        verify(userRepository).existsById(userId);
+        verify(noteRepository).existsByIdAndUserId(noteId, userId);
+        verify(noteRepository).deleteByIdAndUserId(noteId, userId);
+    }
+
+    @Tag("deleteByIdAndUserId")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
+    void deleteByIdAndUserId_userIdOrNoteId_NullOrLessThanOne_ThenInvalidIdException(Long invalidId) {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        invalidId = (invalidId == -999) ? null : invalidId;
+
+        // Act & Assert
+        for (int i = 0; i < 2; i++) {
+            final Long finalUserId = (i == 0) ? invalidId : userId;
+            final Long finalNoteId = (i == 1) ? invalidId : noteId;
+            assertThatThrownBy(() -> noteService.deleteByIdAndUserId(finalNoteId, finalUserId))
+                    .isInstanceOf(InvalidIdException.class)
+                    .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                    .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        }
+        verify(userRepository, never()).existsById(any());
+        verify(noteRepository, never()).existsByIdAndUserId(any(), any());
+        verify(noteRepository, never()).deleteByIdAndUserId(any(), any());
+    }
+
+    @Test
+    @Tag("deleteByIdAndUserId")
+    void deleteByIdAndUserId_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+
+        when(userRepository.existsById(userId)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.deleteByIdAndUserId(noteId, userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).existsById(userId);
+        verify(noteRepository, never()).existsByIdAndUserId(any(), any());
+        verify(noteRepository, never()).deleteByIdAndUserId(any(), any());
+    }
+
+    @Test
+    @Tag("deleteByIdAndUserId")
+    void deleteByIdAndUserId_NoteNotFound_ThenNoteNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(noteRepository.existsByIdAndUserId(noteId, userId)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.deleteByIdAndUserId(noteId, userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.Note.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).existsById(userId);
+        verify(noteRepository).existsByIdAndUserId(noteId, userId);
+        verify(noteRepository, never()).deleteByIdAndUserId(any(), any());
+    }
+
+    @Test
+    @Tag("getPage")
+    void getPage_Successful() {
+        // Arrange
+        Long userId = 1L;
+        PageRequest pageable = PageRequest.of(0, 10, Sort.by("id"));
+        List<NoteEntity> entities = new ArrayList<>();
+
+        for (int i = 0; i < 10; i++) {
+            entities.add(NoteEntity.builder()
+                    .id((long) i)
+                    .title("title" + i)
+                    .content("content" + i)
+                    .updatedAt(new Date())
+                    .build());
+        }
+
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(noteRepository.findByUserId(userId, pageable)).thenReturn(new PageImpl<>(entities));
+
+        // Act
+        List<PublicNoteDTO> dtos = noteService.getPage(pageable, userId);
+
+        // Assert
+        verify(userRepository).existsById(userId);
+        verify(noteRepository).findByUserId(userId, pageable);
+        assertThat(dtos)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(entities.size());
+        for (int i = 0; i < entities.size(); i++) {
+            assertThat(dtos.get(i))
+                    .isNotNull()
+                    .hasFieldOrPropertyWithValue("id", entities.get(i).getId())
+                    .hasFieldOrPropertyWithValue("title", entities.get(i).getTitle())
+                    .hasFieldOrPropertyWithValue("content", entities.get(i).getContent())
+                    .hasFieldOrPropertyWithValue("updatedAt", entities.get(i).getUpdatedAt());
+        }
+    }
+
+
+    @Test
+    @Tag("getPage")
+    void getPage_PageableNull_ThenIllegalArgumentException() {
+        // Arrange
+        Long userId = 1L;
+        PageRequest pageable = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.getPage(pageable, userId))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(userRepository, never()).existsById(any());
+        verify(noteRepository, never()).findByUserId(any(), any());
+    }
+
+    @Tag("getPage")
+    @ParameterizedTest
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
+    void getPage_userIdNullOrLessThanOne_ThenInvalidIdException(Long userId) {
+        // Arrange
+        userId = (userId == -999) ? null : userId;
+        PageRequest pageable = mock(PageRequest.class);
+
+        // Act & Assert
+        final Long finalUserId = userId;
+        assertThatThrownBy(() -> noteService.getPage(pageable, finalUserId))
+                .isInstanceOf(InvalidIdException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.CommonInEntity.ID_INVALID)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).existsById(any());
+        verify(noteRepository, never()).findByUserId(any(), any());
+    }
+
+    @Test
+    @Tag("getPage")
+    void getPage_UserNotFound_ThenUserNotFoundException() {
+        // Arrange
+        Long userId = 1L;
+        PageRequest pageable = mock(PageRequest.class);
+
+        when(userRepository.existsById(userId)).thenReturn(false);
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.getPage(pageable, userId))
+                .isInstanceOf(UserNotFoundException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Fails.NOT_FOUND)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.NOT_FOUND);
+        verify(userRepository).existsById(userId);
+        verify(noteRepository, never()).findByUserId(any(), any());
+    }
+
+    @Test
+    @Tag("getPage")
+    void getPage_EmptyPage_ThenEmptyList() {
+        // Arrange
+        Long userId = 1L;
+        PageRequest pageable = PageRequest.of(0, 10, Sort.by("id"));
+
+        when(userRepository.existsById(userId)).thenReturn(true);
+        when(noteRepository.findByUserId(userId, pageable)).thenReturn(new PageImpl<>(new ArrayList<>()));
+
+        // Act
+        List<PublicNoteDTO> dtos = noteService.getPage(pageable, userId);
+
+        // Assert
+        assertThat(dtos)
+                .isNotNull()
+                .isEmpty();
+    }
+
+    @Test
+    @Tag("deleteAll")
+    void deleteAll_Successful() {
+        doNothing().when(noteRepository).deleteAll();
+        noteService.deleteAll();
+        verify(noteRepository).deleteAll();
+    }
+
+}

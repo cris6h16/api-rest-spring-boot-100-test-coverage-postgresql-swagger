@@ -31,16 +31,16 @@ public class NoteEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_note_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "title", length = MAX_TITLE_LENGTH)
+    @Column(name = "title", length = MAX_TITLE_LENGTH, nullable = false)
     @NotBlank(message = TITLE_IS_BLANK_MSG) // not  null/only spaces
     @Size(max = 255, message = TITLE_MAX_LENGTH_MSG)
     private String title;
 
-    @Column(name = "content", columnDefinition = "TEXT")
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     @NotNull(message = CONTENT_IS_NULL_MSG)
     private String content;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     @Temporal(TemporalType.DATE)
     private Date updatedAt;
 

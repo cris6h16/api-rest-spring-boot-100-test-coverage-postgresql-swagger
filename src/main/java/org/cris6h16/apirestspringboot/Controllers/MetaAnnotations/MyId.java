@@ -18,7 +18,7 @@ import java.security.Principal;
  * Explanation:
  * {@code authentication.name.equalsIgnoreCase('anonymousUser') ? -1}
  * <p>
- * is necessary because even if you put {@code @PreAuthorize("isAuthenticated()")} before of all,
+ * is necessary because even if you putByIdAndUserId {@code @PreAuthorize("isAuthenticated()")} before of all,
  * you will getById an SpEL exception, spring first evaluates the syntax of SpEL.
  * <p>
  * I have a custom impl of {@link User} which has a

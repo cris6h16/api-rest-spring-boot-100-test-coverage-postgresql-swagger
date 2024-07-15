@@ -54,7 +54,7 @@ public interface NoteService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void put(Long noteId, Long userId, CreateNoteDTO note);
+    void putByIdAndUserId(Long noteId, Long userId, CreateNoteDTO note);
 
     /**
      * DELETE the note where:<br>
@@ -67,7 +67,7 @@ public interface NoteService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void delete(Long noteId, Long userId);
+    void deleteByIdAndUserId(Long noteId, Long userId);
 
     /**
      * Get all the notes owned by the user with the provided {@code userId}

@@ -14,6 +14,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.Inval
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.*;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -62,6 +64,10 @@ public class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
+    @BeforeEach
+    void setUp() {
+        Mockito.reset(roleRepository, userRepository, passwordEncoder);
+    }
 
     @Test
     @Tag("create")

@@ -40,7 +40,7 @@ public class CascadingUserEntityTest {
 
 
     /**
-     * Before each test, delete all data from the repositories and
+     * Before each test, deleteByIdAndUserId all data from the repositories and
      * call {@link #initializeAndPrepare()};
      *
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

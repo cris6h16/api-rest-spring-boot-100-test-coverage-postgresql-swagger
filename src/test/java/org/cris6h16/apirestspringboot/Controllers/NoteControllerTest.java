@@ -496,10 +496,10 @@ class NoteControllerTest {
     @Test
     @Order(4)
     @WithMockUserWithId(id = 1L)
-    void put_successful_Then204_NoContent() throws Exception {
+    void put_ByIdAndUserId_successful_Then204_NoContent() throws Exception {
         doNothing()
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
@@ -508,7 +508,7 @@ class NoteControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(noteService, times(1))
-                .put(
+                .putByIdAndUserId(
                         eq(10L),
                         eq(1L),
                         argThat(dto -> dto.getTitle().equals("My First Note") && dto.getContent().equals("note of cris6h16"))
@@ -518,10 +518,10 @@ class NoteControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L)
-    void put_givenEmptyContent_DTO_Then204_NoContent() throws Exception {
+    void put_ByIdAndUserId_givenEmptyContent_DTO_Then204_NoContent() throws Exception {
         doNothing()
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
@@ -529,68 +529,68 @@ class NoteControllerTest {
                         .content("{\"title\":\"Note of cris6h16\",\"content\":\"\"}"))
                 .andExpect(status().isNoContent());
         verify(noteService, times(1))
-                .put(eq(10L), eq(1L), argThat(dto -> dto.getTitle().equals("Note of cris6h16") && dto.getContent().isEmpty()));
+                .putByIdAndUserId(eq(10L), eq(1L), argThat(dto -> dto.getTitle().equals("Note of cris6h16") && dto.getContent().isEmpty()));
     }
 
     @Test
     @WithMockUserWithId
-    void put_untrimmedJsonAttributes_Then204_NoContent() throws Exception {
+    void put_ByIdAndUserId_untrimmedJsonAttributes_Then204_NoContent() throws Exception {
         doNothing()
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"    Note of cris6h16 \",\"content\":\" my content    \"}"))
                 .andExpect(status().isNoContent());
-        verify(noteService, times(1)).put(
+        verify(noteService, times(1)).putByIdAndUserId(
                 eq(10L), eq(1L), any()
         );
     }
 
     @Test
-    void put_Unauthenticated_Then401_Unauthorized() throws Exception {
+    void put_ByIdAndUserId_Unauthenticated_Then401_Unauthorized() throws Exception {
         this.mvc.perform(put(path + "/1").with(csrf()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void put_InvalidIdIsAStr_Then403_FORBIDDEN() throws Exception {
+    void put_ByIdAndUserId_InvalidIdIsAStr_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(get(path + "/one"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void put_requiredIdNotPassed_Then403_FORBIDDEN() throws Exception {
+    void put_ByIdAndUserId_requiredIdNotPassed_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(put(path + "/"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_contentTypeNotSpecified_Then403_FORBIDDEN() throws Exception {
+    void put_ByIdAndUserId_contentTypeNotSpecified_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(put(path + "/1")
                         .with(csrf())
                         .content("{\"title\":\"My First Note\",\"content\":\"note of cris6h16\"}"))
                 .andExpect(status().isForbidden())
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_contentTypeUnsupported_Then403_FORBIDDEN() throws Exception {
+    void put_ByIdAndUserId_contentTypeUnsupported_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(put(path + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -598,24 +598,24 @@ class NoteControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_contentEmpty_then403_FORBIDDEN() throws Exception {
+    void put_ByIdAndUserId_contentEmpty_then403_FORBIDDEN() throws Exception {
         this.mvc.perform(put(path + "/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
+    void put_ByIdAndUserId_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
         String msg = this.mvc.perform(put(path + "/10")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -629,12 +629,12 @@ class NoteControllerTest {
                 Cons.Note.Validations.CONTENT_IS_NULL_MSG,
                 Cons.Note.Validations.TITLE_IS_BLANK_MSG
         );
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_titleNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
+    void put_ByIdAndUserId_titleNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -643,13 +643,13 @@ class NoteControllerTest {
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
 
     @Test
     @WithMockUserWithId
-    void put_givenEmptyTitle_DTO_Then400_BAD_REQUEST() throws Exception {
+    void put_ByIdAndUserId_givenEmptyTitle_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -658,12 +658,12 @@ class NoteControllerTest {
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_contentNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
+    void put_ByIdAndUserId_contentNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -672,15 +672,15 @@ class NoteControllerTest {
                 .andExpect(header().doesNotExist("Location"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(Cons.Note.Validations.CONTENT_IS_NULL_MSG));
-        verify(noteService, never()).put(any(), any(), any());
+        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void put_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+    void put_ByIdAndUserId_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
@@ -692,10 +692,10 @@ class NoteControllerTest {
 
     @Test
     @WithMockUserWithId(roles = {"ROLE_ADMIN"})
-    void put_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringInBody() throws Exception {
+    void put_ByIdAndUserId_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringInBody() throws Exception {
         doThrow(new NullPointerException("2024 Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
@@ -708,10 +708,10 @@ class NoteControllerTest {
 
     @Test
     @WithMockUserWithId
-    void put_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+    void put_ByIdAndUserId_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new ProperExceptionForTheUser(HttpStatus.TOO_EARLY, "cris6h16's handleable exception"))
                 .when(noteService)
-                .put(anyLong(), anyLong(), any(CreateNoteDTO.class));
+                .putByIdAndUserId(anyLong(), anyLong(), any(CreateNoteDTO.class));
 
         this.mvc.perform(put(path + "/10")
                         .with(csrf())
@@ -730,48 +730,48 @@ class NoteControllerTest {
     void delete_successful_Then204_NoContent() throws Exception {
         doNothing()
                 .when(noteService)
-                .delete(anyLong(), anyLong());
+                .deleteByIdAndUserId(anyLong(), anyLong());
 
         this.mvc.perform(delete(path + "/10")
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
         verify(noteService, times(1))
-                .delete(10L, 1L);
+                .deleteByIdAndUserId(10L, 1L);
     }
 
     @Test
-    void delete_Unauthenticated_Then401_Unauthorized() throws Exception {
+    void deleteByIdAndUserId_Unauthenticated_Then401_Unauthorized() throws Exception {
         this.mvc.perform(delete(path + "/1").with(csrf()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).delete(any(), any());
+        verify(noteService, never()).deleteByIdAndUserId(any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void delete_InvalidIdIsAStr_Then403_FORBIDDEN() throws Exception {
+    void deleteByIdAndUserId_InvalidIdIsAStr_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(get(path + "/one"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).delete(any(), any());
+        verify(noteService, never()).deleteByIdAndUserId(any(), any());
     }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void delete_requiredIdNotPassed_Then403_FORBIDDEN() throws Exception {
+    void deleteByIdAndUserId_requiredIdNotPassed_Then403_FORBIDDEN() throws Exception {
         this.mvc.perform(delete(path + "/"))
                 .andExpect(status().isForbidden())
                 .andExpect(content().bytes(new byte[0]));
-        verify(noteService, never()).delete(any(), any());
+        verify(noteService, never()).deleteByIdAndUserId(any(), any());
     }
 
     @Test
     @WithMockUserWithId
-    void delete_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+    void deleteByIdAndUserId_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
                 .when(noteService)
-                .delete(anyLong(), anyLong());
+                .deleteByIdAndUserId(anyLong(), anyLong());
 
         this.mvc.perform(delete(path + "/1")
                         .with(csrf()))
@@ -781,10 +781,10 @@ class NoteControllerTest {
 
     @Test
     @WithMockUserWithId(roles = {"ROLE_ADMIN"})
-    void delete_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringInBody() throws Exception {
+    void deleteByIdAndUserId_UnhandledExceptionRaisedInServiceAsAdmin_ThenExceptionToStringInBody() throws Exception {
         doThrow(new NullPointerException("2024 Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
                 .when(noteService)
-                .delete(anyLong(), anyLong());
+                .deleteByIdAndUserId(anyLong(), anyLong());
 
         this.mvc.perform(delete(path + "/1")
                         .with(csrf()))
@@ -795,10 +795,10 @@ class NoteControllerTest {
 
     @Test
     @WithMockUserWithId
-    void delete_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
+    void deleteByIdAndUserId_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new ProperExceptionForTheUser(HttpStatus.TOO_EARLY, "cris6h16's handleable exception"))
                 .when(noteService)
-                .delete(anyLong(), anyLong());
+                .deleteByIdAndUserId(anyLong(), anyLong());
 
         this.mvc.perform(delete(path + "/1")
                         .with(csrf()))

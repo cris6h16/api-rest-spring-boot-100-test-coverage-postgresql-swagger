@@ -364,7 +364,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called with invalid user ids.
+//     * {@link NoteServiceImpl#putByIdAndUserId(Long, CreateNoteDTO, Long)} is called with invalid user ids.
 //     *
 //     * <p>
 //     * then the exception threw should be:
@@ -379,7 +379,7 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})// -99 == null
-//    @Tag("put")
+//    @Tag("putByIdAndUserId")
 //    void ServiceUtilsNoteServiceImplTest_put_idInvalidUserId(Long userId) {
 //        // Arrange
 //        Long noteId = 1L;
@@ -388,7 +388,7 @@
 //
 //        // Act && Assert
 //        Long finalUserId = userId;
-//        assertThatThrownBy(() -> noteService.put(noteId, note, finalUserId))
+//        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, note, finalUserId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -397,7 +397,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link ServiceUtils#validateId(Long)} when
-//     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called with invalid note ids.
+//     * {@link NoteServiceImpl#putByIdAndUserId(Long, CreateNoteDTO, Long)} is called with invalid note ids.
 //     *
 //     * <p>
 //     * then the exception threw should be:
@@ -412,7 +412,7 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(longs = {0, -1, -99})// -99 == null
-//    @Tag("put")
+//    @Tag("putByIdAndUserId")
 //    void ServiceUtilsNoteServiceImplTest_put_idInvalidNoteId(Long noteId) {
 //        // Arrange
 //        Long userId = userRepository.saveAndFlush(createUserEntityWithoutId()).getId();
@@ -421,7 +421,7 @@
 //
 //        // Act && Assert
 //        Long finalNoteId = noteId;
-//        assertThatThrownBy(() -> noteService.put(finalNoteId, note, userId))
+//        assertThatThrownBy(() -> noteService.putByIdAndUserId(finalNoteId, note, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessage(Cons.CommonInEntity.ID_INVALID)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -430,7 +430,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link UserServiceImpl#validateIdAndGetUser(Long)}
-//     * when {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called
+//     * when {@link NoteServiceImpl#putByIdAndUserId(Long, CreateNoteDTO, Long)} is called
 //     * with a user id that doesn't exist.
 //     *
 //     * <p>
@@ -445,7 +445,7 @@
 //     * @since 1.0
 //     */
 //    @Test
-//    @Tag("put")
+//    @Tag("putByIdAndUserId")
 //    void ServiceUtilsNoteServiceImplTest_put_UserNotFound() {
 //        // Arrange
 //        Long userId = 1L;
@@ -453,7 +453,7 @@
 //        CreateNoteDTO note = new CreateNoteDTO("title", "content");
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.put(noteId, note, userId))
+//        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, note, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessageContaining(Cons.User.Fails.NOT_FOUND)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.NOT_FOUND);
@@ -461,7 +461,7 @@
 //
 //    /**
 //     * Test the exception raised in the {@link NoteRepository#saveAndFlush(Object)}
-//     * when {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} is called
+//     * when {@link NoteServiceImpl#putByIdAndUserId(Long, CreateNoteDTO, Long)} is called
 //     * with a {@link CreateNoteDTO} with a invalid {@code title}.
 //     * <p>
 //     * then the exception threw should be:
@@ -474,7 +474,7 @@
 //     */
 //    @ParameterizedTest
 //    @ValueSource(strings = {"", "     ", "null"})
-//    @Tag("put")
+//    @Tag("putByIdAndUserId")
 //    void ServiceUtilsNoteServiceImplTest_put_DTO_TitleInvalid(String title) {
 //        title = title.equals("null") ? null : title;
 //        // Arrange
@@ -482,7 +482,7 @@
 //        CreateNoteDTO putDTO = new CreateNoteDTO(title, "content");
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.put(1L, putDTO, userId))
+//        assertThatThrownBy(() -> noteService.putByIdAndUserId(1L, putDTO, userId))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.BAD_REQUEST);
@@ -490,7 +490,7 @@
 //
 //    /**
 //     * Test the unexpected exception raised in the
-//     * {@link NoteServiceImpl#put(Long, CreateNoteDTO, Long)} then
+//     * {@link NoteServiceImpl#putByIdAndUserId(Long, CreateNoteDTO, Long)} then
 //     * the exception threw should be:
 //     * <br>
 //     * {@link NoteServiceTransversalException}
@@ -498,7 +498,7 @@
 //     * [{@code message}={@link Cons.Response.ForClient#GENERIC_ERROR},{@code recommendedStatus}={@link HttpStatus#INTERNAL_SERVER_ERROR}]
 //     */
 //    @Test
-//    @Tag("put")
+//    @Tag("putByIdAndUserId")
 //    void ServiceUtilsNoteServiceImplTest_put_UnhandledException() {
 //        // Arrange
 //        UserEntity user = createUserEntityWithoutId();
@@ -514,7 +514,7 @@
 //        };
 //
 //        // Act && Assert
-//        assertThatThrownBy(() -> noteService.put(firstNoteEntity.getId(), putDTO, user.getId()))
+//        assertThatThrownBy(() -> noteService.putByIdAndUserId(firstNoteEntity.getId(), putDTO, user.getId()))
 //                .isInstanceOf(NoteServiceTransversalException.class)
 //                .hasMessageContaining(Cons.Response.ForClient.GENERIC_ERROR)
 //                .hasFieldOrPropertyWithValue("recommendedStatus", HttpStatus.INTERNAL_SERVER_ERROR);

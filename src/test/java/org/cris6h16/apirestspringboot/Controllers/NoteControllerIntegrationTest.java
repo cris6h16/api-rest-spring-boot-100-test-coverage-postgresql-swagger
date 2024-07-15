@@ -169,7 +169,7 @@ class NoteControllerIntegrationTest {
     // -------------------------------- PUT --------------------------------\\
 
     @Test
-    void put_successful_Then204_NoContent() {
+    void put_ByIdAndUserId_successful_Then204_NoContent() {
         CreateNoteDTO dto = CreateNoteDTO.builder()
                 .title("My First Note")
                 .content("note of cris6h16")

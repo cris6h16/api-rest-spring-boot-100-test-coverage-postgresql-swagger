@@ -102,7 +102,7 @@ public class NoteController {
 
     /**
      * Update a {@link NoteEntity}<br>
-     * Uses: {@link NoteServiceImpl#put(Long, Long, CreateNoteDTO)}
+     * Uses: {@link NoteServiceImpl#putByIdAndUserId(Long, Long, CreateNoteDTO)}
      *
      * @param noteId      of the note to update
      * @param note        to be PUT
@@ -115,16 +115,16 @@ public class NoteController {
             value = "/{noteId}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> put(@PathVariable(required = true) Long noteId,
-                                    @RequestBody(required = true) @Valid CreateNoteDTO note,
-                                    @MyId Long principalId) {
-        noteService.put(noteId, principalId, note);
+    public ResponseEntity<Void> putByIdAndUserId(@PathVariable(required = true) Long noteId,
+                                                 @MyId Long principalId,
+                                                 @RequestBody(required = true) @Valid CreateNoteDTO note) {
+        noteService.putByIdAndUserId(noteId, principalId, note);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Delete a {@link NoteEntity}<br>
-     * Uses: {@link NoteServiceImpl#delete(Long, Long)}
+     * Uses: {@link NoteServiceImpl#deleteByIdAndUserId(Long, Long)}
      *
      * @param noteId      of the note to deleteById
      * @param principalId the principal id; the user that is deleting the note
@@ -133,9 +133,9 @@ public class NoteController {
      * @since 1.0
      */
     @DeleteMapping(value = "/{noteId}")
-    public ResponseEntity<Void> delete(@PathVariable(required = true) Long noteId,
+    public ResponseEntity<Void> deleteByIdAndUserId(@PathVariable(required = true) Long noteId,
                                        @MyId Long principalId) {
-        noteService.delete(noteId, principalId);
+        noteService.deleteByIdAndUserId(noteId, principalId);
         return ResponseEntity.noContent().build();
     }
 }

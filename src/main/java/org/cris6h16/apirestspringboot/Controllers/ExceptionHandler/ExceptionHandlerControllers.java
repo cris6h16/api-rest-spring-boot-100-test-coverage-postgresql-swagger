@@ -131,7 +131,7 @@ public class ExceptionHandlerControllers {
         if (isAdmin()) return buildFailResponseForAdmin(e);
         else {
             saveHiddenExceptionForTheUserEveryDefinedMins(e);
-            return new ResponseEntity<>(null, new HttpHeaders(), HttpStatus.FORBIDDEN); // simulate a Response<Void>, I cannot put that as return type because if is admin, the response will contain a String, also returning something in the body for !admins this can be mapped for know the existent endpoints( i.g. if the bad user make a request to an /admin endpoint the response will be a 403 Forbidden with empty body, but if the user make a request to an endpoint that doesn't exist (NoResourceFoundException) it will be a 403 Forbidden with a body that I decide pass here. So, the user can know the existent endpoints)
+            return new ResponseEntity<>(null, new HttpHeaders(), HttpStatus.FORBIDDEN); // simulate a Response<Void>, I cannot putByIdAndUserId that as return type because if is admin, the response will contain a String, also returning something in the body for !admins this can be mapped for know the existent endpoints( i.g. if the bad user make a request to an /admin endpoint the response will be a 403 Forbidden with empty body, but if the user make a request to an endpoint that doesn't exist (NoResourceFoundException) it will be a 403 Forbidden with a body that I decide pass here. So, the user can know the existent endpoints)
         }
     }
 

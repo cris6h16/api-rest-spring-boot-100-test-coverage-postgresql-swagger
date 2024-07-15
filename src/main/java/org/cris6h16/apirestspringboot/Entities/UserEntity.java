@@ -39,23 +39,23 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username", length = MAX_USERNAME_LENGTH)
+    @Column(name = "username", length = MAX_USERNAME_LENGTH, nullable = false)
     @Size(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
     @NotBlank(message = USERNAME_IS_BLANK_MSG)
     private String username;
 
 
-    @Column(name = "password", updatable = true)
+    @Column(name = "password", nullable = false)
     @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG, min = Cons.User.Validations.MIN_PASSWORD_LENGTH)
     @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
     private String password; // pass is passed encrypted, then always is > 8
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false)
     @Email(message = EMAIL_INVALID_MSG)// --> null is valid
     @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 
-    @Column(name = "created_at", nullable = true, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 
