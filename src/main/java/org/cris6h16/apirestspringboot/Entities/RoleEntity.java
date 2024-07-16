@@ -23,8 +23,8 @@ public class RoleEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_role_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @NotNull(message = Cons.Role.Validations.NAME_IS_BLANK)
     private ERole name;
 
 }

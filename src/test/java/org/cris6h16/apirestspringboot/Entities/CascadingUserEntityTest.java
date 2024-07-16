@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,6 +82,7 @@ public class CascadingUserEntityTest {
                 .password("12345678")
                 .email("cristianmherrera21@gmail.com")
                 .notes(new HashSet<>())
+                .createdAt(new Date())
                 .build();
 
         for (int i = 0; i < 10; i++) {

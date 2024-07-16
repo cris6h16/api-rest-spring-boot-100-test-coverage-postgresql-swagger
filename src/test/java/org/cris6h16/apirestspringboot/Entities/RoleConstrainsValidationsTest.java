@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,16 +26,9 @@ public class RoleConstrainsValidationsTest {
     @Autowired
     private RoleRepository roleRepository;
 
-    /**
-     * Test for {@link ConstraintViolationException} -> name is null
-     * <br>
-     * It violates {@code  @NotNull(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
-    void nameIsNull_thenThrowsConstraintViolationException() {
+    void nameIsNull_thenThrowsDataIntegrityViolationException() {
         // Arrange
         RoleEntity role = RoleEntity.builder()
                 .name(null)
@@ -42,8 +36,8 @@ public class RoleConstrainsValidationsTest {
 
         // Act & Assert
         assertThatThrownBy(() -> roleRepository.saveAndFlush(role))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.Role.Validations.NAME_IS_BLANK);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("NULL not allowed for column \"NAME\"");
     }
 
 }

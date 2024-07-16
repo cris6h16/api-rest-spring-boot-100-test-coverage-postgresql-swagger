@@ -39,13 +39,14 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    @Column(name = "username", length = MAX_USERNAME_LENGTH, nullable = false)
+    // columns validations are: DataIntegrityViolationException:
+    @Column(name = "username", length = MAX_USERNAME_LENGTH, nullable = false) // nullable with the below verification can be not necessary, but I want the NOT NULL in the column definition
     @Size(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
     @NotBlank(message = USERNAME_IS_BLANK_MSG)
     private String username;
 
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password", nullable = false, columnDefinition = "TEXT")
     @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG, min = Cons.User.Validations.MIN_PASSWORD_LENGTH)
     @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
     private String password; // pass is passed encrypted, then always is > 8
@@ -55,7 +56,7 @@ public class UserEntity {
     @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false) // updatable = UnsupportedOperationException, nullable = DataIntegrityViolationException
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 

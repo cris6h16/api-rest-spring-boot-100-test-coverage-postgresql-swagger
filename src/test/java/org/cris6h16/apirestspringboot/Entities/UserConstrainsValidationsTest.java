@@ -5,6 +5,8 @@ import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -12,10 +14,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -89,7 +93,6 @@ public class UserConstrainsValidationsTest {
      * @since 1.0
      */
     @Test
-    @Order(2)
     @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_usernameAlreadyExists() {
         // Arrange
@@ -101,7 +104,9 @@ public class UserConstrainsValidationsTest {
                 .roles(Set.of(roleRepository.findAll().iterator().next()))
                 .build();
         // Act & Assert
-        assertThrows(DataIntegrityViolationException.class, () -> userRepository.saveAndFlush(usr2));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr2))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining(Cons.User.Constrains.USERNAME_UNIQUE_NAME);
     }
 
     /**
@@ -113,7 +118,6 @@ public class UserConstrainsValidationsTest {
      * @since 1.0
      */
     @Test
-    @Order(3)
     @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_emailAlreadyExists() {
         // Arrange
@@ -125,8 +129,41 @@ public class UserConstrainsValidationsTest {
                 .roles(Set.of(roleRepository.findAll().iterator().next()))
                 .build();
         // Act & Assert
-        assertThrows(DataIntegrityViolationException.class, () -> userRepository.saveAndFlush(usr2));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr2))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining(Cons.User.Constrains.EMAIL_UNIQUE_NAME);
     }
+
+    @Test
+    @Tag(value = "ConstraintViolationException")
+    void ConstraintViolationException_usernameColumn_usernameTooLong() {
+        // Arrange
+        usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1));
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_MAX_LENGTH_MSG);
+    }
+
+    @Test
+    void Successful_usernameColumn_usernameMinimumLength() {
+        // Arrange
+        usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH));
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
+    }
+
+//    Will never reached, because my jakarta validation is before the hibernate validation
+//    @Test
+//    @Tag(value = "DataIntegrityViolationException")
+//    void DataIntegrityViolationException_usernameColumn_isNull() {
+//        // Arrange
+//        usr.setUsername(null);
+//        // Act & Assert
+//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+//                .isInstanceOf(DataIntegrityViolationException.class)
+//                .hasMessageContaining("some hibernate exception message");
+//    }
 
 
     /**
@@ -138,105 +175,101 @@ public class UserConstrainsValidationsTest {
      * @since 1.0
      */
     @Test
-    @Order(4)
     @Tag(value = "ConstraintViolationException")
     void ConstraintViolationException_usernameTooLong() {
         // Arrange
         usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1));
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_MAX_LENGTH_MSG);
     }
 
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Username is blank
-     * <br>
-     * Username is blank, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @Test
-    @Order(5)
+    @ParameterizedTest
+    @ValueSource(strings = {"blank", "empty", "null"})
     @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_usernameIsBlank() {
+    void ConstraintViolationException_usernameIsBlankOrEmptyOrNull(String username) {
         // Arrange
-        usr.setUsername("             ");
+        username = switch (username) {
+            case "blank" -> "             ";
+            case "empty" -> "";
+            case "null" -> null;
+            default -> throw new IllegalArgumentException("unexpected value: " + username);
+        };
+        usr.setUsername(username);
+
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG);
     }
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Username is null
-     * <br>
-     * Username is null, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+//   Will never reached, because my jakarta validation is before the hibernate validation
+//    @Test
+//    @Tag(value = "DataIntegrityViolationException")
+//    void DataIntegrityViolationException_passwordColumn_isNull() {
+//        // Arrange
+//        usr.setPassword(null);
+//        // Act & Assert
+//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+//                .isInstanceOf(DataIntegrityViolationException.class)
+//                .hasMessageContaining("some hibernate exception message");
+//    }
+
     @Test
-    @Order(6)
     @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_usernameIsNull() {
+    void ConstraintViolationException_passwordColumn_LetAtLeast300Characters() { // definition should be text
         // Arrange
-        usr.setUsername(null);
+        usr.setPassword("a".repeat(300));
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        userRepository.saveAndFlush(usr);
     }
 
-
-    /**
-     * Test for {@link ConstraintViolationException} -> Password is blank
-     * <br>
-     * Password is blank, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @Test
-    @Order(7)
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort"})
     @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_passwordIsBlank() {
+    void ConstraintViolationException_passwordIsNullOrBlankOrEmptyOrTooShort(String password) {
         // Arrange
-        usr.setPassword("             ");
-        // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
-    }
-
-    /**
-     * Test for {@link ConstraintViolationException} -> Password is null
-     * <br>
-     * Password is null, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @Test
-    @Order(8)
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_passwordIsNull() {
-        // Arrange
+        password = switch (password) {
+            case "null" -> null;
+            case "blank" -> "             ";
+            case "empty" -> "";
+            case "tooShort" -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+            default -> throw new IllegalArgumentException("unexpected value: " + password);
+        };
         usr.setPassword(null);
+
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG);
     }
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Email is invalid
-     * <br>
-     * Email is invalid, it violates {@code  @Email(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+//   Will never reached, because my jakarta validation is before the hibernate validation
+//    @Test
+//    @Tag(value = "DataIntegrityViolationException")
+//    void DataIntegrityViolationException_emailColumn_isNull() {
+//        // Arrange
+//        usr.setEmail(null);
+//        // Act & Assert
+//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+//                .isInstanceOf(DataIntegrityViolationException.class)
+//                .hasMessageContaining("some hibernate exception message");
+//    }
+
+
+
+
     @Test
-    @Order(9)
     @Tag(value = "ConstraintViolationException")
     void ConstraintViolationException_emailInvalid() {
         // Arrange
         usr.setEmail("cris6h16");
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_INVALID_MSG);
     }
 
     /**
@@ -247,36 +280,52 @@ public class UserConstrainsValidationsTest {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    @Test
-    @Order(10)
     @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_emailIsNull() {
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty"})
+    void ConstraintViolationException_emailIsNullOrBlankOrEmpty(String email) {
         // Arrange
-        usr.setEmail("cris6h16");
+        email = switch (email) {
+            case "null" -> null;
+            case "blank" -> "             ";
+            case "empty" -> "";
+            default -> throw new IllegalArgumentException("unexpected value: " + email);
+        };
+        usr.setEmail(email);
+
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG);
     }
 
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Email is blank
-     * <br>
-     * Email is blank, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
-    @Order(11)
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_emailIsBlank() {
+    @Tag(value = "DataIntegrityViolationException")
+    void DataIntegrityViolationException_createdAtColumn_isNull() {
         // Arrange
-        usr.setEmail("cris6h16");
+        usr.setCreatedAt(null);
         // Act & Assert
-        assertThrows(ConstraintViolationException.class, () -> userRepository.saveAndFlush(usr));
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("column \"CREATED_AT\"");
     }
 
+    @Test
+    @Tag(value = "UnsupportedOperationException")
+    void UnsupportedOperationException_createdAtColumn_isNotUpdatable() {
+        // Arrange
+        usr.setCreatedAt(new Date());
 
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
+        usr.setCreatedAt(new Date());
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    @Tag(value = "ConstraintViolationException")
     /**
      * Initialize and prepare the {@link #usr} attribute. it's used
      * in the tests, to avoid boilerplate initializations on each method.
@@ -293,6 +342,7 @@ public class UserConstrainsValidationsTest {
                 .password("12345678")
                 .email("cris6h16@gmail.com")
                 .roles(Set.of(roles))
+                .createdAt(new Date())
                 .build();
     }
 }

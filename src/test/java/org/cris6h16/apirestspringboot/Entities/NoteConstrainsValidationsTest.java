@@ -7,15 +7,20 @@ import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 /**
  * Test class for {@link NoteEntity} validations and constraints<br>
@@ -83,67 +88,138 @@ public class NoteConstrainsValidationsTest {
         assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
     }
 
-    /**
-     * Test for {@link ConstraintViolationException} -> {@code  title} is blank.
-     * <br>
-     * it violates {@code @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
-    @Order(2)
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_titleIsBlank() {
-        // Arrange
-        userRepository.saveAndFlush(usr);
-        note.setTitle(" ");
-
-        // Act && Assert
-        assertThrows(ConstraintViolationException.class, () -> noteRepository.saveAndFlush(note));
-    }
-
-    /**
-     * Test for {@link ConstraintViolationException} -> {@code title} is null.
-     * <br>
-     * it violates {@code @NotBlank(message = <>)}
-     *
-     * @since 1.0
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     */
-    @Test
-    @Order(3)
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_titleIsNull() {
-        // Arrange
-        userRepository.saveAndFlush(usr);
-        note.setTitle(null);
-
-        // Act && Assert
-        assertThrows(ConstraintViolationException.class, () -> noteRepository.saveAndFlush(note));
-    }
-
-    /**
-     * Test for {@link ConstraintViolationException} -> {@code title} is too long.
-     * <br>
-     * it violates {@code @Length(max = <>, message = <>)}
-     *
-     * @since 1.0
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     */
-    @Test
-    @Order(4)
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_titleTooLong() {
+    @Tag("DataIntegrityViolationException")
+    void DataIntegrityViolationException_titleColumnIsTooLong() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
 
         // Act && Assert
-        assertThrows(ConstraintViolationException.class, () -> noteRepository.saveAndFlush(note));
+        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining(Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
+    }
+
+    @Test
+    @Tag("success")
+    void success_titleColumnLength_isTheLimit() {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+        note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH));
+
+        // Act
+        noteRepository.saveAndFlush(note);
+
+        // Assert
+        assertThat(noteRepository.findAll()).hasSize(1);
+        assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
+    }
+
+//   Will never be reached, because jakarta.validation is first than hibernate validations
+//    @Test
+//    @Tag("DataIntegrityViolationException")
+//    void DataIntegrityViolationException_titleColumnIsNull() {
+//        // Arrange
+//        note.setTitle(null);
+//
+//        // Act && Assert
+//        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+//                .isInstanceOf(DataIntegrityViolationException.class)
+//                .hasMessageContaining("some hibernate fail message");
+//    }
+
+
+
+    @Tag("ConstraintViolationException")
+    @ParameterizedTest
+    @ValueSource(strings = {"blank", "null", "empty"})
+    void ConstraintViolationException_titleIsBlankOrNullOrEmpty(String title) {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+
+        title = switch (title) {
+            case "blank" -> "     ";
+            case "null" -> null;
+            case "empty" -> "";
+            default -> throw new IllegalArgumentException("Unexpected value: " + title);
+        };
+        note.setTitle(title);
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG);
     }
 
 
+    @Test
+    @Tag("ConstraintViolationException")
+    void ConstraintViolationException_titleIsTooLong() {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+        note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
+    }
+
+    @Test
+    void Success_contentColumnLength_AtLeast500Chars() {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+        note.setContent("a".repeat(500));
+
+        // Act
+        noteRepository.saveAndFlush(note);
+
+        // Assert
+        assertThat(noteRepository.findAll()).hasSize(1);
+        assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
+    }
+
+//    Will never be reached, because jakarta.validation is first than hibernate validations
+//    @Test
+//    @Tag("DataIntegrityViolationException")
+//    void DataIntegrityViolationException_contentColumnIsNull() {
+//        // Arrange
+//        userRepository.saveAndFlush(usr);
+//        note.setContent(null);
+//
+//        // Act && Assert
+//        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+//                .isInstanceOf(DataIntegrityViolationException.class)
+//                .hasMessageContaining("some hibernate fail message");
+//    }
+
+    @Test
+    @Tag("ConstraintViolationException")
+    void ConstraintViolationException_contentIsNull() {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+        note.setContent(null);
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining(Cons.Note.Validations.CONTENT_IS_NULL_MSG);
+    }
+
+
+    @Test
+    @Tag("DataIntegrityViolationException")
+    void DataIntegrityViolationException_updateAtColumnIsNull() {
+        // Arrange
+        userRepository.saveAndFlush(usr);
+        note.setUpdatedAt(null);
+
+        // Act && Assert
+        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("NULL not allowed for column \"UPDATED_AT\"");
+    }
     /**
      * Initialize the {@link  #usr} and {@link  #note} attributes,
      * it'll use to avoid code repetition of initialization
@@ -161,6 +237,7 @@ public class NoteConstrainsValidationsTest {
                 .password("12345678")
                 .email("cris6h16@gmail.com")
                 .roles(Set.of(roles))
+                .createdAt(new Date())
                 .build();
         note = NoteEntity.builder()
                 .id(null)

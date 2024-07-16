@@ -102,11 +102,6 @@ public class Cons {
 
     }
 
-    public class Role {
-        public class Validations {
-            public static final String NAME_IS_BLANK = "Name mustn't be blank";
-        }
-    }
 
     public class CommonInEntity {
         public static final String ID_INVALID = "Invalid id";
