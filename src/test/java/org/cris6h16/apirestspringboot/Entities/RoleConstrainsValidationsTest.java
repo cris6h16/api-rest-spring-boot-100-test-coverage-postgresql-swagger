@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@SpringBootTest
+@ActiveProfiles(profiles = "test")
 @Transactional(rollbackFor = Exception.class)
 public class RoleConstrainsValidationsTest {
     @Autowired
@@ -37,7 +39,7 @@ public class RoleConstrainsValidationsTest {
         // Act & Assert
         assertThatThrownBy(() -> roleRepository.saveAndFlush(role))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("NULL not allowed for column \"NAME\"");
+                .hasMessageContaining("null value in column \"name\" of relation \"roles\" violates not-null constraint");
     }
 
 }

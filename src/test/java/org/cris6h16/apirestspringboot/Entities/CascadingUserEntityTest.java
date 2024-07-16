@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -23,8 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@SpringBootTest
+@ActiveProfiles(profiles = "test")
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class CascadingUserEntityTest {
@@ -90,6 +92,7 @@ public class CascadingUserEntityTest {
                     .id(null)
                     .title("cris6h16's note title" + i)
                     .content("cris6h16's note content")
+                    .updatedAt(new Date())
                     .build();
             notes.add(note);
         }

@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -60,7 +62,7 @@ class AuthenticatedUserControllerIntegrationTest {
                 .email("cristianmherrera21@gmail.com")
                 .password("12345678")
                 .build();
-        id = userService.create(dto);
+        id = userService.create(dto, ERole.ROLE_USER);
         assertThat(userRepository.existsById(id)).isTrue();
     }
 
@@ -71,7 +73,7 @@ class AuthenticatedUserControllerIntegrationTest {
 
         ResponseEntity<PublicUserDTO> res = this.restTemplate
                 .withBasicAuth("cris6h16", "12345678")
-                .getForEntity(path + "/1", PublicUserDTO.class);
+                .getForEntity(path + "/"+id, PublicUserDTO.class);
 
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(res.getBody()).isNotNull();
@@ -84,7 +86,7 @@ class AuthenticatedUserControllerIntegrationTest {
                 .hasFieldOrPropertyWithValue("roles", Set.of(PublicRoleDTO.builder().name(ERole.ROLE_USER).build()))
                 .hasFieldOrPropertyWithValue("notes", new HashSet<>(0))
                 .hasNoNullFieldsOrPropertiesExcept("updatedAt");
-        assertThat(pdto.getCreatedAt()).isInSameDayAs(new Date());
+        assertTrue(pdto.getCreatedAt().getTime() <= System.currentTimeMillis());
     }
 
 

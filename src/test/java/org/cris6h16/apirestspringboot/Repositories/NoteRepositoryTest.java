@@ -292,6 +292,7 @@ public class NoteRepositoryTest {
                 .email(username + "@example.com")
                 .password("12345678")
                 .notes(new HashSet<>())
+                .createdAt(new Date())
                 .build();
     }
 
@@ -307,7 +308,7 @@ public class NoteRepositoryTest {
     private Set<NoteEntity> createNotes(int startSuffix, int endSuffix) {
         Set<NoteEntity> notes = new HashSet<>();
         for (int i = startSuffix; i <= endSuffix; i++) {
-            notes.add(NoteEntity.builder().title("title" + i).content("content" + i).build());
+            notes.add(NoteEntity.builder().title("title" + i).content("content" + i).updatedAt(new Date()).build());
         }
         return notes;
     }

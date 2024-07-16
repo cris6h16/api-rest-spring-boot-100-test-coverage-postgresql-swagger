@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
 import org.junit.jupiter.api.*;
@@ -49,7 +50,7 @@ class PublicUserControllerTest {
     @Test
     @Order(1)
     void create_successful_Then201_Created() throws Exception {
-        when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);
+        when(userService.create(any(CreateUserDTO.class), any(ERole.class))).thenReturn(222L);
 
         String location = this.mvc.perform(post(path)
                         .with(csrf())
@@ -63,13 +64,14 @@ class PublicUserControllerTest {
         verify(userService).create(argThat(
                 dto -> dto.getUsername().equals("cris6h16")
                         && dto.getPassword().equals("12345678")
-                        && dto.getEmail().equals("cristianmherrera21@gmail.com")
-        ));
+                        && dto.getEmail().equals("cristianmherrera21@gmail.com")),
+                eq(ERole.ROLE_USER)
+                );
     }
 
     @Test
     void create_givenJsonAttributesUntrimmed_Then_201_Created() throws Exception {// depends on service
-        when(userService.create(any(CreateUserDTO.class))).thenReturn(222L);
+        when(userService.create(any(CreateUserDTO.class), any(ERole.class))).thenReturn(222L);
 
         String username = "  cris6h16 ";
         String password = " 12345678    ";
@@ -89,13 +91,13 @@ class PublicUserControllerTest {
                 .andReturn().getResponse().getHeader("Location");
 
         assertThat(location).matches("/api/v1/users/222");
-        verify(userService).create(any(CreateUserDTO.class));
+        verify(userService).create(any(CreateUserDTO.class), eq(ERole.ROLE_USER));
     }
 
     @Test
     @Order(2)
     void create_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        when(userService.create(any(CreateUserDTO.class)))
+        when(userService.create(any(CreateUserDTO.class), any(ERole.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
 
         this.mvc.perform(post(path)
@@ -110,7 +112,7 @@ class PublicUserControllerTest {
     @Test
     @Order(3)
     void create_HandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
-        when(userService.create(any(CreateUserDTO.class))) // random exception
+        when(userService.create(any(CreateUserDTO.class), any(ERole.class))) // random exception
                 .thenThrow(new ProperExceptionForTheUser(HttpStatus.URI_TOO_LONG, "cris6h16's handleable exception"));
 
         this.mvc.perform(post(path)
@@ -126,7 +128,7 @@ class PublicUserControllerTest {
     @Test
     @WithMockUserWithId(roles = {"ROLE_ADMIN"})
     void create_UnhandledExceptionRaisedInServiceAsAdmin_ThenFullExceptionInfo() throws Exception {
-        when(userService.create(any(CreateUserDTO.class)))
+        when(userService.create(any(CreateUserDTO.class), any(ERole.class)))
                 .thenThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES));
 
         this.mvc.perform(post(path)

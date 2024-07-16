@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Controllers;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
+import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
@@ -62,11 +63,14 @@ class NoteControllerIntegrationTest {
         userService.deleteAll();  // N + 1
         noteServiceImpl.deleteAll();
 
-        Long id = userService.create(CreateUserDTO.builder()
-                .username("cris6h16")
-                .email("cristianmherrera21@gmail.com")
-                .password(noEncryptedPassword)
-                .build());
+        Long id = userService.create(
+                CreateUserDTO.builder()
+                        .username("cris6h16")
+                        .email("cristianmherrera21@gmail.com")
+                        .password(noEncryptedPassword)
+                        .build(),
+                ERole.ROLE_USER
+        );
         assertThat(userRepository.existsById(id)).isTrue();
         userEntity = userRepository.findById(id).get();
     }

@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -28,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@SpringBootTest
+@ActiveProfiles(profiles = "test")
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class NoteConstrainsValidationsTest {
@@ -89,15 +91,15 @@ public class NoteConstrainsValidationsTest {
     }
 
     @Test
-    @Tag("DataIntegrityViolationException")
-    void DataIntegrityViolationException_titleColumnIsTooLong() {
+    @Tag("ConstraintViolationException")
+    void ConstraintViolationException_titleColumnIsTooLong() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
 
         // Act && Assert
         assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-                .isInstanceOf(DataIntegrityViolationException.class)
+                .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining(Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
     }
 
@@ -218,7 +220,7 @@ public class NoteConstrainsValidationsTest {
         // Act && Assert
         assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("NULL not allowed for column \"UPDATED_AT\"");
+                .hasMessageContaining("null value in column \"updated_at\" of relation \"notes\" violates not-null constraint");
     }
     /**
      * Initialize the {@link  #usr} and {@link  #note} attributes,
@@ -243,6 +245,7 @@ public class NoteConstrainsValidationsTest {
                 .id(null)
                 .title("the first cris6h16's note")
                 .content("the content of the first cris6h16's note")
+                .updatedAt(new Date())
                 .build();
     }
 }

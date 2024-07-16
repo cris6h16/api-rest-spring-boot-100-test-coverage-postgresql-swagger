@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
@@ -28,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-@DataJpaTest
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+@SpringBootTest
+@ActiveProfiles(profiles = "test")
 @Transactional(rollbackFor = Exception.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserConstrainsValidationsTest {
@@ -102,6 +104,7 @@ public class UserConstrainsValidationsTest {
                 .email(usr.getEmail())
                 .password("12345678")
                 .roles(Set.of(roleRepository.findAll().iterator().next()))
+                .createdAt(new Date())
                 .build();
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr2))
@@ -127,6 +130,7 @@ public class UserConstrainsValidationsTest {
                 .email(usr.getEmail())
                 .password("12345678")
                 .roles(Set.of(roleRepository.findAll().iterator().next()))
+                .createdAt(new Date())
                 .build();
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr2))
@@ -308,7 +312,7 @@ public class UserConstrainsValidationsTest {
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("column \"CREATED_AT\"");
+                .hasMessageContaining("null value in column \"created_at\"");
     }
 
     @Test
@@ -324,8 +328,6 @@ public class UserConstrainsValidationsTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
-    @Test
-    @Tag(value = "ConstraintViolationException")
     /**
      * Initialize and prepare the {@link #usr} attribute. it's used
      * in the tests, to avoid boilerplate initializations on each method.

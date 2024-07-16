@@ -51,6 +51,7 @@ class AuthenticationListenerTest {
 
         clearInvocations(filesUtils);
         reset(filesUtils);
+
     }
 
     /**
@@ -355,19 +356,26 @@ class AuthenticationListenerTest {
         }
 
 
-        // todo: improve this part, it may fail if the for loop is too fast, but is more possible than it isn't
         // e.g 4 threads hit the 2nd lock at the same time (then arr.length == 4), then the 1st lock is released (3 waiting), when it leaves the lock, It would have passed to be saved 4 list elements, then the expected value would be ( (50 * 30) - 4 )
-        assertThat(authenticationListener.successData.size()).isEqualTo((50 * 30) - 1);
-        assertThat(authenticationListener.failureData.size()).isEqualTo((50 * 30) - 1);
+        int successDataSize = 50 * 30;
+        int failureDataSize = 50 * 30;
+        int afterSuccessSize = authenticationListener.successData.size();
+        int afterFailureSize = authenticationListener.failureData.size();
+
+        assertThat(afterSuccessSize).isLessThan(successDataSize); // can be less based on the threads performance
+        assertThat(afterFailureSize).isLessThan(failureDataSize); // can be less based on the threads performance
+
+        int successDataSaved = successDataSize - afterSuccessSize; // can be more than 1 ( based on the threads speed )
+        int failureDataSaved = failureDataSize - afterFailureSize; // can be more than 1 ( based on the threads speed )
 
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE)),
-                argThat(str -> str.split("\n").length == 1)
+                argThat(str -> str.split("\n").length == successDataSaved)
         );
 
         verify(filesUtils, times(1)).appendToFile(
                 eq(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)),
-                argThat(str -> str.split("\n").length == 1)
+                argThat(str -> str.split("\n").length == failureDataSaved)
         );
     }
 }

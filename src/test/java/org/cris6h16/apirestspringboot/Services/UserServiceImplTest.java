@@ -161,9 +161,19 @@ public class UserServiceImplTest {
                             passedToDb.getUpdatedAt() == null &&
                             passedToDb.getRoles().size() == ERole.values().length &&
                             rolesPassedToDb.length == ERole.values().length &&
-                            Arrays.equals(rolesPassedToDb, eRoles);
+                            equalsIgnoreOrder(rolesPassedToDb, eRoles);
                 }
         ));
+    }
+
+    public static boolean equalsIgnoreOrder(ERole[] arr1, ERole[] arr2) {
+        if (arr1 == null || arr2 == null) return arr1 == arr2;
+        if (arr1.length != arr2.length) return false;
+
+        // set store unordered the elements, so we can use them to compare
+        Set<ERole> set1 = new HashSet<>(Arrays.asList(arr1));
+        Set<ERole> set2 = new HashSet<>(Arrays.asList(arr2));
+        return set1.equals(set2);
     }
 
     @Test
