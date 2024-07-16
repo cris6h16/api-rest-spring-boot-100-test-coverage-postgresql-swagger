@@ -31,6 +31,9 @@ public class FilesUtils {
      * @since 1.0
      */
     public void appendToFile(Path path, String content) {
+        if (path == null) throw new IllegalArgumentException("The path can't be null");
+        if (content == null) content = "";
+
         try {
             if (Files.notExists(path.getParent())) Files.createDirectories(path.getParent());
 
@@ -45,7 +48,8 @@ public class FilesUtils {
             }
 
         } catch (Exception e) {
-            log.error("Error writing in file: {}", path, e);
+            log.error("Error writing in file, path: {}, exception: {}", path, e.toString());
+            throw new RuntimeException("Error writing in file, path: " + path + ", exception: " + e.toString());
         }
     }
 }

@@ -1,13 +1,15 @@
 package org.cris6h16.apirestspringboot.Config.Security.EventListener;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.cris6h16.apirestspringboot.Utils.FilesUtils;
+import org.junit.jupiter.api.*;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -22,8 +24,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @Tag("IntegrationTest")
@@ -36,12 +37,24 @@ public class AuthenticationListenerIntegrationTest {
     @Autowired
     private AuthenticationListener authenticationListener;
 
+    @MockBean
+    FilesUtils filesUtils;
+
+    private String successFile;
+    private String failureFile;
+
+    public AuthenticationListenerIntegrationTest() {
+        this.successFile = Cons.Logs.SUCCESS_AUTHENTICATION_FILE;
+        this.failureFile = Cons.Logs.FAIL_AUTHENTICATION_FILE;
+    }
+
     @BeforeEach
-    void setUp() throws IOException {
-        deleteLogFilesIfExist();
+    void setUp() {
+        Mockito.clearInvocations(filesUtils);
         authenticationListener.lastSuccessFlushed = 0L; // avoid wait for 10 mins to flush
         authenticationListener.lastFailureFlushed = 0L; // avoid wait for 10 mins to flush
     }
+
 
     @Test
     void testSuccessEventPublished() throws IOException {
@@ -55,29 +68,13 @@ public class AuthenticationListenerIntegrationTest {
         // Assert
         // Verify that the successData list is updated
         assertTrue(authenticationListener.successData.isEmpty());
-        assertThatFailureFileNotExists();
-        assertThatSuccessFileExistsAndContainALineContainingKeywords();
-    }
-
-    private void assertThatFailureFileNotExists() {
-        assertFalse(Files.exists(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE)));
-    }
-
-    private void assertThatSuccessFileExistsAndContainALineContainingKeywords() throws IOException {
-        Path path = Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE);
-        assertTrue(Files.exists(path));
-        String allLines = Files.readString(path);
-
-        assertThat(allLines.split("\n").length).isEqualTo(1);
-        assertThat(allLines)
-                .contains("SuccessData[authentication=")
-                .contains("instant=")
-                .endsWith("\n");
-    }
-
-    private void deleteLogFilesIfExist() throws IOException {
-        Files.deleteIfExists(Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE));
-        Files.deleteIfExists(Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE));
+        verify(filesUtils, times(1)).appendToFile(
+                argThat(s -> s.toString().equals(successFile)),
+                argThat(s -> s.contains("SuccessData[authentication=") &&
+                        s.contains("instant=") &&
+                        s.endsWith("\n")
+                )
+        );
     }
 
     @Test
@@ -95,24 +92,12 @@ public class AuthenticationListenerIntegrationTest {
         // Assert
         // Verify that the failureData list is updated
         assertTrue(authenticationListener.failureData.isEmpty());
-        assertThatSuccessFileNotExists();
-        assertThatFailureFileExistsAndContainALineContainingKeywords();
-    }
-
-    private void assertThatSuccessFileNotExists() {
-        Path p = Path.of(Cons.Logs.SUCCESS_AUTHENTICATION_FILE);
-        assertFalse(Files.exists(p));
-    }
-
-    private void assertThatFailureFileExistsAndContainALineContainingKeywords() throws IOException {
-        Path path = Path.of(Cons.Logs.FAIL_AUTHENTICATION_FILE);
-        assertTrue(Files.exists(path));
-        String allLines = Files.readString(path);
-
-        assertThat(allLines.split("\n").length).isEqualTo(1);
-        assertThat(allLines)
-                .contains("FailureData[authentication=")
-                .contains("instant=")
-                .endsWith("\n");
+        verify(filesUtils, times(1)).appendToFile(
+                argThat(s -> s.toString().equals(failureFile)),
+                argThat(s -> s.contains("FailureData[authentication=") &&
+                        s.contains("instant=") &&
+                        s.endsWith("\n")
+                )
+        );
     }
 }
