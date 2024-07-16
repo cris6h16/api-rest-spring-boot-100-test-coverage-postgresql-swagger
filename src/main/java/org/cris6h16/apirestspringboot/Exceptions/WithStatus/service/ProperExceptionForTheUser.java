@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@Setter
 public class ProperExceptionForTheUser extends RuntimeException {
     private HttpStatus status;
     private String reason;
