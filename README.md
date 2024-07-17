@@ -1,4 +1,4 @@
-# api-rest-spring-boot-basic-auth--notes-app
+# api-rest-spring-boot-100%-test-coverage-postgresql 
 
 DOCS STILL NOT ADDED, BUT IT'S A TO DO
 
