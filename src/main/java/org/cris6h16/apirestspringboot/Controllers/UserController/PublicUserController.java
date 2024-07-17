@@ -15,6 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
+/**
+ * Controller of the public endpoints to work with {@link UserServiceImpl}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @RestController
 @RequestMapping(PublicUserController.path)
 public class PublicUserController {
@@ -28,15 +34,6 @@ public class PublicUserController {
         this.userService = userService;
     }
 
-    /**
-     * Create a new user<br>
-     * make it using: {@link UserService#create(CreateUserDTO)}
-     *
-     * @param user {@link CreateUserDTO} with the data of the new user
-     * @return {@link ResponseEntity#created(URI)} with the location of the new user
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateUserDTO user) {
         Long id = userService.create(user, ERole.ROLE_USER);

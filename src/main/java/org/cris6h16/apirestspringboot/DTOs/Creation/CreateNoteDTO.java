@@ -10,11 +10,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.*;
 
 
 /**
- * DTO for {@link NoteEntity}
- * <p>
- * - Used for request a creation through the {@link NoteService#create(CreateNoteDTO, Long)} <br>
- * - Also used to update through the {@link NoteService#put(Long, CreateNoteDTO, Long)}
- * </p>
+ * DTO to create or update a note.
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0

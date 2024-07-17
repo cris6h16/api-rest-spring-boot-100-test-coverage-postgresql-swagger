@@ -3,6 +3,7 @@ package org.cris6h16.apirestspringboot.Services.Interfaces;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
+import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -16,73 +17,67 @@ import java.util.List;
  */
 public interface NoteService {
     /**
-     * Get a note by:<br>
-     * {@code (note.id == noteId) && (note.user.id == userId)}
+     * Get a note by id and user id, return if {@code retrievedNote.user.id == userId}
      *
-     * @param noteId of the note to getById
-     * @param userId of the user that owns the note
-     * @return the note that has the provided {@code noteId} and {@code userId}, as a {@link PublicNoteDTO}
-     * @throws NoteServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param noteId note id
+     * @param userId user id that owns the note
+     * @return a {@link PublicNoteDTO} with the note data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     PublicNoteDTO getByIdAndUserId(Long noteId, Long userId);
 
     /**
-     * Create a new note with the provided {@code note} setting the {@code userId} as the owner
+     * Create a new note
      *
-     * @param note   to create
-     * @param userId of the user that will own the note
-     * @return the {@code id} of the created note
-     * @throws NoteServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param note   the data of the new note
+     * @param userId the id of the user that is creating the note
+     * @return the id of the new note created
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     Long create(CreateNoteDTO note, Long userId);
 
     /**
-     * PUT the passed note where:<br>
-     * {@code (note.id == noteId) && (note.user.id == userId)}
+     * PUT a note.<br>
+     * If exists, update the note where {@code (note.id == noteId) && (note.user.id == userId)}
      *
-     * @param noteId of the note to update
-     * @param note   containing the new data to update
-     * @param userId of the user that owns the note
-     * @throws NoteServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param noteId note id
+     * @param userId user id that owns the note
+     * @param note   the note data to be PUT
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     void putByIdAndUserId(Long noteId, Long userId, CreateNoteDTO note);
 
     /**
-     * DELETE the note where:<br>
-     * {@code (note.id == noteId) && (note.user.id == userId)}
+     * DELETE a note.<br>
+     * where {@code (note.id == noteId) && (note.user.id == userId)}
      *
-     * @param noteId of the note to deleteById
-     * @param userId of the user that owns the note
-     * @throws NoteServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param noteId note id of the note to delete
+     * @param userId user id that owns the note
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     void deleteByIdAndUserId(Long noteId, Long userId);
 
     /**
-     * Get all the notes owned by the user with the provided {@code userId}
+     * Get a page of notes owned by a user
      *
-     * @param pageable page request
-     * @param userId   of the user that owns the notes
-     * @return a list of {@link PublicNoteDTO} with the notes of the user
-     * @throws NoteServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param pageable the page request
+     * @param userId   the id of the user that owns the notes
+     * @return a list of {@link PublicNoteDTO} with the notes data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     List<PublicNoteDTO> getPage(Pageable pageable, Long userId);
 
-
+    /**
+     * Delete all notes
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     void deleteAll();
 
 }

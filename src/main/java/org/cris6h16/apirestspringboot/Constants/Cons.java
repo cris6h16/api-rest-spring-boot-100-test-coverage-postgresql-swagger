@@ -10,10 +10,6 @@ import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
  * @since 1.0
  */
 public class Cons {
-    public class FrontEnd {
-        public static final String BASE_URL = "http://localhost:3000";
-    }
-
 
     public class User {
 
@@ -51,9 +47,6 @@ public class Cons {
             public static final String NOT_FOUND = "User not found";
         }
 
-        /**
-         * All DTOs
-         */
         public static class DTO {
             /**
              * message for provide errors when any dto related to the user entity is
@@ -107,26 +100,10 @@ public class Cons {
         public static final String ID_INVALID = "Invalid id";
     }
 
-    public class Auth {
-        public class Fails {
-            public static final String ACCESS_DENIED = "Access denied";
-            public static final String UNAUTHORIZED = "Unauthorized";
-        }
-    }
 
     public class Response {
         public static class ForClient {
-            /**
-             * Generic error message for the client, used when we don't want to provide a specific message about the failure
-             *
-             * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-             * @since 1.0
-             */
             public static final String GENERIC_ERROR = "An error occurred, please try again later or contact the us for support";
-            public static final String NO_RESOURCE_FOUND = "No resource found";
-            public static final String UNSUPPORTED_MEDIA_TYPE = "Unsupported media type";
-            public static final String REQUEST_BODY_MISSING = "Required request body is missing";
-
         }
     }
 
@@ -135,7 +112,7 @@ public class Cons {
         /**
          * Constant for testing purposes
          * <p>
-         * the {@link TESTING#UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES} is the pattern
+         * this is the pattern
          * used for identify if an unhandled exceptions was thrown for testing purposes
          *
          * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>

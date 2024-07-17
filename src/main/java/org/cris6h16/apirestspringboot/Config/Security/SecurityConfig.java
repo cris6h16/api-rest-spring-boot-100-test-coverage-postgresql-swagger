@@ -38,13 +38,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private WebSecurity webSecurity;
+    private final WebSecurity webSecurity;
 
     public SecurityConfig(WebSecurity webSecurity) {
         this.webSecurity = webSecurity;
     }
 
-    //todo: doc the reason that I prefer use the request matchers config from filter chain instead used the method security based ( hard to achieve completely the principle of least privilege, In almost every exception hanlded by the advice I havo to see if is authenticated, is admin, or user for respond properly.... also this probably can improve the testing isolation on the controller layer
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
@@ -78,13 +77,7 @@ public class SecurityConfig {
         };
     }
 
-    /**
-     * Create a delegating password encoder bean. The default encoder is {@code bcrypt}.
-     *
-     * @return A new instance of {@link DelegatingPasswordEncoder}.
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Bean
     public static PasswordEncoder passwordEncoder() {
         PasswordEncoder dpe = PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -92,28 +85,11 @@ public class SecurityConfig {
         return dpe;
     }
 
-    /**
-     * Create a new instance of {@link UserDetailsServiceImpl} to load the user from the database.
-     * This bean is used by the {@link DaoAuthenticationProvider} to authenticate the user.
-     *
-     * @param ur The {@link UserRepository} to load the user from the database.
-     * @param pe The {@link PasswordEncoder} to encode the password.
-     * @return A new instance of {@link UserDetailsServiceImpl}.
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Bean
     UserDetailsService userDetailsService(UserRepository ur, PasswordEncoder pe) {
         return new UserDetailsServiceImpl(ur, pe);
     }
 
-    /**
-     * Create a custom cors policy.
-     *
-     * @return A new instance of {@link UrlBasedCorsConfigurationSource}.
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration conf = new CorsConfiguration();

@@ -13,13 +13,5 @@ import java.util.Optional;
  * @since 1.0
  */
 public interface RoleRepository extends JpaRepository<RoleEntity, Long> {
-    /**
-     * Find a {@link RoleEntity} by its {@code name}
-     *
-     * @param name of the {@link RoleEntity}
-     * @return {@link Optional} of {@link RoleEntity} if found, {@link Optional#empty()} otherwise
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     Optional<RoleEntity> findByName(ERole name);
 }

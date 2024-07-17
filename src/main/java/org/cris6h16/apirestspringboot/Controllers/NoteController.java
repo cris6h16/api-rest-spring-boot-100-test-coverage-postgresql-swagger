@@ -106,7 +106,7 @@ public class NoteController {
      *
      * @param noteId      of the note to update
      * @param note        to be PUT
-     * @param principalId the principal id; the user that is updating the note
+     * @param principalId injected, the id of the principal; the user that is updating the note
      * @return {@link ResponseEntity#noContent()} if successful
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -127,7 +127,7 @@ public class NoteController {
      * Uses: {@link NoteServiceImpl#deleteByIdAndUserId(Long, Long)}
      *
      * @param noteId      of the note to deleteById
-     * @param principalId the principal id; the user that is deleting the note
+     * @param principalId injected, the id of the principal; the user that is deleting the note
      * @return {@link ResponseEntity#noContent()} if successful
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0

@@ -16,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -28,8 +29,7 @@ import java.util.*;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 
 /**
- * Handling of exception in the application and give a custom response
- * based on the exception type && its message
+ * Handling of exception in the controllers
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
@@ -97,13 +97,29 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(status, forClient);
     }
 
+    /**
+     * Handles the exceptions that was designed to be passed directly to the user
+     *
+     * @param e the exception
+     * @return a {@link ResponseEntity} with the status and message of the exception
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @ExceptionHandler(ProperExceptionForTheUser.class)
     public ResponseEntity<String> handleProperExceptionForTheUser(ProperExceptionForTheUser e) {
         logHandledDebug(e);
         return buildAFailResponse(e.getStatus(), e.getReason());
     }
 
-    // produced by @Valid
+    /**
+     * Exception produced by {@code @Valid} annotation in the
+     * method parameters
+     *
+     * @param e the exception
+     * @return a proper response containing a message and status {@code BAD_REQUEST}
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         logHandledDebug(e);
@@ -121,7 +137,7 @@ public class ExceptionHandlerControllers {
      *
      * @param e the exception
      * @return a {@link ResponseEntity} with status {@link HttpStatus#INTERNAL_SERVER_ERROR}
-     * and message {@link Cons.Response.ForClient#GENERIC_ERROR}
+     * and message {@link Cons.Response.ForClient#GENERIC_ERROR} if is not an admin.
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
@@ -135,6 +151,16 @@ public class ExceptionHandlerControllers {
         }
     }
 
+    /**
+     * Build a {@link ResponseEntity<String>} to a failed request
+     * for the admin
+     *
+     * @param e the exception to log
+     * @return a containing with the status {@link HttpStatus#INTERNAL_SERVER_ERROR}
+     * and in the message {@code @exception.toString}, with {@link MediaType#APPLICATION_JSON} as content type
+     * @see #buildFailJsonBody(String, HttpStatus, long)
+     * @since 1.0
+     */
     private ResponseEntity<String> buildFailResponseForAdmin(Exception e) {
         String body = buildFailJsonBody(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR, System.currentTimeMillis());
         HttpHeaders headers = new HttpHeaders();
@@ -153,6 +179,9 @@ public class ExceptionHandlerControllers {
      * @since 1.0
      */
     private String buildFailJsonBody(String message, HttpStatus status, long timestamp) {
+        String statusStr = (status == null) ? "" : status.toString();
+        message = (message == null) ? "" : message;
+
         String pre_body = """
                 {
                     "message": "%s",
@@ -162,11 +191,8 @@ public class ExceptionHandlerControllers {
                 """
                 .replace("\n", "")
                 .replace(" ", ""); // improve the format for the logs
-        if (message == null) message = "";
-        if (status == null) status = HttpStatus.INTERNAL_SERVER_ERROR;
-        // long primitive type is not nullable
 
-        return String.format(pre_body, message, status.toString(), timestamp);
+        return String.format(pre_body, message, statusStr, timestamp);
     }
 
     /**
@@ -174,7 +200,7 @@ public class ExceptionHandlerControllers {
      *
      * @param status  the proper status related to the exception
      * @param message the message to be shown in the response
-     * @return a {@link ResponseEntity<String>} with the given status and message ready for show to
+     * @return containing the given status and message ready for show to
      * the client, with {@link MediaType#APPLICATION_JSON} as content type
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -307,4 +333,5 @@ public class ExceptionHandlerControllers {
             );
         }
     }
+
 }

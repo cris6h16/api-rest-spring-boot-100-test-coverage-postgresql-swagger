@@ -13,6 +13,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.cris6h16.apirestspringboot.Services.Interfaces.NoteService;
+import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +27,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of {@link NoteService} interface // todo: explain why I dont use userservice -> excess of transactions
+ * An implementation of {@link NoteService} interface
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0

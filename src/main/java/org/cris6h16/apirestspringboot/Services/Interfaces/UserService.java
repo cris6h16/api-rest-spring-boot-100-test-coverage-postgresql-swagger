@@ -21,10 +21,9 @@ public interface UserService {
     /**
      * Create a new user
      *
-     * @param dto the user to create
-     * @return the id of the created user
-     * @throws UserServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param dto   the data of the new user
+     * @param roles the roles of the new user
+     * @return the id of the new user created
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
@@ -33,10 +32,8 @@ public interface UserService {
     /**
      * Get a user by id
      *
-     * @param id of the user to getById
-     * @return the user owner of the provided {@code id} as a {@link PublicUserDTO}
-     * @throws UserServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param id of the user to get
+     * @return a {@link PublicUserDTO} with the user data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
@@ -46,32 +43,58 @@ public interface UserService {
     /**
      * Delete a user by id
      *
-     * @param id of the user to deleteById
-     * @throws UserServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @param id of the user to delete
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     void deleteById(Long id);
 
     /**
-     * Get all users paginated
+     * Get a page of users
      *
      * @param pageable the page request
-     * @return a list of {@link PublicUserDTO}
-     * @throws UserServiceTransversalException with the proper
-     *                                         status code and message ready to be sent to the client
+     * @return a list of {@link PublicUserDTO} with the users data
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
     List<PublicUserDTO> getPage(Pageable pageable);
 
+    /**
+     * Patch the username of a user by id
+     *
+     * @param id  of the user to patch
+     * @param dto with the new username
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     void patchUsernameById(Long id, PatchUsernameUserDTO dto);
 
+    /**
+     * Patch the email of a user by id
+     *
+     * @param id  of the user to patch
+     * @param dto with the new email
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     void patchEmailById(Long id, PatchEmailUserDTO dto);
 
+    /**
+     * Patch the password of a user by id
+     *
+     * @param id  of the user to patch
+     * @param dto with the new password
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     void patchPasswordById(Long id, PatchPasswordUserDTO dto);
 
+    /**
+     * Delete all users
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     void deleteAll();
 
 }

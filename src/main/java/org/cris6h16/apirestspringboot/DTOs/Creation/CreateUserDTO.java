@@ -13,7 +13,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InS
 
 
 /**
- * DTO for {@link UserEntity}, Used for request a creation using the {@link UserService#create(CreateUserDTO, ERole...)} <br>
+ * DTO for creating a new user.
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
