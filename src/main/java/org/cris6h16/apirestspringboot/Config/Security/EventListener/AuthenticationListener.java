@@ -80,7 +80,7 @@ public class AuthenticationListener {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    void flushSuccessInFile() {
+    protected void flushSuccessInFile() {
         if (System.currentTimeMillis() - lastSuccessFlushed < flushInterval) return;
 
         synchronized (successLock) {

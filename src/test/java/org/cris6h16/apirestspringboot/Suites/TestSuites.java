@@ -8,6 +8,8 @@ public class TestSuites {
 
     @Suite
     @SelectPackages({
+            "org.cris6h16.apirestspringboot",
+
             "org.cris6h16.apirestspringboot.Config.Security",
             "org.cris6h16.apirestspringboot.Config.Security.CustomUser",
             "org.cris6h16.apirestspringboot.Config.Security.EventListener",
@@ -29,6 +31,8 @@ public class TestSuites {
 
     @Suite
     @SelectPackages({
+            "org.cris6h16.apirestspringboot",
+
             "org.cris6h16.apirestspringboot.Config.Security",
             "org.cris6h16.apirestspringboot.Config.Security.CustomUser",
             "org.cris6h16.apirestspringboot.Config.Security.EventListener",

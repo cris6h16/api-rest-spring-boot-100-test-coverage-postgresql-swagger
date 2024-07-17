@@ -3,10 +3,11 @@ package org.cris6h16.apirestspringboot.Utils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,12 +15,19 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@SpringBootTest
+/**
+ * Test class for {@link FilesUtils}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
+@ExtendWith(MockitoExtension.class)
 class FilesUtilsTest {
 
-    @Autowired
+    @InjectMocks
     private FilesUtils filesUtils;
 
     private Path tempFile;

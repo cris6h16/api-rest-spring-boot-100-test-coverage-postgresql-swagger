@@ -40,6 +40,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
+/**
+ * Unit tests for {@link ExceptionHandlerControllers}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
+
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
 class ExceptionHandlerControllersTest {

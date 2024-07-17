@@ -2,6 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.NoteController;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
@@ -23,6 +24,14 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+
+/**
+ * Unit tests for {@link PublicUserController} endpoints<br>
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 
 @SpringBootTest
 @AutoConfigureMockMvc

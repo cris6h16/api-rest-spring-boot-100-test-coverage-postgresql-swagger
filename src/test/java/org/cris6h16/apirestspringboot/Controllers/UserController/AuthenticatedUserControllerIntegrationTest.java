@@ -30,6 +30,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
+/**
+ * Integration test for {@link AuthenticatedUserController}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Tag("IntegrationTest")
 @ActiveProfiles(profiles = "test")

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
@@ -51,15 +50,12 @@ class UserDetailsServiceImplTest {
 
     /**
      * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}
-     * when the user is not found then It should throw a {@link UsernameNotFoundException}
-     * with the message {@link Cons.User.Fails#NOT_FOUND} and the status {@link HttpStatus#NOT_FOUND}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
-     * @see UserDetailsServiceImpl#loadUserByUsername(String)
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_loadUserByUsername_UsernameNotFoundException() {
+    void loadUserByUsername_UsernameNotFoundException() {
         // Arrange
         when(userRepository.findByUsername("username")).thenReturn(Optional.empty());
 
@@ -70,15 +66,13 @@ class UserDetailsServiceImplTest {
     }
 
     /**
-     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * but the roles are null then a default role should be assigned {@link ERole#ROLE_USER}<br>
-     * I want to emphasize that this fail will occur if a user was created externally to the application
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_UserFoundWithRolesNull() {
+    void UserFoundWithRolesNull() {
         // Arrange
         UserEntity usr = UserEntity.builder()
                 .id(1L)
@@ -105,15 +99,13 @@ class UserDetailsServiceImplTest {
     }
 
     /**
-     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * but the roles are empty then It should return a {@link UserDetails} with
-     * a default role {@link ERole#ROLE_USER}
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_UserFoundWithRolesEmpty() { // todo: rename tests all, remove the """standard""" format from the name
+    void UserFoundWithRolesEmpty() { // todo: rename tests all, remove the """standard""" format from the name
         // Arrange
         UserEntity usr = UserEntity.builder()
                 .id(1L)
@@ -142,16 +134,13 @@ class UserDetailsServiceImplTest {
     }
 
     /**
-     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)} when the user is found
-     * and the roles are not empty then It should return a {@link UserDetails} with the roles
+     * Test method for {@link UserDetailsServiceImpl#loadUserByUsername(String)}
      *
      * @autor <a href="https://www.github.com/cris6h16" target="_blank"> Cristian Herrera </a>
-     * @see UserDetailsServiceImpl#loadUserByUsername(String)
-     * @see UserDetails
      * @since 1.0
      */
     @Test
-    void UserDetailsServiceImplTest_UserFound_Successful() {
+    void UserFound_Successful() {
         // Arrange
         Set<RoleEntity> roles = Collections.singleton(RoleEntity.builder()
                 .id(1L)

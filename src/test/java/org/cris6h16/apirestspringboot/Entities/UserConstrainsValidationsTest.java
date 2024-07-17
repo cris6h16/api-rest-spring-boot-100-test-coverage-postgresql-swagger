@@ -8,9 +8,6 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,7 +19,6 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test class for {@link UserEntity} validations and constraints<br>
@@ -86,14 +82,7 @@ public class UserConstrainsValidationsTest {
         assertThat(i.next().equals(usr)).isTrue();
     }
 
-    /**
-     * Test for {@link DataIntegrityViolationException} -> Unique constraint violation
-     * <br>
-     * Username already exists in the database then we try one with the same username
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_usernameAlreadyExists() {
@@ -112,14 +101,7 @@ public class UserConstrainsValidationsTest {
                 .hasMessageContaining(Cons.User.Constrains.USERNAME_UNIQUE_NAME);
     }
 
-    /**
-     * Test for {@link DataIntegrityViolationException} -> Unique constraint violation
-     * <br>
-     * Email already exists in the database then we try one with the same email
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_emailAlreadyExists() {
@@ -170,14 +152,7 @@ public class UserConstrainsValidationsTest {
 //    }
 
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Username too long
-     * <br>
-     * Username is too long, it violates {@code  @Length(max = <>, message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag(value = "ConstraintViolationException")
     void ConstraintViolationException_usernameTooLong() {
@@ -276,14 +251,7 @@ public class UserConstrainsValidationsTest {
                 .hasMessageContaining(Cons.User.Validations.EMAIL_INVALID_MSG);
     }
 
-    /**
-     * Test for {@link ConstraintViolationException} -> Email is null
-     * <br>
-     * Email is null, it violates {@code  @NotBlank(message = <>)}
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Tag(value = "ConstraintViolationException")
     @ParameterizedTest
     @ValueSource(strings = {"null", "blank", "empty"})

@@ -10,6 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for {@link UserWithId}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @ExtendWith(MockitoExtension.class)
 @Tag("UnitTest")
 class UserWithIdTest {

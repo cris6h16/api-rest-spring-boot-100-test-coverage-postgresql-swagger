@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Testing for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+ * Testing for {@link WebSecurity}
  *
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
@@ -32,6 +32,12 @@ class WebSecurityTest {
     @InjectMocks
     WebSecurity webSecurity;
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(1)
     void testGranted() {
@@ -51,6 +57,12 @@ class WebSecurityTest {
         assertTrue(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     @Order(2)
     void testNotGranted() {
@@ -70,6 +82,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
 
     @Test
     void hasRoleAdmin_SamePathVariableAndPrincipalId_thenTrue() {
@@ -88,6 +106,12 @@ class WebSecurityTest {
         assertTrue(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRoleAdmin_DifferentPathVariableAndPrincipalId_thenFalse() {
         String pathVariable_UserId = "2";
@@ -105,6 +129,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRoleAdmin_ButPrincipalIdIsNull_thenFalse() {
         String pathVariable_UserId = "2";
@@ -122,7 +152,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
-
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRoleUser_SamePathVariableAndPrincipalId_thenTrue() {
         String pathVariable_UserId = "2";
@@ -140,6 +175,12 @@ class WebSecurityTest {
         assertTrue(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRoleUser_DifferentPathVariableAndPrincipalId_thenFalse() {
         String pathVariable_UserId = "2";
@@ -157,6 +198,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRoleUser_ButPrincipalIdIsNull_thenFalse() {
         String pathVariable_UserId = "2";
@@ -174,6 +221,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasNoRoleUserOrAdmin_thenFalse() {
         String pathVariable_UserId = "2";
@@ -191,6 +244,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRolesEmpty_thenFalse() {
         String pathVariable_UserId = "2";
@@ -208,7 +267,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
-
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void hasRolesNull_thenFalse() {
         String pathVariable_UserId = "2";
@@ -226,6 +290,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void SupplierNull_thenFalse() {
         String pathVariable_UserId = "2";
@@ -235,6 +305,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void IdNull_thenFalse() {
         String pathVariable_UserId = null;
@@ -252,6 +328,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void InvalidId_thenFalse() {
         String pathVariable_UserId = "users";
@@ -269,6 +351,12 @@ class WebSecurityTest {
         assertFalse(granted);
     }
 
+    /**
+     * Test for {@link WebSecurity#checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier, String)}
+     *
+     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+     * @since 1.0
+     */
     @Test
     void AuthenticationNull_thenFalse() {
         String pathVariable_UserId = "2";

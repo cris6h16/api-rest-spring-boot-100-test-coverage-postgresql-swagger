@@ -5,9 +5,6 @@ import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
@@ -99,17 +96,6 @@ public class CascadingUserEntityTest {
     }
 
 
-    /**
-     * Test the right behavior of cascading on {@link UserEntity} to the contained {@link RoleEntity}
-     * <br>
-     * If we have a not persisted {@link RoleEntity} in a {@link UserEntity} attribute, both
-     * are not persisted ( both id = null )
-     * <br>
-     * When we persist the {@link UserEntity}, the {@link RoleEntity} is persisted too.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     @Order(1)
     @Tag("RoleEntity")
@@ -130,16 +116,7 @@ public class CascadingUserEntityTest {
         assertThat(roleRepository.count()).isEqualTo(1);
     }
 
-    /**
-     * Test the right behavior of cascading on {@link UserEntity} to
-     * the contained {@link RoleEntity}
-     * <br>
-     * If we have a persisted {@link RoleEntity} in a {@link UserEntity} attribute (both
-     * are persisted ).
-     * <br>
-     * When we remove a {@link UserEntity}, the {@link RoleEntity} wouldn't
-     * be removed, just the {@link UserEntity}.
-     */
+
     @Test
     @Order(3)
     @Tag("RoleEntity")
@@ -159,18 +136,6 @@ public class CascadingUserEntityTest {
     }
 
 
-    /**
-     * Test the right behavior of cascading on {@link UserEntity}
-     * to the contained {@link NoteEntity}
-     * <br>
-     * If we have a not persisted {@link NoteEntity} in a {@link UserEntity} attribute
-     * (both are not persisted).
-     * <br>
-     * When we persist the {@link UserEntity}, the {@link NoteEntity} is persisted too.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     @Order(2)
     @Tag("NoteEntity")
@@ -189,18 +154,7 @@ public class CascadingUserEntityTest {
         ).containsAll(notes);
     }
 
-    /**
-     * Test the right behavior of cascading on {@link UserEntity}
-     * to the contained {@link NoteEntity}
-     * <br>
-     * If we have a list of persisted {@link NoteEntity} in a {@link UserEntity} attribute
-     * (both are persisted).
-     * <br>
-     * When we remove a {@link UserEntity}, all the {@link NoteEntity} would be removed too.
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Order(4)
     @Tag("NoteEntity")

@@ -54,18 +54,7 @@ class AuthenticationListenerTest {
 
     }
 
-    /**
-     * Test for {@link AuthenticationListener#onSuccess(AuthenticationSuccessEvent)}
-     *
-     * <p>
-     * This test verifies that the list {@link AuthenticationListener#successData}
-     * is updated and the method {@link AuthenticationListener#flushInFile()} is called
-     * with the correct parameters.
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     void testOnSuccess() {
         // Arrange
@@ -85,18 +74,7 @@ class AuthenticationListenerTest {
         );
     }
 
-    /**
-     * Test for {@link AuthenticationListener#onFailure(AbstractAuthenticationFailureEvent)}
-     *
-     * <p>
-     * This test verifies that the list {@link AuthenticationListener#failureData}
-     * is updated and the method {@link AuthenticationListener#flushInFile()} is called
-     * with the correct parameters.
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     void testOnFailure() {
         // Arrange
@@ -119,20 +97,6 @@ class AuthenticationListenerTest {
     }
 
 
-    /**
-     * Test for {@link AuthenticationListener#flushInFile()}
-     *
-     * <p>
-     * This test verifies that the method {@link AuthenticationListener#flushInFile()}
-     * works correctly when the list {@link AuthenticationListener#failureData} is empty
-     * and the list {@link AuthenticationListener#successData} has just 1 element.
-     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
-     * is called just 1 time with the correct parameters.
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     void flushSuccessInFile_justCollected_successData() {
         // Arrange
@@ -162,20 +126,6 @@ class AuthenticationListenerTest {
     }
 
 
-    /**
-     * Test for {@link AuthenticationListener#flushInFile()}
-     *
-     * <p>
-     * This test verifies that the method {@link AuthenticationListener#flushInFile()}
-     * works correctly when the list {@link AuthenticationListener#successData} is empty
-     * and the list {@link AuthenticationListener#failureData} has just 1 element.
-     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
-     * is called just 1 time with the correct parameters.
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
     @Test
     void flushFailureInFile_justCollected_failureData() {
         // Arrange
@@ -206,20 +156,7 @@ class AuthenticationListenerTest {
         );
     }
 
-    /**
-     * Test for {@link AuthenticationListener#flushInFile()}
-     *
-     * <p>
-     * This test verifies that the method {@link AuthenticationListener#flushInFile()}
-     * works correctly when the list {@link AuthenticationListener#failureData} &&
-     * {@link AuthenticationListener#successData} has each one just 1 element.
-     * then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
-     * is called twice. One for successData and one for failureData
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag("flushInFile")
     void testFlushInFile_bothCollected() {
@@ -259,22 +196,7 @@ class AuthenticationListenerTest {
         );
     }
 
-    /**
-     * Test for {@link AuthenticationListener#flushInFile()}
-     *
-     * <p>
-     * This test verifies that the method {@link AuthenticationListener#flushInFile()}
-     * works correctly when the list {@link AuthenticationListener#failureData} &&
-     * {@link AuthenticationListener#successData} has 10 elements
-     * each one then the method {@link FilesUtils#appendToFile(Path, String, SychFor)}
-     * is called twice. One for successData and one for failureData
-     * <br>
-     * Also verify the lines of the content passed to the file by both, it should be 10 each one
-     * </p>
-     *
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
     @Test
     @Tag("both")
     void testFlushInFile_bothCollected_List10Elements() {

@@ -26,6 +26,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+/**
+ * Integration test for {@link AuthenticationListener}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @SpringBootTest
 @Tag("IntegrationTest")
 @ActiveProfiles(profiles = "test")
@@ -68,6 +74,7 @@ public class AuthenticationListenerIntegrationTest {
         // Assert
         // Verify that the successData list is updated
         assertTrue(authenticationListener.successData.isEmpty());
+        // Verify if it tries to append to the file
         verify(filesUtils, times(1)).appendToFile(
                 argThat(s -> s.toString().equals(successFile)),
                 argThat(s -> s.contains("SuccessData[authentication=") &&
@@ -92,6 +99,7 @@ public class AuthenticationListenerIntegrationTest {
         // Assert
         // Verify that the failureData list is updated
         assertTrue(authenticationListener.failureData.isEmpty());
+        // Verify if it tries to append to the file
         verify(filesUtils, times(1)).appendToFile(
                 argThat(s -> s.toString().equals(failureFile)),
                 argThat(s -> s.contains("FailureData[authentication=") &&

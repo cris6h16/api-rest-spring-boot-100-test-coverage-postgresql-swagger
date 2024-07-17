@@ -1,13 +1,8 @@
 package org.cris6h16.apirestspringboot.Entities;
 
-import jakarta.validation.ConstraintViolationException;
-import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;

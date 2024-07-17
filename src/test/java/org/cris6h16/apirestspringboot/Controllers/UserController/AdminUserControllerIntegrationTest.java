@@ -23,6 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCollection;
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Controller.Path.USER_PATH;
 
+/**
+ * Integration test for {@link AdminUserController}
+ *
+ * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
+ * @since 1.0
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Tag("IntegrationTest")
 @ActiveProfiles(profiles = "test")
