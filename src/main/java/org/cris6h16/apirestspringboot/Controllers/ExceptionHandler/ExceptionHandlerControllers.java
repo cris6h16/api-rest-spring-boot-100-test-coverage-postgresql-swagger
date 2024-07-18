@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.Email;
@@ -24,6 +25,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
@@ -38,13 +42,16 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Slf4j
 public class ExceptionHandlerControllers {
 
+    private final ObjectMapper objectMapper;
     private final Object lock = new Object();
     private final FilesUtils filesSyncUtils;
     protected static volatile long lastSavedToFile; // concurrent changed
     protected static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
     protected static List<String> hiddenExceptionsLines;
 
-    public ExceptionHandlerControllers(FilesUtils filesSyncUtils) {
+    public ExceptionHandlerControllers(ObjectMapper objectMapper,
+                                       FilesUtils filesSyncUtils) {
+        this.objectMapper = objectMapper;
         this.filesSyncUtils = filesSyncUtils;
         lastSavedToFile = 0;
         hiddenExceptionsLines = new Vector<>(); // for thread safety ( for avoid internally crashes [adding && removing] )
@@ -158,11 +165,11 @@ public class ExceptionHandlerControllers {
      * @param e the exception to log
      * @return a containing with the status {@link HttpStatus#INTERNAL_SERVER_ERROR}
      * and in the message {@code @exception.toString}, with {@link MediaType#APPLICATION_JSON} as content type
-     * @see #buildFailJsonBody(String, HttpStatus, long)
+     * @see #buildFailJsonBody(String, HttpStatus)
      * @since 1.0
      */
     private ResponseEntity<String> buildFailResponseForAdmin(Exception e) {
-        String body = buildFailJsonBody(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR, System.currentTimeMillis());
+        String body = buildFailJsonBody(e.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new ResponseEntity<>(body, headers, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -173,26 +180,26 @@ public class ExceptionHandlerControllers {
      *
      * @param message   value for the {@code message} in the json body
      * @param status    value for the {@code status} in the json body
-     * @param timestamp value for the {@code timestamp} in the json body
      * @return a json body with the given values
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    private String buildFailJsonBody(String message, HttpStatus status, long timestamp) {
+    private String buildFailJsonBody(String message,
+                                     HttpStatus status) {
         String statusStr = (status == null) ? "" : status.toString();
         message = (message == null) ? "" : message;
 
-        String pre_body = """
-                {
-                    "message": "%s",
-                    "status": "%s",
-                    "timestamp": "%s"
-                }
-                """
-                .replace("\n", "")
-                .replace(" ", ""); // improve the format for the logs
+        ErrorResponse errorResponse = new ErrorResponse(
+                message,
+                statusStr,
+                DateTimeFormatter.ISO_INSTANT
+                        .withZone(ZoneOffset.UTC)
+                        .format(Instant.now()) // yyyy-MM-dd'T'HH:mm:ss.SSS'Z' --> ISO-8601 (UTC)
+        );
 
-        return String.format(pre_body, message, statusStr, timestamp);
+        return objectMapper
+                .valueToTree(errorResponse) // convert the object to a JsonNode (  {"message":"msg","status":"status","timestamp":"timestamp"})
+                .toString();
     }
 
     /**
@@ -207,7 +214,7 @@ public class ExceptionHandlerControllers {
      */
     private ResponseEntity<String> buildAFailResponse(HttpStatus status, String message) {
 
-        String body = buildFailJsonBody(message, status, System.currentTimeMillis());
+        String body = buildFailJsonBody(message, status);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

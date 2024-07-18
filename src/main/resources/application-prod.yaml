@@ -20,17 +20,19 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-#  data:
-#    web:
-#      pageable:
-#        default-page-size: 15
-#        max-page-size: 100
-#        page-parameter: page
-#        size-parameter: size
+  #  data:
+  #    web:
+  #      pageable:
+  #        default-page-size: 15
+  #        max-page-size: 100
+  #        page-parameter: page
+  #        size-parameter: size
 
   sql:
     init:
       mode: never # execute a sql script when the application starts
+
+
 
 server:
   port: 8080
@@ -41,7 +43,21 @@ server:
 
 
 
-#logging:
-#  level:
-#    root: debug
+  #logging:
+  #  level:
+  #    root: debug
+
+
+
+## Swagger
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /docs/swagger-ui.html
+  api-docs:
+    enabled: true
+    path: /docs/api-docs
+  packages-to-scan: org.cris6h16
+
+
 

@@ -60,11 +60,13 @@ public class SecurityConfig {
                             boolean granted = webSecurity.checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(authentication, userId);
                             return new AuthorizationDecision(granted);
                         })
+                        .requestMatchers("/docs/**").permitAll()
                         .anyRequest().denyAll())
-                .sessionManagement(
-                        sm -> sm
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+//                .sessionManagement(
+//                        sm -> sm
+//                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                )
+        ;
         return http.build();
     }
 
