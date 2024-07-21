@@ -42,16 +42,13 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 @Slf4j
 public class ExceptionHandlerControllers {
 
-    private final ObjectMapper objectMapper;
     private final Object lock = new Object();
     private final FilesUtils filesSyncUtils;
     protected static volatile long lastSavedToFile; // concurrent changed
     protected static final long MILLIS_EACH_SAVE = 10 * 60 * 1000; // 10 minutes
     protected static List<String> hiddenExceptionsLines;
 
-    public ExceptionHandlerControllers(ObjectMapper objectMapper,
-                                       FilesUtils filesSyncUtils) {
-        this.objectMapper = objectMapper;
+    public ExceptionHandlerControllers(FilesUtils filesSyncUtils) {
         this.filesSyncUtils = filesSyncUtils;
         lastSavedToFile = 0;
         hiddenExceptionsLines = new Vector<>(); // for thread safety ( for avoid internally crashes [adding && removing] )
@@ -178,8 +175,8 @@ public class ExceptionHandlerControllers {
     /**
      * Build a json body for a response of a failed request
      *
-     * @param message   value for the {@code message} in the json body
-     * @param status    value for the {@code status} in the json body
+     * @param message value for the {@code message} in the json body
+     * @param status  value for the {@code status} in the json body
      * @return a json body with the given values
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
@@ -197,9 +194,33 @@ public class ExceptionHandlerControllers {
                         .format(Instant.now()) // yyyy-MM-dd'T'HH:mm:ss.SSS'Z' --> ISO-8601 (UTC)
         );
 
-        return objectMapper
-                .valueToTree(errorResponse) // convert the object to a JsonNode (  {"message":"msg","status":"status","timestamp":"timestamp"})
-                .toString();
+        return String.format(
+                removeChars(
+                        """
+                                {
+                                    "message": "%s",
+                                    "status": "%s",
+                                    "instant": "%s"
+                                }
+                                """,
+                        '\n', ' '),
+                errorResponse.message(),
+                errorResponse.status(),
+                errorResponse.instant()
+        );
+    }
+
+    private String removeChars(String str, char... chars) {
+        if (str == null || chars == null || chars.length == 0) return str;
+        StringBuilder sb = new StringBuilder(str);
+        for (char c : chars) {
+            int idx = sb.indexOf(String.valueOf(c));
+            while (idx != -1) {
+                sb.deleteCharAt(idx);
+                idx = sb.indexOf(String.valueOf(c));
+            }
+        }
+        return sb.toString();
     }
 
     /**

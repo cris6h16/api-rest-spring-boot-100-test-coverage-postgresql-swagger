@@ -1,10 +1,7 @@
 package org.cris6h16.apirestspringboot.DTOs.Patch;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.cris6h16.apirestspringboot.DTOs.Interfaces.TrimmableAttributes;
-
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
 
 /**
  * DTO to update the username of a user
@@ -17,7 +14,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 @Getter
 @Setter
 @Builder
-public class PatchUsernameUserDTO implements TrimmableAttributes {
+public class PatchUsernameUserDTO implements CleanableAttributes {
 //    Verification was centralized in the service layer( and its message), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
 //    @NotBlank(message = EMAIL_IS_INVALID_MDG)
     private String username;
@@ -25,5 +22,10 @@ public class PatchUsernameUserDTO implements TrimmableAttributes {
     @Override
     public void trimNotNullAttributes() {
         if (username != null) username = username.trim();
+    }
+
+    @Override
+    public void toLowerCaseNotNullAttributes() {
+        if (username != null) username = username.toLowerCase();
     }
 }

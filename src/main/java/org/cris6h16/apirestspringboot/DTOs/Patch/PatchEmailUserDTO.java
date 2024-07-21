@@ -1,7 +1,7 @@
 package org.cris6h16.apirestspringboot.DTOs.Patch;
 
 import lombok.*;
-import org.cris6h16.apirestspringboot.DTOs.Interfaces.TrimmableAttributes;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
 
 
 /**
@@ -15,7 +15,7 @@ import org.cris6h16.apirestspringboot.DTOs.Interfaces.TrimmableAttributes;
 @Getter
 @Setter
 @Builder
-public class PatchEmailUserDTO implements TrimmableAttributes {
+public class PatchEmailUserDTO implements CleanableAttributes {
 //    Verification was centralized in the service layer( and its message), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
 //    @NotBlank(message = EMAIL_IS_INVALID_MDG)
     private String email;
@@ -23,5 +23,10 @@ public class PatchEmailUserDTO implements TrimmableAttributes {
     @Override
     public void trimNotNullAttributes() {
         if (email != null) email = email.trim();
+    }
+
+    @Override
+    public void toLowerCaseNotNullAttributes() {
+        if (email != null) email = email.toLowerCase();
     }
 }

@@ -59,8 +59,8 @@ public class UserServiceImpl implements UserService {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
         }
-        dtoNotNull(dto); // never reached if the controller has @Valid
-        dto.trimNotNullAttributes();
+        dtoNotNull(dto);
+        dto.cleanAttributes();
 
         validateUsername(dto.getUsername());
         validateEmail(dto.getEmail());
@@ -97,8 +97,7 @@ public class UserServiceImpl implements UserService {
         verifyId(id); // coming from controller is never reached ( if is logged in then the principal.id is valid, and if try pass an invalid id then the security in the controller endpoint will deny the access (principal.id == idRequested ? grantAccess : denyAccess) )
 
         Optional<UserEntity> userO = userRepository.findById(id); // coming from controller is never reached ( controllers has the verification as principal.id == idRequested ? grantAccess : denyAccess )
-        if (userO.isEmpty())
-            throw new UserNotFoundException(); // if our app is not stateless && is multi-session, we may have that exception
+        if (userO.isEmpty()) throw new UserNotFoundException(); // if our app is not stateless && is multi-session, we may have that exception
 
         return createPublicUserDTO(userO.get());
     }
@@ -143,7 +142,7 @@ public class UserServiceImpl implements UserService {
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
         verifyId(id); // never reached coming from controller
         dtoNotNull(dto); // never reached coming from controller
-        dto.trimNotNullAttributes();
+        dto.cleanAttributes();
 
         validateUsername(dto.getUsername());
 
@@ -165,7 +164,7 @@ public class UserServiceImpl implements UserService {
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
-        dto.trimNotNullAttributes();
+        dto.cleanAttributes();
 
         validateEmail(dto.getEmail());
 
@@ -182,7 +181,7 @@ public class UserServiceImpl implements UserService {
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
-        dto.trimNotNullAttributes();
+        dto.cleanAttributes();
 
         validatePassword(dto.getPassword());
 
