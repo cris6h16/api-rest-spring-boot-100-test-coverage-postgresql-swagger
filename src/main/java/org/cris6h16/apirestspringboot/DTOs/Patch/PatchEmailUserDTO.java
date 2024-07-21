@@ -1,7 +1,8 @@
 package org.cris6h16.apirestspringboot.DTOs.Patch;
 
 import lombok.*;
-import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesToLowerConverter;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesTrimmer;
 
 
 /**
@@ -15,7 +16,7 @@ import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
 @Getter
 @Setter
 @Builder
-public class PatchEmailUserDTO implements CleanableAttributes {
+public class PatchEmailUserDTO implements NotNullAttributesTrimmer, NotNullAttributesToLowerConverter {
 //    Verification was centralized in the service layer( and its message), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
 //    @NotBlank(message = EMAIL_IS_INVALID_MDG)
     private String email;

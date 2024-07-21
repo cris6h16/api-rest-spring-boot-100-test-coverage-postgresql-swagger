@@ -8,7 +8,7 @@ import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.AnyNoteDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.NoteNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleIsBlankException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleMaxLengthFailException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
@@ -69,8 +69,8 @@ public class NoteServiceImplTest {
         NoteEntity nDB = mock(NoteEntity.class);
         CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
 
-        when(toCreate.getTitle()).thenReturn("cris6h16's note");
-        when(toCreate.getContent()).thenReturn("note content");
+        when(toCreate.getTitle()).thenReturn("    criS6h16'S nOtE@'A    ");
+        when(toCreate.getContent()).thenReturn("   noTe cON ten TT  ");
         when(nDB.getId()).thenReturn(noteId);
 
         when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
@@ -85,29 +85,12 @@ public class NoteServiceImplTest {
                 .isEqualTo(noteId);
         verify(userRepository).findById(userId);
         verify(noteRepository).saveAndFlush(argThat(passedToDB ->
-                passedToDB.getTitle().equals(toCreate.getTitle()) &&
-                        passedToDB.getContent().equals(toCreate.getContent()) &&
+                passedToDB.getTitle().equals(toCreate.getTitle() /*.trim()*/) &&
+                        passedToDB.getContent().equals(toCreate.getContent() /*.trim()*/) &&
                         passedToDB.getUser().equals(uDB) &&
                         passedToDB.getUpdatedAt() != null &&
                         passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis()
         ));
-    }
-
-
-    @Test
-    @Tag("create")
-    void create_DTONull_ThenAnyNoteDTOIsNullException() {
-        // Arrange
-        Long userId = 1L;
-        CreateNoteDTO toCreate = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> noteService.create(toCreate, userId))
-                .isInstanceOf(AnyNoteDTOIsNullException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.Note.DTO.NULL)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).findById(any());
-        verify(userRepository, never()).saveAndFlush(any());
     }
 
     @Tag("create")
@@ -127,33 +110,112 @@ public class NoteServiceImplTest {
         verify(userRepository, never()).saveAndFlush(any());
     }
 
+    @Test
+    @Tag("create")
+    void create_DTONull_ThenAnyNoteDTOIsNullException() {
+        // Arrange
+        Long userId = 1L;
+        CreateNoteDTO toCreate = null;
+
+        // Act & Assert
+        assertThatThrownBy(() -> noteService.create(toCreate, userId))
+                .isInstanceOf(AnyNoteDTOIsNullException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.Note.DTO.NULL)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).findById(any());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
     @Tag("create")
     @ParameterizedTest
     @ValueSource(strings = {"null", "blank", "empty"})
-    void create_titleNullOrBlankOrEmpty_ThenTitleIsBlankException(String title) {
+    void create_Successful_titleNullOrBlankOrEmpty_ThenPassedEmptyTitleToDB(String title) {
         // Arrange
         Long userId = 1L;
-        CreateNoteDTO toCreate = mock(CreateNoteDTO.class);
         title = switch (title) {
             case "null" -> null;
             case "blank" -> "   ";
             default -> "";
         };
 
-        when(toCreate.getTitle()).thenReturn(title);
+        CreateNoteDTO toCreate = CreateNoteDTO.builder()
+                .title(title)
+                .content("github.com/cris6h16")
+                .build();
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(mock(UserEntity.class)));
+        when(noteRepository.saveAndFlush(any())).thenReturn(mock(NoteEntity.class));
+
+
+        // Act
+        noteService.create(toCreate, userId);
+
+        // Assert
+        verify(userRepository).findById(userId);
+        final String finalToDB = title == null || title.length() == 0 ? "" : title;
+        verify(noteRepository).saveAndFlush(argThat(passedToDB -> {
+                    return passedToDB.getTitle().equals(finalToDB) &&
+                            passedToDB.getContent().equals(toCreate.getContent());
+                }
+        ));
+    }
+
+    @Test
+    @Tag("create")
+    void create_TitleMaxLengthExceeded_ThenTitleMaxLengthFailException() {
+        // Arrange
+        Long userId = 1L;
+        CreateNoteDTO toCreate = CreateNoteDTO.builder()
+                .title("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1))
+                .content("github.com/cris6h16")
+                .build();
 
         // Act & Assert
         assertThatThrownBy(() -> noteService.create(toCreate, userId))
-                .isInstanceOf(TitleIsBlankException.class)
+                .isInstanceOf(TitleMaxLengthFailException.class)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).findById(any());
-        verify(userRepository, never()).saveAndFlush(any());
+        verify(noteRepository, never()).saveAndFlush(any());
     }
+
+    @Test
+    @Tag("create")
+    void create_TitleMaxLength_ThenSuccessful() {
+        // Arrange
+        Long userId = 1L;
+        Long noteId = 11L;
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = mock(NoteEntity.class);
+        CreateNoteDTO toCreate = CreateNoteDTO.builder()
+                .title("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH))
+                .content("github.com/cris6h16")
+                .build();
+
+        when(nDB.getId()).thenReturn(noteId);
+
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.saveAndFlush(any())).thenReturn(nDB);
+
+        // Act
+        Long savedNoteId = noteService.create(toCreate, userId);
+
+        // Assert
+        assertThat(savedNoteId)
+                .isNotNull()
+                .isEqualTo(noteId);
+        verify(userRepository).findById(userId);
+        verify(noteRepository).saveAndFlush(argThat(passedToDB ->
+                passedToDB.getTitle().equals(toCreate.getTitle()) &&
+                        passedToDB.getContent().equals(toCreate.getContent())
+        ));
+    }
+
 
     @Tag("create")
     @ParameterizedTest
     @ValueSource(strings = {"null", "blank", "empty"})
-    void create_contentNullOrBlankOrEmpty_ThenSuccessfulWithContentEmpty(String content) {
+    void create_Successful_contentNullOrBlankOrEmpty_ThenPassedEmptyTitleToDB(String content) {
         // Arrange
         Long userId = 1L;
         Long noteId = 11L;
@@ -328,7 +390,7 @@ public class NoteServiceImplTest {
         verify(userRepository).findById(userId);
         verify(noteRepository).findByIdAndUserId(noteId, userId);
         verify(noteRepository).saveAndFlush(argThat(passedToDB ->
-                        passedToDB.getId().equals(noteId) &&
+                passedToDB.getId().equals(noteId) &&
                         passedToDB.getTitle().equals(toPutDto.getTitle()) &&
                         passedToDB.getContent().equals(toPutDto.getContent()) &&
                         passedToDB.getUser().equals(uDB) &&
@@ -380,7 +442,7 @@ public class NoteServiceImplTest {
     @Tag("putByIdAndUserId")
     @ParameterizedTest
     @ValueSource(strings = {"null", "blank", "empty"})
-    void putByIdAndUserId_ByIdAndUserId_titleNullOrBlankOrEmpty_ThenTitleIsBlankException(String title) {
+    void putByIdAndUserId_ByIdAndUserId_titleNullOrBlankOrEmpty_ThenSuccessfulWithTitleEmpty(String title) {
         // Arrange
         Long userId = 1L;
         Long noteId = 11L;
@@ -389,18 +451,39 @@ public class NoteServiceImplTest {
             case "blank" -> "   ";
             default -> "";
         };
+        UserEntity uDB = mock(UserEntity.class);
+        NoteEntity nDB = NoteEntity.builder()
+                .id(noteId)
+                .title("title")
+                .content("content")
+                .updatedAt(new Date())
+                .user(uDB)
+                .build();
         CreateNoteDTO dto = CreateNoteDTO.builder()
                 .title(title)
                 .content("github.com/cris6h16")
                 .build();
 
-        // Act & Assert
-        assertThatThrownBy(() -> noteService.putByIdAndUserId(noteId, userId, dto))
-                .isInstanceOf(TitleIsBlankException.class)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).findById(any());
-        verify(noteRepository, never()).findByIdAndUserId(any(), any());
-        verify(noteRepository, never()).saveAndFlush(any());
+        when(userRepository.findById(any())).thenReturn(Optional.of(uDB));
+        when(noteRepository.findByIdAndUserId(any(), any())).thenReturn(Optional.of(nDB));
+        when(noteRepository.saveAndFlush(any())).thenReturn(nDB);
+
+        // Act
+        noteService.putByIdAndUserId(noteId, userId, dto);
+
+        // Assert
+        verify(userRepository).findById(userId);
+        verify(noteRepository).findByIdAndUserId(noteId, userId);
+
+        String finalTitle = title == null || title.length() == 0 ? "" : title;
+        verify(noteRepository).saveAndFlush(argThat(passedToDB -> {
+                    return passedToDB.getTitle().equals(finalTitle) &&
+                            passedToDB.getContent().equals(dto.getContent()) &&
+                            passedToDB.getUser().equals(uDB) &&
+                            passedToDB.getUpdatedAt() != null &&
+                            passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis();
+                }
+        ));
     }
 
     @Tag("putByIdAndUserId")
@@ -423,6 +506,7 @@ public class NoteServiceImplTest {
                 .updatedAt(new Date())
                 .user(uDB)
                 .build();
+
         CreateNoteDTO dto = CreateNoteDTO.builder()
                 .title("cris6h16's note")
                 .content(content)
@@ -438,9 +522,11 @@ public class NoteServiceImplTest {
         // Assert
         verify(userRepository).findById(userId);
         verify(noteRepository).findByIdAndUserId(noteId, userId);
+
+        String finalContent = content == null || content.length() == 0 ? "" : content;
         verify(noteRepository).saveAndFlush(argThat(passedToDB -> {
                     return passedToDB.getTitle().equals(dto.getTitle()) &&
-                            passedToDB.getContent().equals(dto.getContent()) &&
+                            passedToDB.getContent().equals(finalContent) &&
                             passedToDB.getUser().equals(uDB) &&
                             passedToDB.getUpdatedAt() != null &&
                             passedToDB.getUpdatedAt().getTime() <= System.currentTimeMillis();

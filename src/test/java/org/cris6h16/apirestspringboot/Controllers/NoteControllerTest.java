@@ -139,67 +139,8 @@ class NoteControllerTest {
     }
 
 
-    @Test
-    @WithMockUserWithId(id = 1, roles = {"ROLE_USER"})
-    void create_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        String msg = this.mvc.perform(post(path)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"My first note\",\"word\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        assertThat(msg).containsAnyOf(
-                Cons.Note.Validations.CONTENT_IS_NULL_MSG,
-                Cons.Note.Validations.TITLE_IS_BLANK_MSG
-        );
-        verify(noteService, never()).create(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1, roles = {"ROLE_USER"})
-    void create_titleNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(path)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"content\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).create(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1, roles = {"ROLE_USER"})
-    void create_givenEmptyTitle_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(path)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"\",\"content\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).create(any(), any());
-    }
 
 
-    @Test
-    @WithMockUserWithId(id = 1, roles = {"ROLE_USER"})
-    void create_contentNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(post(path)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"My title\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.CONTENT_IS_NULL_MSG));
-        verify(noteService, never()).create(any(), any());
-    }
 
     @Test
     @WithMockUserWithId(id = 100, roles = {"ROLE_USER"})
@@ -613,67 +554,6 @@ class NoteControllerTest {
         verify(noteService, never()).putByIdAndUserId(any(), any(), any());
     }
 
-    @Test
-    @WithMockUserWithId
-    void put_ByIdAndUserId_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        String msg = this.mvc.perform(put(path + "/10")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"My first note\",\"word\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-
-        assertThat(msg).containsAnyOf(
-                Cons.Note.Validations.CONTENT_IS_NULL_MSG,
-                Cons.Note.Validations.TITLE_IS_BLANK_MSG
-        );
-        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId
-    void put_ByIdAndUserId_titleNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(put(path + "/10")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"content\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
-    }
-
-
-    @Test
-    @WithMockUserWithId
-    void put_ByIdAndUserId_givenEmptyTitle_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(put(path + "/10")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"\",\"content\":\"owned by cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.TITLE_IS_BLANK_MSG));
-        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId
-    void put_ByIdAndUserId_contentNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(put(path + "/10")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"My title\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(header().doesNotExist("Location"))
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.Note.Validations.CONTENT_IS_NULL_MSG));
-        verify(noteService, never()).putByIdAndUserId(any(), any(), any());
-    }
 
     @Test
     @WithMockUserWithId

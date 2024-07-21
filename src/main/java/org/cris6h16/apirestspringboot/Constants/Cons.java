@@ -77,8 +77,6 @@ public class Cons {
 
         public class Validations {
             public static final String TITLE_MAX_LENGTH_MSG = "Title must be less than 255 characters";
-            public static final String TITLE_IS_BLANK_MSG = "Title is required";
-            public static final String CONTENT_IS_NULL_MSG = "Content can be empty but not null";
             public static final short MAX_TITLE_LENGTH = 255;
         }
 

@@ -2,6 +2,8 @@ package org.cris6h16.apirestspringboot.Services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesToLowerConverter;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesTrimmer;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
@@ -60,7 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
         }
         dtoNotNull(dto);
-        dto.cleanAttributes();
+        prepareAttributes(dto);
 
         validateUsername(dto.getUsername());
         validateEmail(dto.getEmail());
@@ -97,7 +99,8 @@ public class UserServiceImpl implements UserService {
         verifyId(id); // coming from controller is never reached ( if is logged in then the principal.id is valid, and if try pass an invalid id then the security in the controller endpoint will deny the access (principal.id == idRequested ? grantAccess : denyAccess) )
 
         Optional<UserEntity> userO = userRepository.findById(id); // coming from controller is never reached ( controllers has the verification as principal.id == idRequested ? grantAccess : denyAccess )
-        if (userO.isEmpty()) throw new UserNotFoundException(); // if our app is not stateless && is multi-session, we may have that exception
+        if (userO.isEmpty())
+            throw new UserNotFoundException(); // if our app is not stateless && is multi-session, we may have that exception
 
         return createPublicUserDTO(userO.get());
     }
@@ -142,7 +145,7 @@ public class UserServiceImpl implements UserService {
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
         verifyId(id); // never reached coming from controller
         dtoNotNull(dto); // never reached coming from controller
-        dto.cleanAttributes();
+        prepareAttributes(dto);
 
         validateUsername(dto.getUsername());
 
@@ -164,7 +167,7 @@ public class UserServiceImpl implements UserService {
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
-        dto.cleanAttributes();
+        prepareAttributes(dto);
 
         validateEmail(dto.getEmail());
 
@@ -181,7 +184,7 @@ public class UserServiceImpl implements UserService {
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
-        dto.cleanAttributes();
+        prepareAttributes(dto);
 
         validatePassword(dto.getPassword());
 
@@ -261,8 +264,14 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-
     private <T> void dtoNotNull(T dto) {
         if (dto == null) throw new AnyUserDTOIsNullException();
     }
+
+    private <T> void prepareAttributes(T dto) {
+//       instanceof NullAttributesBlanker // not implemented in the DTOs used here ( due that these attributes has e.g. Dates, and I can't set a Date to "" )
+        if (dto instanceof NotNullAttributesTrimmer obj) obj.trimNotNullAttributes();
+        if (dto instanceof NotNullAttributesToLowerConverter obj) obj.toLowerCaseNotNullAttributes();
+    }
+
 }

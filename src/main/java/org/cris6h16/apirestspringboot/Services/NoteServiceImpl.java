@@ -1,19 +1,18 @@
 package org.cris6h16.apirestspringboot.Services;
 
-import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Notes.NullAttributesBlanker;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Entities.UserEntity;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.Common.InvalidIdException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.AnyNoteDTOIsNullException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.NoteNotFoundException;
-import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleIsBlankException;
+import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.NoteService.TitleMaxLengthFailException;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.UserNotFoundException;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.cris6h16.apirestspringboot.Services.Interfaces.NoteService;
-import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,14 +25,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.MAX_TITLE_LENGTH;
+
 /**
  * An implementation of {@link NoteService} interface
  *
- * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
 @Service
-@Slf4j
 public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
@@ -44,87 +43,55 @@ public class NoteServiceImpl implements NoteService {
         this.userRepository = userRepository;
     }
 
-
     @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
-    public Long create(CreateNoteDTO note, Long userId) { // @Valid doesn't work here
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
+    public Long create(CreateNoteDTO dto, Long userId) {
+        prepareAndVerifyDTOAndIds(dto, userId);
 
-        verifyId(userId);
-        attributesNotBlankNotNull(note); // content == null then content = ""
-
-        Optional<UserEntity> user = userRepository.findById(userId);
-        if (user.isEmpty()) throw new UserNotFoundException();
+        UserEntity user = getUserById(userId);
 
         NoteEntity noteEntity = NoteEntity.builder()
-                .title(note.getTitle())
-                .content(note.getContent())
+                .title(dto.getTitle())
+                .content(dto.getContent())
                 .updatedAt(new Date())
-                .user(user.get())
+                .user(user)
                 .build();
-        noteEntity = noteRepository.saveAndFlush(noteEntity); // Changed from `.save()` to one with flush, due to testing with H2
+        noteEntity = noteRepository.saveAndFlush(noteEntity);
 
         return noteEntity.getId();
     }
 
-    private void verifyId(Long... ids) {
-        for (Long id : ids) {
-            if (id == null || id <= 0) throw new InvalidIdException();
-        }
-    }
-
-    private void attributesNotBlankNotNull(CreateNoteDTO dto) {
-        if (dto == null) throw new AnyNoteDTOIsNullException();
-        if (dto.getTitle() == null || dto.getTitle().isBlank()) throw new TitleIsBlankException();
-        if (dto.getContent() == null) dto.setContent("");
-    }
-
     @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public PublicNoteDTO getByIdAndUserId(Long noteId, Long userId) {
         verifyId(userId, noteId);
 
-        Optional<NoteEntity> n = noteRepository.findByIdAndUserId(noteId, userId);
-        if (n.isEmpty()) throw new NoteNotFoundException();
+        NoteEntity noteEntity = noteRepository.findByIdAndUserId(noteId, userId)
+                .orElseThrow(NoteNotFoundException::new);
 
-        return createPublicNoteDTO(n.get());
+        return createPublicNoteDTO(noteEntity);
     }
 
-
     @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void putByIdAndUserId(Long noteId, Long userId, CreateNoteDTO dto) {
-        verifyId(userId, noteId);
-        attributesNotBlankNotNull(dto);
+        prepareAndVerifyDTOAndIds(dto, userId, noteId);
 
-        Optional<UserEntity> user = userRepository.findById(userId);
-        if (user.isEmpty()) throw new UserNotFoundException();
+        UserEntity user = getUserById(userId);
 
-        NoteEntity n = noteRepository
-                .findByIdAndUserId(noteId, userId) // If exists getById it, else create ==> exists || create ==> same ID
-                .orElse(NoteEntity.builder().id(noteId).build());
+        NoteEntity noteEntity = noteRepository.findByIdAndUserId(noteId, userId)
+                .orElse(NoteEntity.builder().id(noteId).user(user).build());
 
-        n.setTitle(dto.getTitle());
-        n.setContent(dto.getContent());
-        n.setUpdatedAt(new Date());
-        n.setUser(user.get());
+        noteEntity.setTitle(dto.getTitle());
+        noteEntity.setContent(dto.getContent());
+        noteEntity.setUpdatedAt(new Date());
 
-        noteRepository.saveAndFlush(n);
+        noteRepository.saveAndFlush(noteEntity);
     }
 
+
     @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void deleteByIdAndUserId(Long noteId, Long userId) {
         verifyId(userId, noteId);
         if (!userRepository.existsById(userId)) throw new UserNotFoundException();
@@ -134,50 +101,73 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
-    @Transactional(
-            isolation = Isolation.READ_COMMITTED,
-            rollbackFor = Exception.class
-    )
+    @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public List<PublicNoteDTO> getPage(Pageable pageable, Long userId) {
         if (pageable == null) throw new IllegalArgumentException("Pageable can't be null");
         verifyId(userId);
         if (!userRepository.existsById(userId)) throw new UserNotFoundException();
 
         Page<NoteEntity> page = noteRepository.findByUserId(userId,
-                // all elements are verified in the creation of the PageRequest then it is not necessary to verify them again ( IllegalArgumentException )
-                PageRequest.of(
-                        pageable.getPageNumber(),
-                        pageable.getPageSize(),
-                        pageable.getSort()
-                )
-        );
+                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()));
 
         return page.stream()
                 .map(this::createPublicNoteDTO)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(
-            isolation = Isolation.SERIALIZABLE,
-            rollbackFor = Exception.class
-    )
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE, rollbackFor = Exception.class)
     public void deleteAll() {
         noteRepository.deleteAll();
     }
 
+    private UserEntity getUserById(Long userId) {
+        return userRepository
+                .findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+    }
 
-    private PublicNoteDTO createPublicNoteDTO(NoteEntity n) {
-        if (n == null) n = NoteEntity.builder().build();
-        if (n.getId() == null) n.setId(-1L);
-        if (n.getTitle() == null) n.setTitle("");
-        if (n.getContent() == null) n.setContent("");
-
+    private PublicNoteDTO createPublicNoteDTO(NoteEntity noteEntity) {
         return PublicNoteDTO.builder()
-                .title(n.getTitle())
-                .content(n.getContent())
-                .id(n.getId())
-                .updatedAt(n.getUpdatedAt())
+                .title(Optional.ofNullable(noteEntity.getTitle()).orElse(""))
+                .content(Optional.ofNullable(noteEntity.getContent()).orElse(""))
+                .id(Optional.ofNullable(noteEntity.getId()).orElse(-1L))
+                .updatedAt(noteEntity.getUpdatedAt())
                 .build();
+    }
+
+    private void prepareAndVerifyDTOAndIds(CreateNoteDTO dto, Long... ids) {
+        verifyId(ids);
+        _dtoNotNull(dto);
+        _prepareAttributes(dto);
+
+        _verifyTitle(dto.getTitle());
+        _verifyContent(dto.getContent());
+    }
+
+    private void verifyId(Long... ids) {
+        for (Long id : ids) {
+            if (id == null || id <= 0) {
+                throw new InvalidIdException();
+            }
+        }
+    }
+
+    private void _verifyContent(String content) {
+        // at the moment we don't have any validation for content
+    }
+
+    private void _verifyTitle(String title) {
+        if (title.trim().length() > MAX_TITLE_LENGTH) {
+            throw new TitleMaxLengthFailException();
+        }
+    }
+
+    private <T> void _dtoNotNull(T dto) {
+        if (dto == null) throw new AnyNoteDTOIsNullException();
+    }
+
+    private <T extends NullAttributesBlanker> void _prepareAttributes(T dto) {
+        dto.toBlankNullAttributes();
     }
 }

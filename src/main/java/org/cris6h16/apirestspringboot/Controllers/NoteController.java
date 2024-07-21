@@ -47,7 +47,7 @@ public class NoteController {
     @PostMapping(
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateNoteDTO note,
+    public ResponseEntity<Void> create(@RequestBody(required = true)  CreateNoteDTO note,
                                        @MyId Long principalId) {
         Long id = noteService.create(note, principalId);
         URI uri = URI.create(path + "/" + id);
@@ -117,7 +117,7 @@ public class NoteController {
     )
     public ResponseEntity<Void> putByIdAndUserId(@PathVariable(required = true) Long noteId,
                                                  @MyId Long principalId,
-                                                 @RequestBody(required = true) @Valid CreateNoteDTO note) {
+                                                 @RequestBody(required = true)  CreateNoteDTO note) {
         noteService.putByIdAndUserId(noteId, principalId, note);
         return ResponseEntity.noContent().build();
     }

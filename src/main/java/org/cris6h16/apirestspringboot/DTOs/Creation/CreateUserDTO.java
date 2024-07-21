@@ -2,7 +2,8 @@ package org.cris6h16.apirestspringboot.DTOs.Creation;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
-import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesToLowerConverter;
+import org.cris6h16.apirestspringboot.DTOs.Interfaces.Users.NotNullAttributesTrimmer;
 
 
 /**
@@ -21,7 +22,7 @@ import org.cris6h16.apirestspringboot.DTOs.Interfaces.CleanableAttributes;
  * THEN: @JsonFormat  ->  indicate how your DTO is serialized and deserialized.
  */
 @JsonFormat
-public class CreateUserDTO implements CleanableAttributes {
+public class CreateUserDTO implements NotNullAttributesTrimmer, NotNullAttributesToLowerConverter {
     //    Verifications were centralized in the service layer(therefore theirs fail messages), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
 //    @NotBlank(message = USERNAME_LENGTH_FAIL_MSG)
 //    @NotBlank(message = PASSWORD_LENGTH_FAIL_MSG)
@@ -41,6 +42,6 @@ public class CreateUserDTO implements CleanableAttributes {
     public void toLowerCaseNotNullAttributes() {
         if (username != null) username = username.toLowerCase();
         if (email != null) email = email.toLowerCase();
-//        if (password != null) password = password.toLowerCase(); //password have not to pass to lowercase
+//        if (password != null) password = password.toLowerCase(); // password should not be lowercased
     }
 }

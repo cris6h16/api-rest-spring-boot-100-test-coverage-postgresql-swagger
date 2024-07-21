@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-public class TitleIsBlankException extends ProperExceptionForTheUser {
-    public TitleIsBlankException() {
-        super(HttpStatus.BAD_REQUEST, Cons.Note.Validations.TITLE_IS_BLANK_MSG);
+public class TitleMaxLengthFailException extends ProperExceptionForTheUser {
+    public TitleMaxLengthFailException() {
+        super(HttpStatus.BAD_REQUEST, Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
     }
 }

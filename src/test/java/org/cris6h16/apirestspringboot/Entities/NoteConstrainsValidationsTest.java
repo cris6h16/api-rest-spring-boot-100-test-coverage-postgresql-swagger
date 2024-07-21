@@ -1,7 +1,6 @@
 package org.cris6h16.apirestspringboot.Entities;
 
 
-import jakarta.validation.ConstraintViolationException;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
@@ -87,16 +86,15 @@ public class NoteConstrainsValidationsTest {
     }
 
     @Test
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_titleColumnIsTooLong() {
+    void DataIntegrityViolationException_titleColumnIsTooLong() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
 
         // Act && Assert
         assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: value too long for type character varying(255)] [insert int");
     }
 
     @Test
@@ -113,56 +111,17 @@ public class NoteConstrainsValidationsTest {
         assertThat(noteRepository.findAll()).hasSize(1);
         assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
     }
-
-//   Will never be reached, because jakarta.validation is first than hibernate validations
-//    @Test
-//    @Tag("DataIntegrityViolationException")
-//    void DataIntegrityViolationException_titleColumnIsNull() {
-//        // Arrange
-//        note.setTitle(null);
-//
-//        // Act && Assert
-//        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-//                .isInstanceOf(DataIntegrityViolationException.class)
-//                .hasMessageContaining("some hibernate fail message");
-//    }
-
-
-
-    @Tag("ConstraintViolationException")
-    @ParameterizedTest
-    @ValueSource(strings = {"blank", "null", "empty"})
-    void ConstraintViolationException_titleIsBlankOrNullOrEmpty(String title) {
-        // Arrange
-        userRepository.saveAndFlush(usr);
-
-        title = switch (title) {
-            case "blank" -> "     ";
-            case "null" -> null;
-            case "empty" -> "";
-            default -> throw new IllegalArgumentException("Unexpected value: " + title);
-        };
-        note.setTitle(title);
-
-        // Act && Assert
-        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.Note.Validations.TITLE_IS_BLANK_MSG);
-    }
-
-
     @Test
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_titleIsTooLong() {
+    void DataIntegrityViolationException_titleColumnIsNull() {
         // Arrange
-        userRepository.saveAndFlush(usr);
-        note.setTitle("a".repeat(Cons.Note.Validations.MAX_TITLE_LENGTH + 1));
+        note.setTitle(null);
 
         // Act && Assert
         assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.Note.Validations.TITLE_MAX_LENGTH_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: null value in column \"title\" of relation \"notes\" violates not-null constraint");
     }
+
 
     @Test
     void Success_contentColumnLength_AtLeast500Chars() {
@@ -178,36 +137,20 @@ public class NoteConstrainsValidationsTest {
         assertThat(noteRepository.findAll().get(0)).isEqualTo(note);
     }
 
-//    Will never be reached, because jakarta.validation is first than hibernate validations
-//    @Test
-//    @Tag("DataIntegrityViolationException")
-//    void DataIntegrityViolationException_contentColumnIsNull() {
-//        // Arrange
-//        userRepository.saveAndFlush(usr);
-//        note.setContent(null);
-//
-//        // Act && Assert
-//        assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-//                .isInstanceOf(DataIntegrityViolationException.class)
-//                .hasMessageContaining("some hibernate fail message");
-//    }
-
     @Test
-    @Tag("ConstraintViolationException")
-    void ConstraintViolationException_contentIsNull() {
+    void DataIntegrityViolationException_contentColumnIsNull() {
         // Arrange
         userRepository.saveAndFlush(usr);
         note.setContent(null);
 
         // Act && Assert
         assertThatThrownBy(() -> noteRepository.saveAndFlush(note))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.Note.Validations.CONTENT_IS_NULL_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: null value in column \"content\" of relation \"notes\" violates not-null constraint");
     }
 
 
     @Test
-    @Tag("DataIntegrityViolationException")
     void DataIntegrityViolationException_updateAtColumnIsNull() {
         // Arrange
         userRepository.saveAndFlush(usr);
