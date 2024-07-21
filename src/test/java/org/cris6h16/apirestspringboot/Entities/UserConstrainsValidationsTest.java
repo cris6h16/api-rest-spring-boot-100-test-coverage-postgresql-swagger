@@ -1,12 +1,9 @@
 package org.cris6h16.apirestspringboot.Entities;
 
-import jakarta.validation.ConstraintViolationException;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -84,7 +81,6 @@ public class UserConstrainsValidationsTest {
 
 
     @Test
-    @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_usernameAlreadyExists() {
         // Arrange
         userRepository.saveAndFlush(usr);
@@ -103,7 +99,6 @@ public class UserConstrainsValidationsTest {
 
 
     @Test
-    @Tag(value = "DataIntegrityViolationException")
     void DataIntegrityViolationException_emailAlreadyExists() {
         // Arrange
         userRepository.saveAndFlush(usr);
@@ -121,14 +116,35 @@ public class UserConstrainsValidationsTest {
     }
 
     @Test
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_usernameColumn_usernameTooLong() {
+    void DataIntegrityViolationException_UsernameIsNull() {
+        // Arrange
+        usr.setUsername(null);
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("""
+                        atement [ERROR: null value in column "username" of relation "users" violates not-null constraint
+                        """);
+    }
+
+    @Test
+    void DataIntegrityViolationException_UsernameTooShort() {
+        // Arrange
+        usr.setUsername("a".repeat(Cons.User.Validations.MIN_USERNAME_LENGTH - 1));
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("statement [ERROR: new row for relation \"users\" violates check constraint \"users_username_check\"");
+    }
+
+    @Test
+    void DataIntegrityViolationException_UsernameTooLong() {
         // Arrange
         usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1));
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_MAX_LENGTH_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: value too long for type character varying(20)] [ins");
     }
 
     @Test
@@ -139,136 +155,104 @@ public class UserConstrainsValidationsTest {
         userRepository.saveAndFlush(usr);
     }
 
-//    Will never reached, because my jakarta validation is before the hibernate validation
-//    @Test
-//    @Tag(value = "DataIntegrityViolationException")
-//    void DataIntegrityViolationException_usernameColumn_isNull() {
-//        // Arrange
-//        usr.setUsername(null);
-//        // Act & Assert
-//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-//                .isInstanceOf(DataIntegrityViolationException.class)
-//                .hasMessageContaining("some hibernate exception message");
-//    }
-
-
-
     @Test
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_usernameTooLong() {
+    void Successful_usernameColumn_usernameMaximumLength() {
         // Arrange
-        usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1));
-        // Act & Assert
-        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_MAX_LENGTH_MSG);
-    }
-
-
-    @ParameterizedTest
-    @ValueSource(strings = {"blank", "empty", "null"})
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_usernameIsBlankOrEmptyOrNull(String username) {
-        // Arrange
-        username = switch (username) {
-            case "blank" -> "             ";
-            case "empty" -> "";
-            case "null" -> null;
-            default -> throw new IllegalArgumentException("unexpected value: " + username);
-        };
-        usr.setUsername(username);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.USERNAME_IS_BLANK_MSG);
-    }
-
-//   Will never reached, because my jakarta validation is before the hibernate validation
-//    @Test
-//    @Tag(value = "DataIntegrityViolationException")
-//    void DataIntegrityViolationException_passwordColumn_isNull() {
-//        // Arrange
-//        usr.setPassword(null);
-//        // Act & Assert
-//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-//                .isInstanceOf(DataIntegrityViolationException.class)
-//                .hasMessageContaining("some hibernate exception message");
-//    }
-
-    @Test
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_passwordColumn_LetAtLeast300Characters() { // definition should be text
-        // Arrange
-        usr.setPassword("a".repeat(300));
+        usr.setUsername("a".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH));
         // Act & Assert
         userRepository.saveAndFlush(usr);
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank", "empty", "tooShort"})
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_passwordIsNullOrBlankOrEmptyOrTooShort(String password) {
+    @Test
+    void DataIntegrityViolationException_passwordIsNull() {
         // Arrange
-        password = switch (password) {
-            case "null" -> null;
-            case "blank" -> "             ";
-            case "empty" -> "";
-            case "tooShort" -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
-            default -> throw new IllegalArgumentException("unexpected value: " + password);
-        };
         usr.setPassword(null);
-
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: null value in column \"password\" of relation \"users\" violates not-null constraint");
     }
-
-//   Will never reached, because my jakarta validation is before the hibernate validation
-//    @Test
-//    @Tag(value = "DataIntegrityViolationException")
-//    void DataIntegrityViolationException_emailColumn_isNull() {
-//        // Arrange
-//        usr.setEmail(null);
-//        // Act & Assert
-//        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-//                .isInstanceOf(DataIntegrityViolationException.class)
-//                .hasMessageContaining("some hibernate exception message");
-//    }
-
-
-
 
     @Test
-    @Tag(value = "ConstraintViolationException")
-    void ConstraintViolationException_emailInvalid() {
+    void DataIntegrityViolationException_passwordTooShort() {
         // Arrange
-        usr.setEmail("cris6h16");
+        usr.setPassword("a".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1));
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_INVALID_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: new row for relation \"users\" violates check constraint \"users_password_check\"");
     }
 
-
-    @Tag(value = "ConstraintViolationException")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank", "empty"})
-    void ConstraintViolationException_emailIsNullOrBlankOrEmpty(String email) {
+    @Test
+void DataIntegrityViolationException_passwordTooLong() {
         // Arrange
-        email = switch (email) {
-            case "null" -> null;
-            case "blank" -> "             ";
-            case "empty" -> "";
-            default -> throw new IllegalArgumentException("unexpected value: " + email);
-        };
-        usr.setEmail(email);
-
+        usr.setPassword("a".repeat(Cons.User.Validations.MAX_PASSWORD_LENGTH_ENCRYPTED + 1));
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
-                .isInstanceOf(ConstraintViolationException.class)
-                .hasMessageContaining(Cons.User.Validations.EMAIL_IS_BLANK_MSG);
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: value too long for type character varying(1000)] [in");
+    }
+
+    @Test
+    void Successful_passwordColumn_passwordMinimumLength() {
+        // Arrange
+        usr.setPassword("a".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH));
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
+    }
+
+    @Test
+    void Successful_passwordColumn_passwordMaximumLength() {
+        // Arrange
+        usr.setPassword("a".repeat(Cons.User.Validations.MAX_PASSWORD_LENGTH_ENCRYPTED));
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
+    }
+
+    @Test
+    void DataIntegrityViolationException_emailIsNull() {
+        // Arrange
+        usr.setEmail(null);
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: null value in column \"email\" of relation \"users\" violates not-null constraint");
+    }
+
+    @Test
+    void DataIntegrityViolationException_emailTooShort() {
+        // Arrange
+        usr.setEmail("a".repeat(Cons.User.Validations.MIN_EMAIL_LENGTH - 1));
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: new row for relation \"users\" violates check constraint \"users_email_check\"");
+    }
+
+    @Test
+    void DataIntegrityViolationException_emailTooLong() {
+        // Arrange
+        usr.setEmail("a".repeat(Cons.User.Validations.MAX_EMAIL_LENGTH + 1));
+        // Act & Assert
+        assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("could not execute statement [ERROR: value too long for type character varying(255)] [i");
+    }
+
+    @Test
+    void Successful_emailColumn_emailMinimumLength() {
+        // Arrange
+        usr.setEmail("a".repeat(Cons.User.Validations.MIN_EMAIL_LENGTH));
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
+    }
+
+    @Test
+    void Successful_emailColumn_emailMaximumLength() {
+        // Arrange
+        usr.setEmail("a".repeat(Cons.User.Validations.MAX_EMAIL_LENGTH));
+        // Act & Assert
+        userRepository.saveAndFlush(usr);
     }
 
 
@@ -280,7 +264,7 @@ public class UserConstrainsValidationsTest {
         // Act & Assert
         assertThatThrownBy(() -> userRepository.saveAndFlush(usr))
                 .isInstanceOf(DataIntegrityViolationException.class)
-                .hasMessageContaining("null value in column \"created_at\"");
+                .hasMessageContaining("could not execute statement [ERROR: null value in column \"created_at\" of relation \"users\" violates not-null constraint");
     }
 
     @Test

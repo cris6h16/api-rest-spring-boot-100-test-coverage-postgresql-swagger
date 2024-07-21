@@ -265,7 +265,7 @@ public class UserServiceImplTest {
     @Tag("create")
     @ParameterizedTest
     @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong", "isNotEmail"})
-    void create_emailNullOrBlank_ThenEmailIsInvalidException(String str) {
+    void create_emailNullOrBlankOrEmptyOrTooShortOrTooLongOrIsNotEmail_ThenEmailIsInvalidException(String str) {
         // Arrange
         String email = switch (str) {
             case "null" -> null;
@@ -283,7 +283,7 @@ public class UserServiceImplTest {
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
                 .isInstanceOf(EmailIsInvalidException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_INVALID_MSG)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
@@ -291,21 +291,25 @@ public class UserServiceImplTest {
 
     @Tag("create")
     @ParameterizedTest
-    @ValueSource(strings = {"null", "blank", "tooShort"})
-    void create_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong"})
+    void create_passwordNullOrBlankOrEmptyOrTooShortOrTooLong_ThenPlainPasswordLengthException(String str){
         // Arrange
-        CreateUserDTO dtoToCreate = createValidDTO();
         String password = switch (str) {
             case "null" -> null;
             case "blank" -> "   ";
-            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+            case "empty" -> "";
+            case "tooShort" -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+            case "tooLong" -> "2".repeat(Cons.User.Validations.MAX_PASSWORD_LENGTH_PLAIN + 1);
+            default -> throw new IllegalStateException("unexpected value: " + str);
         };
+
+        CreateUserDTO dtoToCreate = createValidDTO();
         dtoToCreate.setPassword(password);
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
-                .isInstanceOf(PasswordTooShortException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .isInstanceOf(PlainPasswordLengthException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.PASSWORD_LENGTH_FAIL_MSG)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
@@ -368,8 +372,7 @@ public class UserServiceImplTest {
 
     @Tag("getById")
     @ParameterizedTest
-    @ValueSource(longs = {0, -1, -999})
-        // -999 == null
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
     void getById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
         Long id = longs == -999 ? null : longs;
@@ -444,8 +447,7 @@ public class UserServiceImplTest {
 
     @Tag("deleteById")
     @ParameterizedTest
-    @ValueSource(longs = {0, -1, -999})
-        // -999 == null
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
     void deleteById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
         Long id = longs == -999 ? null : longs;
@@ -540,8 +542,7 @@ public class UserServiceImplTest {
 
     @Tag("patchUsernameById")
     @ParameterizedTest
-    @ValueSource(longs = {0, -1, -999})
-        // -999 == null
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
     void patchUsernameById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
         Long id = longs == -999 ? null : longs;
@@ -570,25 +571,6 @@ public class UserServiceImplTest {
     }
 
 
-    @Tag("patchUsernameById")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank"})
-    void patchUsernameById_usernameNullOrBlank_ThenUsernameIsBlankException(String str) {
-        // Arrange
-        Long id = 1L;
-        PatchUsernameUserDTO dto = mock(PatchUsernameUserDTO.class);
-        String username = str.equals("null") ? null : "   ";
-
-        when(dto.getUsername()).thenReturn(username);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).updateUsernameById(any(), any());
-    }
-
     @Test
     @Tag("patchUsernameById")
     void patchUsernameById_TrimFields() {
@@ -608,6 +590,33 @@ public class UserServiceImplTest {
 
         // Assert
         verify(userRepository).updateUsernameById(cleanUsername, id);
+    }
+
+
+
+    @Tag("patchUsernameById")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong"})
+    void patchUsernameById_usernameNullOrBlankOrEmptyOrTooShortOrTooLong_ThenUsernameLengthException(String str) {
+        // Arrange
+        Long id = 1L;
+        String username = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            case "empty" -> "";
+            case "tooShort" -> "a".repeat(Cons.User.Validations.MIN_USERNAME_LENGTH - 1);
+            case "tooLong" -> "b".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1);
+            default -> throw new IllegalStateException("unexpected value: " + str);
+        };
+
+        PatchUsernameUserDTO dto = new PatchUsernameUserDTO(username);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchUsernameById(id, dto))
+                .isInstanceOf(UsernameLengthException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_LENGTH_FAIL_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updateUsernameById(any(), any());
     }
 
     @Test
@@ -676,8 +685,7 @@ public class UserServiceImplTest {
 
     @Tag("patchEmailById")
     @ParameterizedTest
-    @ValueSource(longs = {0, -1, -999})
-        // -999 == null
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
     void patchEmailById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
         Long id = longs == -999 ? null : longs;
@@ -705,24 +713,6 @@ public class UserServiceImplTest {
         verify(userRepository, never()).updateEmailById(any(), any());
     }
 
-    @Tag("patchEmailById")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank"})
-    void patchEmailById_emailNullOrBlank_ThenEmailIsBlankException(String str) {
-        // Arrange
-        Long id = 1L;
-        PatchEmailUserDTO dto = mock(PatchEmailUserDTO.class);
-        String email = str.equals("null") ? null : "   ";
-
-        when(dto.getEmail()).thenReturn(email);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(EmailIsBlankException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).updateEmailById(any(), any());
-    }
 
     @Test
     @Tag("patchEmailById")
@@ -745,6 +735,31 @@ public class UserServiceImplTest {
         verify(userRepository).updateEmailById(cleanEmail, id);
     }
 
+    @Tag("patchEmailById")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong", "isNotEmail"})
+    void patchEmailById_emailNullOrBlankOrEmptyOrTooShortOrTooLongOrIsNotEmail_ThenEmailIsInvalidException(String str) {
+        // Arrange
+        Long id = 1L;
+        String email = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            case "empty" -> "";
+            case "tooShort" -> "a".repeat(Cons.User.Validations.MIN_EMAIL_LENGTH - 1);
+            case "tooLong" -> "b".repeat(Cons.User.Validations.MAX_EMAIL_LENGTH + 1);
+            case "isNotEmail" -> "thisIsNotAnEmail";
+            default -> throw new IllegalStateException("unexpected value: " + str);
+        };
+
+        PatchEmailUserDTO dto = new PatchEmailUserDTO(email);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchEmailById(id, dto))
+                .isInstanceOf(EmailIsInvalidException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_INVALID_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updateEmailById(any(), any());
+    }
 
     @Test
     @Tag("patchEmailById")
@@ -806,8 +821,7 @@ public class UserServiceImplTest {
 
     @Tag("patchPasswordById")
     @ParameterizedTest
-    @ValueSource(longs = {0, -1, -999})
-        // -999 == null
+    @ValueSource(longs = {0, -1, -999})/* -999 == null */
     void patchPasswordById_IdNullOrLessThan1_ThenInvalidIdException(long longs) {
         // Arrange
         Long id = longs == -999 ? null : longs;
@@ -835,29 +849,6 @@ public class UserServiceImplTest {
         verify(userRepository, never()).updatePasswordById(any(), any());
     }
 
-    @Tag("patchPasswordById")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank"})
-    void patchPasswordById_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
-        // Arrange
-        Long id = 1L;
-        PatchPasswordUserDTO dto = mock(PatchPasswordUserDTO.class);
-        String password = switch (str) {
-            case "null" -> null;
-            case "blank" -> "   ";
-            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
-        };
-
-        when(dto.getPassword()).thenReturn(password);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
-                .isInstanceOf(PasswordTooShortException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).updatePasswordById(any(), any());
-    }
-
     @Test
     @Tag("patchPasswordById")
     void patchPasswordById_TrimFields() {
@@ -878,6 +869,32 @@ public class UserServiceImplTest {
         // Assert
         verify(passwordEncoder).encode(cleanPassword);
         verify(userRepository).updatePasswordById("{bcrypt}$2a81...", id);
+    }
+
+
+    @Tag("patchPasswordById")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong"})
+    void patchPasswordById_passwordNullOrBlankOrEmptyOrTooShortOrTooLong_ThenPlainPasswordLengthException(String str) {
+        // Arrange
+        Long id = 1L;
+        String password = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            case "empty" -> "";
+            case "tooShort" -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+            case "tooLong" -> "2".repeat(Cons.User.Validations.MAX_PASSWORD_LENGTH_PLAIN + 1);
+            default -> throw new IllegalStateException("unexpected value: " + str);
+        };
+
+        PatchPasswordUserDTO dto = new PatchPasswordUserDTO(password);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.patchPasswordById(id, dto))
+                .isInstanceOf(PlainPasswordLengthException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.PASSWORD_LENGTH_FAIL_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).updatePasswordById(any(), any());
     }
 
 

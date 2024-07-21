@@ -34,7 +34,7 @@ public class Cons {
         public class Validations {
             public static final short MAX_EMAIL_LENGTH = 255;
             public static final short MIN_EMAIL_LENGTH = 5;
-            public static final String EMAIL_IS_INVALID_MDG = "Email is invalid";
+            public static final String EMAIL_IS_INVALID_MSG = "Email is invalid";
 
 
 

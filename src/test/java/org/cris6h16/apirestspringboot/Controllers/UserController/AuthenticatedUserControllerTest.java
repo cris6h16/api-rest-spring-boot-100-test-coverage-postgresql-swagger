@@ -281,48 +281,6 @@ class AuthenticatedUserControllerTest {
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_username + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"cris6h16\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_givenEmptyUsername_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_username + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchUsernameById_UsernameNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_username + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.USERNAME_IS_BLANK_MSG));
-
-        verify(userService, never()).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
     void patchUsernameById_UnhandledExceptionRaisedInService_PassedToAdviceSuccessfully() throws Exception {
         doThrow(new NullPointerException("Unhandled Exception " + Cons.TESTING.UNHANDLED_EXCEPTION_MSG_FOR_TESTING_PURPOSES))
                 .when(userService).patchUsernameById(any(Long.class), any(PatchUsernameUserDTO.class));
@@ -465,47 +423,6 @@ class AuthenticatedUserControllerTest {
         verify(userService, never()).patchEmailById(any(), any());
     }
 
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"cristianmherrera21@gmail.com\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_givenEmptyEmail_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchEmailById_EmailNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_email + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.EMAIL_IS_BLANK_MSG));
-
-        verify(userService, never()).patchEmailById(any(Long.class), any(PatchEmailUserDTO.class));
-    }
 
     @Test
     @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
@@ -652,47 +569,6 @@ class AuthenticatedUserControllerTest {
                 .andExpect(status().isForbidden())
                 .andExpect(content().bytes(new byte[0]));
         verify(userService, never()).patchPasswordById(any(), any());
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_givenInvalidJsonAttributes_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"hello\":\"1234567\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_givenEmptyPassword_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"password\":\"\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
-    }
-
-    @Test
-    @WithMockUserWithId(id = 1L, roles = {"ROLE_USER"})
-    void patchPasswordById_PasswordNotPassed_DTO_Then400_BAD_REQUEST() throws Exception {
-        this.mvc.perform(patch(path_patch_password + "/1")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.message").value(Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG));
-
-        verify(userService, never()).patchPasswordById(any(Long.class), any(PatchPasswordUserDTO.class));
     }
 
     @Test

@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
         }
         dtoNotNull(dto); // never reached if the controller has @Valid
-        trimAndToLower(dto);
+        dto.trimNotNullAttributes();
 
         validateUsername(dto.getUsername());
         validateEmail(dto.getEmail());
@@ -143,7 +143,8 @@ public class UserServiceImpl implements UserService {
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
         verifyId(id); // never reached coming from controller
         dtoNotNull(dto); // never reached coming from controller
-        dto.setUsername(dto.getUsername().toLowerCase().trim());
+        dto.trimNotNullAttributes();
+
         validateUsername(dto.getUsername());
 
         if (!userRepository.existsById(id))
@@ -164,8 +165,8 @@ public class UserServiceImpl implements UserService {
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
+        dto.trimNotNullAttributes();
 
-        dto.setEmail(dto.getEmail().toLowerCase().trim());
         validateEmail(dto.getEmail());
 
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
@@ -181,9 +182,10 @@ public class UserServiceImpl implements UserService {
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
         verifyId(id);
         dtoNotNull(dto);
+        dto.trimNotNullAttributes();
 
-        dto.setPassword(dto.getPassword().trim());
         validatePassword(dto.getPassword());
+
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }
@@ -198,46 +200,35 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void trimAndToLower(CreateUserDTO dto) {
-        dto.setEmail(dto.getEmail().toLowerCase().trim());
-        dto.setPassword(dto.getPassword().toLowerCase().trim());
-        dto.setUsername(dto.getUsername().toLowerCase().trim());
-    }
-
-
     private void validatePassword(String password) {
-        boolean isNull = password == null;
-        boolean isTooShort = !isNull && password.trim().length() < MIN_PASSWORD_LENGTH;
-        boolean isTooLong = !isNull && password.trim().length() > MAX_PASSWORD_LENGTH_PLAIN;
+        if (password == null) throw new PlainPasswordLengthException();
 
-        boolean lengthFail = isNull || isTooShort || isTooLong;
+        boolean isTooShort = password.trim().length() < MIN_PASSWORD_LENGTH;
+        boolean isTooLong = password.trim().length() > MAX_PASSWORD_LENGTH_PLAIN;
+
+        boolean lengthFail = isTooShort || isTooLong;
         if (lengthFail) throw new PlainPasswordLengthException();
     }
 
     private void validateUsername(String username) {
-        boolean isNull = username == null;
-        boolean isTooShort = !isNull && username.trim().length() < MIN_USERNAME_LENGTH;
-        boolean isTooLong = !isNull && username.trim().length() > MAX_USERNAME_LENGTH;
+        if (username == null) throw new UsernameLengthException();
 
-        boolean lengthFail = isNull || isTooShort || isTooLong;
+        boolean isTooShort = username.trim().length() < MIN_USERNAME_LENGTH;
+        boolean isTooLong = username.trim().length() > MAX_USERNAME_LENGTH;
+
+        boolean lengthFail = isTooShort || isTooLong;
         if (lengthFail) throw new UsernameLengthException();
     }
 
     private void validateEmail(String email) {
-        boolean isNull = true;
-        boolean isTooShort = true;
-        boolean isTooLong = true;
-        boolean isEmail = true;
+        if (email == null) throw new EmailIsInvalidException();
 
-        isNull = email == null;
-        if (!isNull) {
-            isTooShort = email.trim().length() < MIN_EMAIL_LENGTH;
-            isTooLong = email.trim().length() > MAX_EMAIL_LENGTH;
-            isEmail = email.trim().matches("/^\\S+@\\S+\\.\\S+$/"); //-->  / = start of the regex, ^ = start of the string, \S = any non-whitespace character, + = one or more, @ = @, \S = any non-whitespace character, + = one or more, \. = ., \S = any non-whitespace character, + = one or more, $ = end of the string, / = end of the regex
-        }
+        boolean isTooShort = email.trim().length() < MIN_EMAIL_LENGTH;
+        boolean isTooLong = email.trim().length() > MAX_EMAIL_LENGTH;
+        boolean isEmail = email.trim().matches("^\\S+@\\S+\\.\\S+$"); //--> ^ = start of the string, \S = any non-whitespace character, + = one or more, @ = @, \S = any non-whitespace character, + = one or more, \. = ., \S = any non-whitespace character, + = one or more, $ = end of the string
 
-        boolean lengthFail = isNull || isTooShort || isTooLong || !isEmail;
-        if (lengthFail) throw new EmailIsInvalidException();
+        boolean emailInvalid = isTooShort || isTooLong || !isEmail;
+        if (emailInvalid) throw new EmailIsInvalidException();
     }
 
     /**
