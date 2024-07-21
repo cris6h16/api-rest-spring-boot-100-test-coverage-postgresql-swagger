@@ -3,13 +3,8 @@ package org.cris6h16.apirestspringboot.DTOs.Creation;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import org.cris6h16.apirestspringboot.Entities.ERole;
-import org.cris6h16.apirestspringboot.Entities.UserEntity;
-import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_IS_BLANK_MSG;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG;
 
 
 /**
@@ -29,13 +24,11 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.InS
  */
 @JsonFormat
 public class CreateUserDTO {
-
-    @NotBlank(message = USERNAME_IS_BLANK_MSG)
+//    Verifications were centralized in the service layer(therefore theirs fail messages), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
+//    @NotBlank(message = USERNAME_LENGTH_FAIL_MSG)
+//    @NotBlank(message = PASSWORD_LENGTH_FAIL_MSG)
+//    @NotBlank(message = EMAIL_IS_INVALID_MDG)
     private String username;
-
-    @NotBlank(message = PASS_IS_TOO_SHORT_MSG)
     private String password;
-
-    @NotBlank(message = EMAIL_IS_BLANK_MSG)
     private String email;
 }

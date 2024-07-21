@@ -52,7 +52,6 @@ public class PublicUserController {
             summary = "create a new user",
             description = "Create a new user with the data provided in the request body. The user will have the role USER by default",
             method = "POST",
-
             responses = {
                     @ApiResponse(
                             responseCode = "201",
@@ -61,13 +60,7 @@ public class PublicUserController {
                                     @Header(
                                             name = "Location",
                                             description = "URI of the created user",
-                                            schema = @Schema(type = "string"),
-                                            examples = {
-                                                    @ExampleObject(
-                                                            name = "user created",
-                                                            value = "/api/v1/users/5" // todo: replace the hardcoded
-                                                    )
-                                            }
+                                            example = "/api/v1/users/5"
                                     )
                             },
                             content = @Content
@@ -155,12 +148,23 @@ public class PublicUserController {
                                             }
                                     )
                             }
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Any unexpected error occurred while processing the request"
                     )
-            }
+            },
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "User data to create",
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = CreateUserDTO.class),
+                            mediaType = MediaType.APPLICATION_JSON_VALUE
+                    )
+            )
     )
-
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> create(@RequestBody(required = true) @Valid CreateUserDTO user) {
+    public ResponseEntity<Void> create(@RequestBody(required = true) CreateUserDTO user) {
         Long id = userService.create(user, ERole.ROLE_USER);
         URI uri = URI.create(path + "/" + id);
         return ResponseEntity.created(uri).build();

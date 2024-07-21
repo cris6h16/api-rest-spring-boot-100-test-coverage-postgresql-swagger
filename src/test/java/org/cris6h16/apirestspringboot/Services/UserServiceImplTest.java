@@ -176,20 +176,6 @@ public class UserServiceImplTest {
         return set1.equals(set2);
     }
 
-    @Test
-    @Tag("create")
-    void create_nullDTO_ThenAnyUserDTOIsNullException() {
-        // Arrange
-        CreateUserDTO dtoToCreate = null;
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
-                .isInstanceOf(AnyUserDTOIsNullException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
     //    @Test
     @Tag("create")
     @ParameterizedTest
@@ -205,62 +191,20 @@ public class UserServiceImplTest {
         verify(userRepository, never()).saveAndFlush(any());
     }
 
+    @Test
     @Tag("create")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank"})
-    void create_usernameNullOrBlank_ThenUsernameIsBlankException(String str) {
+    void create_nullDTO_ThenAnyUserDTOIsNullException() {
         // Arrange
-        CreateUserDTO dtoToCreate = createValidDTO();
-        String username = str.equals("null") ? null : "   ";
-        dtoToCreate.setUsername(username);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate, new ERole[]{ERole.ROLE_USER, ERole.ROLE_ADMIN}))
-                .isInstanceOf(UsernameIsBlankException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_IS_BLANK_MSG)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
-
-
-    @Tag("create")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank"})
-    void create_emailNullOrBlank_ThenEmailIsBlankException(String str) {
-        // Arrange
-        CreateUserDTO dtoToCreate = createValidDTO();
-        String email = str.equals("null") ? null : "   ";
-        dtoToCreate.setEmail(email);
+        CreateUserDTO dtoToCreate = null;
 
         // Act & Assert
         assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
-                .isInstanceOf(EmailIsBlankException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .isInstanceOf(AnyUserDTOIsNullException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.DTO.ANY_RELATED_DTO_WITH_USER_NULL)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
         verify(userRepository, never()).saveAndFlush(any());
     }
 
-
-    @Tag("create")
-    @ParameterizedTest
-    @ValueSource(strings = {"null", "blank", "tooShort"})
-    void create_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
-        // Arrange
-        CreateUserDTO dtoToCreate = createValidDTO();
-        String password = switch (str) {
-            case "null" -> null;
-            case "blank" -> "   ";
-            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
-        };
-        dtoToCreate.setPassword(password);
-
-        // Act & Assert
-        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
-                .isInstanceOf(PasswordTooShortException.class)
-                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
-        verify(userRepository, never()).saveAndFlush(any());
-    }
 
 
     @Test
@@ -289,6 +233,83 @@ public class UserServiceImplTest {
                         passedToDb.getPassword().equals("{bcrypt}$2a81..."))
         );
     }
+
+
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong"})
+    void create_usernameNullOrBlankOrEmptyOrTooShortOrTooLong_ThenUsernameLengthException(String str) {
+        // Arrange
+        String username = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            case "empty" -> "";
+            case "tooShort" -> "a".repeat(Cons.User.Validations.MIN_USERNAME_LENGTH - 1);
+            case "tooLong" -> "b".repeat(Cons.User.Validations.MAX_USERNAME_LENGTH + 1);
+            default -> throw new IllegalStateException("unexpected value: " + str);
+        };
+
+        CreateUserDTO dtoToCreate = createValidDTO();
+        dtoToCreate.setUsername(username);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, new ERole[]{ERole.ROLE_USER, ERole.ROLE_ADMIN}))
+                .isInstanceOf(UsernameLengthException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.USERNAME_LENGTH_FAIL_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "empty", "tooShort", "tooLong", "isNotEmail"})
+    void create_emailNullOrBlank_ThenEmailIsInvalidException(String str) {
+        // Arrange
+        String email = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            case "empty" -> "";
+            case "tooShort" -> "a".repeat(Cons.User.Validations.MIN_EMAIL_LENGTH - 1);
+            case "tooLong" -> "b".repeat(Cons.User.Validations.MAX_EMAIL_LENGTH + 1);
+            case "isNotEmail" -> "thisIsNotAnEmail";
+            default -> throw new IllegalStateException("unexpected value: " + str);
+        };
+
+        CreateUserDTO dtoToCreate = createValidDTO();
+        dtoToCreate.setEmail(email);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(EmailIsInvalidException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.EMAIL_IS_BLANK_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+
+    @Tag("create")
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "blank", "tooShort"})
+    void create_passwordNullOrBlankOrTooShort_ThenPasswordTooShortException(String str) {
+        // Arrange
+        CreateUserDTO dtoToCreate = createValidDTO();
+        String password = switch (str) {
+            case "null" -> null;
+            case "blank" -> "   ";
+            default -> "1".repeat(Cons.User.Validations.MIN_PASSWORD_LENGTH - 1);
+        };
+        dtoToCreate.setPassword(password);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(PasswordTooShortException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
 
 
     private UserEntity createUserEntityWithIdAndRolesWithId() {

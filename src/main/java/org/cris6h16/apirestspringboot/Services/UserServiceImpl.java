@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.MIN_PASSWORD_LENGTH;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
 
 
 /**
@@ -56,14 +56,18 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public Long create(CreateUserDTO dto, ERole... roles) { // @Valid doesn't work here
-        if (roles == null || roles.length == 0) throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
+        if (roles == null || roles.length == 0) {
+            throw new IllegalArgumentException("Roles can't be empty"); // implementation fail, we don't show the message to the user
+        }
+        dtoNotNull(dto); // never reached if the controller has @Valid
+        trimAndToLower(dto);
+
+        validateUsername(dto.getUsername());
+        validateEmail(dto.getEmail());
+        validatePassword(dto.getPassword());
 
         UserEntity user;
         Set<RoleEntity> rolesEntities = new HashSet<>(roles.length);
-
-        attributesNotBlankNotNull(dto);
-        trimAndToLower(dto);
-        validatePassword(dto.getPassword());
 
         for (ERole role : roles) {
             RoleEntity roleDB = roleRepository
@@ -90,10 +94,11 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public PublicUserDTO getById(Long id) {
-        verifyId(id);
+        verifyId(id); // coming from controller is never reached ( if is logged in then the principal.id is valid, and if try pass an invalid id then the security in the controller endpoint will deny the access (principal.id == idRequested ? grantAccess : denyAccess) )
 
-        Optional<UserEntity> userO = userRepository.findById(id);
-        if (userO.isEmpty()) throw new UserNotFoundException();
+        Optional<UserEntity> userO = userRepository.findById(id); // coming from controller is never reached ( controllers has the verification as principal.id == idRequested ? grantAccess : denyAccess )
+        if (userO.isEmpty())
+            throw new UserNotFoundException(); // if our app is not stateless && is multi-session, we may have that exception
 
         return createPublicUserDTO(userO.get());
     }
@@ -105,8 +110,8 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void deleteById(Long id) {
-        verifyId(id);
-        if (!userRepository.existsById(id)) throw new UserNotFoundException();
+        verifyId(id); // never reached coming from controller
+        if (!userRepository.existsById(id)) throw new UserNotFoundException(); // never reached coming from controller
         userRepository.deleteById(id);
     }
 
@@ -136,11 +141,13 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
-        verifyId(id);
-        attributesNotBlankNotNull(dto);
-
+        verifyId(id); // never reached coming from controller
+        dtoNotNull(dto); // never reached coming from controller
         dto.setUsername(dto.getUsername().toLowerCase().trim());
-        if (!userRepository.existsById(id)) throw new UserNotFoundException();
+        validateUsername(dto.getUsername());
+
+        if (!userRepository.existsById(id))
+            throw new UserNotFoundException(); // never reached if is stateless and single-session
         if (userRepository.existsByUsername(dto.getUsername())) throw new UsernameAlreadyExistsException();
         userRepository.updateUsernameById(dto.getUsername(), id);
     }
@@ -156,9 +163,11 @@ public class UserServiceImpl implements UserService {
     )
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
         verifyId(id);
-        attributesNotBlankNotNull(dto);
+        dtoNotNull(dto);
 
         dto.setEmail(dto.getEmail().toLowerCase().trim());
+        validateEmail(dto.getEmail());
+
         if (!userRepository.existsById(id)) throw new UserNotFoundException();
         if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
         userRepository.updateEmailById(dto.getEmail(), id);
@@ -170,8 +179,8 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
-       verifyId(id);
-        attributesNotBlankNotNull(dto);
+        verifyId(id);
+        dtoNotNull(dto);
 
         dto.setPassword(dto.getPassword().trim());
         validatePassword(dto.getPassword());
@@ -195,11 +204,41 @@ public class UserServiceImpl implements UserService {
         dto.setUsername(dto.getUsername().toLowerCase().trim());
     }
 
+
     private void validatePassword(String password) {
-        boolean passFailLength = password != null && password.length() < MIN_PASSWORD_LENGTH;
-        if (passFailLength) throw new PasswordTooShortException();
+        boolean isNull = password == null;
+        boolean isTooShort = !isNull && password.trim().length() < MIN_PASSWORD_LENGTH;
+        boolean isTooLong = !isNull && password.trim().length() > MAX_PASSWORD_LENGTH_PLAIN;
+
+        boolean lengthFail = isNull || isTooShort || isTooLong;
+        if (lengthFail) throw new PlainPasswordLengthException();
     }
 
+    private void validateUsername(String username) {
+        boolean isNull = username == null;
+        boolean isTooShort = !isNull && username.trim().length() < MIN_USERNAME_LENGTH;
+        boolean isTooLong = !isNull && username.trim().length() > MAX_USERNAME_LENGTH;
+
+        boolean lengthFail = isNull || isTooShort || isTooLong;
+        if (lengthFail) throw new UsernameLengthException();
+    }
+
+    private void validateEmail(String email) {
+        boolean isNull = true;
+        boolean isTooShort = true;
+        boolean isTooLong = true;
+        boolean isEmail = true;
+
+        isNull = email == null;
+        if (!isNull) {
+            isTooShort = email.trim().length() < MIN_EMAIL_LENGTH;
+            isTooLong = email.trim().length() > MAX_EMAIL_LENGTH;
+            isEmail = email.trim().matches("/^\\S+@\\S+\\.\\S+$/"); //-->  / = start of the regex, ^ = start of the string, \S = any non-whitespace character, + = one or more, @ = @, \S = any non-whitespace character, + = one or more, \. = ., \S = any non-whitespace character, + = one or more, $ = end of the string, / = end of the regex
+        }
+
+        boolean lengthFail = isNull || isTooShort || isTooLong || !isEmail;
+        if (lengthFail) throw new EmailIsInvalidException();
+    }
 
     /**
      * Create a {@link PublicUserDTO} from a {@link UserEntity}<br>
@@ -233,36 +272,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void attributesNotBlankNotNull(CreateUserDTO dto) {
+    private <T> void dtoNotNull(T dto) {
         if (dto == null) throw new AnyUserDTOIsNullException();
-
-        boolean emailBlank = dto.getEmail() == null || dto.getEmail().isBlank();
-        boolean passwordBlank = dto.getPassword() == null || dto.getPassword().isBlank();
-        boolean usernameBlank = dto.getUsername() == null || dto.getUsername().isBlank();
-
-        if (emailBlank) throw new EmailIsBlankException();
-        if (passwordBlank) throw new PasswordTooShortException();
-        if (usernameBlank) throw new UsernameIsBlankException();
-    }
-
-    private void attributesNotBlankNotNull(PatchUsernameUserDTO dto) {
-        if (dto == null) throw new AnyUserDTOIsNullException();
-
-        boolean usernameBlank = dto.getUsername() == null || dto.getUsername().isBlank();
-        if (usernameBlank) throw new UsernameIsBlankException();
-    }
-
-    private void attributesNotBlankNotNull(PatchEmailUserDTO dto) {
-        if (dto == null) throw new AnyUserDTOIsNullException();
-
-        boolean emailBlank = dto.getEmail() == null || dto.getEmail().isBlank();
-        if (emailBlank) throw new EmailIsBlankException();
-    }
-
-    private void attributesNotBlankNotNull(PatchPasswordUserDTO dto) {
-        if (dto == null) throw new AnyUserDTOIsNullException();
-
-        boolean passwordBlank = dto.getPassword() == null || dto.getPassword().isBlank();
-        if (passwordBlank) throw new PasswordTooShortException();
     }
 }

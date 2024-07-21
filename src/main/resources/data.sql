@@ -1,0 +1,14 @@
+-- CREATE OR REPLACE FUNCTION isEmail(email TEXT) RETURNS
+--     BOOLEAN AS
+-- -- $$
+-- '
+-- BEGIN
+--     IF email IS NULL OR LENGTH(TRIM(email)) = 0 THEN
+--         RETURN FALSE;
+--     END IF;
+--
+--     RETURN (POSITION(''@'' IN email) > 0) AND (POSITION(''.'' IN email) > 0) AND (LENGTH(email) >= 5);
+-- END;
+-- -- $$
+--     '
+--     LANGUAGE plpgsql;

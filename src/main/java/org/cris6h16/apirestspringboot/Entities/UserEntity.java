@@ -3,9 +3,7 @@ package org.cris6h16.apirestspringboot.Entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.cris6h16.apirestspringboot.Constants.Cons;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -23,9 +21,14 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.*;
  */
 @Entity
 @Table(name = "users",
-        uniqueConstraints = { // for `UNIQUE CONSTRAINT` elements, the indexes are created automatically
+        uniqueConstraints = {
                 @UniqueConstraint(name = USERNAME_UNIQUE_NAME, columnNames = "username"),
-                @UniqueConstraint(name = EMAIL_UNIQUE_NAME, columnNames = "email")}
+                @UniqueConstraint(name = EMAIL_UNIQUE_NAME, columnNames = "email")
+        },
+        indexes = {
+                @Index(name = "idx_" + USERNAME_UNIQUE_NAME, columnList = "username", unique = true),
+                @Index(name = "idx_" + EMAIL_UNIQUE_NAME, columnList = "email", unique = true)
+        }
 )
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,24 +42,35 @@ public class UserEntity {
     @SequenceGenerator(name = "default", sequenceName = "id_user_seq", allocationSize = 50, initialValue = 1)
     private Long id;
 
-    // columns validations are: DataIntegrityViolationException:
-    @Column(name = "username", length = MAX_USERNAME_LENGTH, nullable = false) // nullable with the below verification can be not necessary, but I want the NOT NULL in the column definition
-    @Size(max = MAX_USERNAME_LENGTH, message = USERNAME_MAX_LENGTH_MSG)
-    @NotBlank(message = USERNAME_IS_BLANK_MSG)
+    // DataIntegrityViolationException
+    @Column(
+            name = "username",
+            nullable = false,
+            columnDefinition = "VARCHAR(" + MAX_USERNAME_LENGTH + ") CHECK (LENGTH(username) >= " + MIN_USERNAME_LENGTH + ")"
+            // unique = true ==> I can't put a custom name for the unique constraint
+    )
     private String username;
 
 
-    @Column(name = "password", nullable = false, columnDefinition = "TEXT")
-    @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG, min = Cons.User.Validations.MIN_PASSWORD_LENGTH)
-    @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
-    private String password; // pass is passed encrypted, then always is > 8
+    @Column(
+            name = "password",
+            nullable = false,
+            columnDefinition = "VARCHAR(" + MAX_PASSWORD_LENGTH_ENCRYPTED + ") CHECK (LENGTH(password) >= " + MIN_PASSWORD_LENGTH + ")"
+    )
+    private String password;
 
-    @Column(name = "email", nullable = false)
-    @Email(message = EMAIL_INVALID_MSG)// --> null is valid
-    @NotBlank(message = EMAIL_IS_BLANK_MSG)
+    @Column(
+            name = "email",
+            nullable = false,
+            columnDefinition = "VARCHAR(" + MAX_EMAIL_LENGTH + ") CHECK ( LENGTH(email) >= " + MIN_EMAIL_LENGTH + ")"
+    )
     private String email;
 
-    @Column(name = "created_at", nullable = false, updatable = false) // updatable = UnsupportedOperationException, nullable = DataIntegrityViolationException
+    @Column(
+            name = "created_at",
+            nullable = false,
+            updatable = false // UnsupportedOperationException
+    )
     @Temporal(TemporalType.DATE)
     private Date createdAt;
 

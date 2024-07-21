@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_INVALID_MSG;
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_IS_BLANK_MSG;
+import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMAIL_IS_INVALID_MDG;
+
 
 /**
  * DTO to update the email of a user
@@ -19,7 +19,7 @@ import static org.cris6h16.apirestspringboot.Constants.Cons.User.Validations.EMA
 @Setter
 @Builder
 public class PatchEmailUserDTO {
-    @Email(message = EMAIL_INVALID_MSG)// --> null is valid
-    @NotBlank(message = EMAIL_IS_BLANK_MSG)
+//    Verification was centralized in the service layer( and its message), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
+//    @NotBlank(message = EMAIL_IS_INVALID_MDG)
     private String email;
 }

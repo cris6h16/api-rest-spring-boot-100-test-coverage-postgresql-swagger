@@ -17,9 +17,7 @@ import org.cris6h16.apirestspringboot.Constants.Cons;
 @Setter
 @Builder
 public class PatchPasswordUserDTO {
-
-    @Size(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG) //--> null is valid
-    @NotBlank(message = Cons.User.Validations.InService.PASS_IS_TOO_SHORT_MSG)
+//    Verification was centralized in the service layer( and its message), and verified manually to avoid increase the testing complexity(I don't use the validator bean)
+//    @NotBlank(message = Cons.User.Validations.PASSWORD_LENGTH_FAIL_MSG)
     private String password;
-
 }

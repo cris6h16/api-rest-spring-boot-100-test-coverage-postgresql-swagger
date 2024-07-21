@@ -24,23 +24,29 @@ public class Cons {
         }
 
         public class Constrains {
-            public static final String EMAIL_UNIQUE_NAME = "email_unique";
-            public static final String EMAIL_UNIQUE_MSG = "Email already exists";
-            public static final String USERNAME_UNIQUE_MSG = "Username already exists";
             public static final String USERNAME_UNIQUE_NAME = "username_unique";
+            public static final String EMAIL_UNIQUE_NAME = "email_unique";
+
+            public static final String USERNAME_UNIQUE_MSG = "Username already exists";
+            public static final String EMAIL_UNIQUE_MSG = "Email already exists";
         }
 
         public class Validations {
-            public static final String EMAIL_IS_BLANK_MSG = "Email is required";
-            public static final String EMAIL_INVALID_MSG = "Email is invalid";
-            public static final String USERNAME_MAX_LENGTH_MSG = "Username must be less than 20 characters";
-            public static final String USERNAME_IS_BLANK_MSG = "Username mustn't be blank";
-            public static final byte MAX_USERNAME_LENGTH = 20;
-            public static final byte MIN_PASSWORD_LENGTH = 8;
+            public static final short MAX_EMAIL_LENGTH = 255;
+            public static final short MIN_EMAIL_LENGTH = 5;
+            public static final String EMAIL_IS_INVALID_MDG = "Email is invalid";
 
-            public class InService {
-                public static final String PASS_IS_TOO_SHORT_MSG = "Password must be at least 8 characters";
-            }
+
+
+            public static final byte MAX_USERNAME_LENGTH = 20;
+            public static final byte MIN_USERNAME_LENGTH = 4;
+            public static final String USERNAME_LENGTH_FAIL_MSG = "Username must be between 4 and 20 characters";
+
+
+            public static final short MAX_PASSWORD_LENGTH_ENCRYPTED = 1000;
+            public static final byte MIN_PASSWORD_LENGTH = 8;
+            public static final short MAX_PASSWORD_LENGTH_PLAIN = 50;
+            public static final String PASSWORD_LENGTH_FAIL_MSG = "Password must be between 8 and 50 characters";
         }
 
         public static class Fails {
