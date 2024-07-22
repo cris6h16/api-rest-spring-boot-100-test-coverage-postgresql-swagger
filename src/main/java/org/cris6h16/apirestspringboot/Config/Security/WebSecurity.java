@@ -16,14 +16,16 @@ public class WebSecurity {
 
 
     public boolean checkIfIsAdminOrUserAndHasThisIdAsPrincipalId(Supplier<Authentication> supplier, String userId) {
+        boolean granted = false;
         try {
             Authentication auth = supplier.get();
             if (!hasAnyRole(auth, ERole.ROLE_ADMIN, ERole.ROLE_USER)) return false;
-            return principalIdEqualsTo(auth, userId);
+            granted = principalIdEqualsTo(auth, userId);
         } catch (Exception e) {
             log.debug("Debug Exception on checkIfIsAdminOrUserAndHasThisIdAsPrincipalId: {}", e.toString());
-            return false;
         }
+        log.debug("Debug checkIfIsAdminOrUserAndHasThisIdAsPrincipalId: {}", granted);
+        return granted;
     }
 
 

@@ -7,9 +7,8 @@ import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 /**
  * Service layer for {@link UserRepository}
@@ -57,7 +56,7 @@ public interface UserService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    List<PublicUserDTO> getPage(Pageable pageable);
+    Page<PublicUserDTO> getPage(Pageable pageable);
 
     /**
      * Patch the username of a user by id

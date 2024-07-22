@@ -2,7 +2,7 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchEmailUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchPasswordUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Patch.PatchUsernameUserDTO;

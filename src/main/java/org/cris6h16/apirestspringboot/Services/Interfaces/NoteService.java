@@ -3,10 +3,8 @@ package org.cris6h16.apirestspringboot.Services.Interfaces;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Repositories.NoteRepository;
-import org.cris6h16.apirestspringboot.Repositories.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 
 /**
@@ -70,7 +68,7 @@ public interface NoteService {
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
      * @since 1.0
      */
-    List<PublicNoteDTO> getPage(Pageable pageable, Long userId);
+    Page<PublicNoteDTO> getPage(Pageable pageable, Long userId);
 
     /**
      * Delete all notes

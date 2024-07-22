@@ -22,6 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,8 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -638,7 +639,6 @@ public class NoteServiceImplTest {
         verify(noteRepository).existsByIdAndUserId(noteId, userId);
         verify(noteRepository, never()).deleteByIdAndUserId(any(), any());
     }
-
     @Test
     @Tag("getPage")
     void getPage_Successful() {
@@ -656,21 +656,37 @@ public class NoteServiceImplTest {
                     .build());
         }
 
+        Page<NoteEntity> page = new PageImpl<>(entities, pageable, 100L);
+
+        long mockTotalElements = 100L;
+        int mockTotalPages = 10;
+        int mockPageNumber = 0;
+        int mockPageSize = 10;
+
         when(userRepository.existsById(userId)).thenReturn(true);
-        when(noteRepository.findByUserId(userId, pageable)).thenReturn(new PageImpl<>(entities));
+        when(noteRepository.findByUserId(userId, pageable)).thenReturn(page);
 
         // Act
-        List<PublicNoteDTO> dtos = noteService.getPage(pageable, userId);
+        Page<PublicNoteDTO> pageRes = noteService.getPage(pageable, userId);
 
         // Assert
         verify(userRepository).existsById(userId);
         verify(noteRepository).findByUserId(userId, pageable);
-        assertThat(dtos)
+
+        assertEquals(pageRes.getTotalElements(), mockTotalElements);
+        assertEquals(pageRes.getTotalPages(), mockTotalPages);
+        assertEquals(pageRes.getNumber(), mockPageNumber);
+        assertEquals(pageRes.getSize(), mockPageSize);
+        assertEquals(pageRes.isLast(), false);
+        assertEquals(pageRes.isFirst(), true);
+        assertEquals(pageRes.isEmpty(), false);
+
+        assertThat(pageRes.getContent())
                 .isNotNull()
-                .isNotEmpty()
                 .hasSize(entities.size());
+
         for (int i = 0; i < entities.size(); i++) {
-            assertThat(dtos.get(i))
+            assertThat(pageRes.getContent().get(i))
                     .isNotNull()
                     .hasFieldOrPropertyWithValue("id", entities.get(i).getId())
                     .hasFieldOrPropertyWithValue("title", entities.get(i).getTitle())
@@ -741,7 +757,7 @@ public class NoteServiceImplTest {
         when(noteRepository.findByUserId(userId, pageable)).thenReturn(new PageImpl<>(new ArrayList<>()));
 
         // Act
-        List<PublicNoteDTO> dtos = noteService.getPage(pageable, userId);
+        Page<PublicNoteDTO> dtos = noteService.getPage(pageable, userId);
 
         // Assert
         assertThat(dtos)

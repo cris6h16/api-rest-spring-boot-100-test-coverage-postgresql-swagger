@@ -2,7 +2,8 @@ package org.cris6h16.apirestspringboot.Controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.CustomPageImpl;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -139,9 +141,6 @@ class NoteControllerTest {
     }
 
 
-
-
-
     @Test
     @WithMockUserWithId(id = 100, roles = {"ROLE_USER"})
     void create_givenEmptyContent_DTO_Then201_Created() throws Exception {
@@ -233,16 +232,36 @@ class NoteControllerTest {
     @Order(2)
     @WithMockUserWithId(id = 1, roles = {"ROLE_USER"})
     void getPage_successful_Then200_Ok() throws Exception {
-        when(noteService.getPage(any(), anyLong()))
-                .thenReturn(create10FixedPublicNoteDTO());
+        CustomPageImpl<PublicNoteDTO> page = mock(CustomPageImpl.class);
 
-        String listStr = this.mvc.perform(get(path))
+        long mockTotalElements = 100L;
+        int mockTotalPages = 10;
+        int mockPageNumber = 0;
+        int mockPageSize = 10;
+        boolean mockEmpty = false;
+        boolean mockFirst = true;
+        boolean mockLast = true;
+
+        when(page.getContent()).thenReturn(create10FixedPublicNoteDTO());
+        when(page.getTotalElements()).thenReturn(mockTotalElements);
+        when(page.getTotalPages()).thenReturn(mockTotalPages);
+        when(page.getNumber()).thenReturn(mockPageNumber);
+        when(page.getSize()).thenReturn(mockPageSize);
+        when(page.isFirst()).thenReturn(mockFirst);
+        when(page.isEmpty()).thenReturn(mockEmpty);
+        when(page.isLast()).thenReturn(mockLast);
+
+
+        when(noteService.getPage(any(), anyLong()))
+                .thenReturn(page);
+
+        String pageStr = this.mvc.perform(get(path))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(this.objectMapper.writeValueAsString(create10FixedPublicNoteDTO()))
-                .isEqualTo(listStr);
+        assertThat(this.objectMapper.writeValueAsString(page))
+                .isEqualTo(pageStr);
     }
 
     @Test
@@ -258,7 +277,7 @@ class NoteControllerTest {
     @WithMockUserWithId(id = 100L)
     void getPage_PageableDefaultParamsWork() throws Exception {
         when(noteService.getPage(any(Pageable.class), anyLong()))
-                .thenReturn(List.of());
+                .thenReturn(mock(CustomPageImpl.class));
 
         this.mvc.perform(get(path)).andExpect(status().isOk());
 
@@ -277,7 +296,7 @@ class NoteControllerTest {
     @WithMockUserWithId(id = 101L)
     void getPage_PageableCustomParamsWork() throws Exception {
         when(noteService.getPage(any(Pageable.class), anyLong()))
-                .thenReturn(List.of());
+                .thenReturn(mock(CustomPageImpl.class));
 
         this.mvc.perform(get(path + "?page=7&size=21&sort=cris6h16,desc"))
                 .andExpect(status().isOk());

@@ -1,8 +1,7 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
-import org.cris6h16.apirestspringboot.Controllers.NoteController;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;

@@ -24,10 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -36,6 +33,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
@@ -482,17 +480,25 @@ public class UserServiceImplTest {
         // Arrange
         int amount = 10;
         List<UserEntity> entities = getUserEntities(amount);
-        Pageable pag = PageRequest.of(999, 99999, Sort.by(Sort.Order.asc("id")));
-
-        when(userRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(entities));
+        Pageable pag = PageRequest.of(1, 5, Sort.by(Sort.Order.asc("id")));
+        PageImpl<UserEntity> mockPage = new PageImpl<>(entities, pag, entities.size()); // 10
+                when(userRepository.findAll(any(Pageable.class)))
+                .thenReturn(mockPage);
 
         // Act
-        List<PublicUserDTO> list = userService.getPage(pag);
+        Page<PublicUserDTO> pageRes = userService.getPage(pag);
 
         // Assert
+        assertEquals( pageRes.getTotalElements(), entities.size());
+        assertEquals(pageRes.getTotalPages(), 2);
+        assertEquals(pageRes.getNumber(), 1);
+        assertEquals(pageRes.getSize(), 5);
+        assertEquals(pageRes.isLast(), true );
+        assertEquals(pageRes.isFirst(), false);
+        assertEquals(pageRes.isEmpty(), false);
+
         for (int i = 0; i < entities.size(); i++) {
-            assertThat(list.get(i))
+            assertThat(pageRes.getContent().get(i))
                     .isNotNull()
                     .hasFieldOrPropertyWithValue("id", entities.get(i).getId())
                     .hasFieldOrPropertyWithValue("username", entities.get(i).getUsername())

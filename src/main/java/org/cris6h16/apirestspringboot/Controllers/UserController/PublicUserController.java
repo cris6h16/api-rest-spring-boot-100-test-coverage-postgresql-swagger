@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.cris6h16.apirestspringboot.Constants.Cons;
@@ -58,9 +59,10 @@ public class PublicUserController {
                             description = "User created successfully",
                             headers = {
                                     @Header(
+                                            schema = @Schema(type = "string"),
                                             name = "Location",
                                             description = "URI of the created user",
-                                            example = "/api/v1/users/5"
+                                            example = Cons.User.Controller.Path.USER_PATH + "/1"
                                     )
                             },
                             content = @Content
@@ -122,36 +124,37 @@ public class PublicUserController {
                                                             summary = "Invalid email"
                                                     ),
                                                     @ExampleObject(
-                                                            name = "Username too long",
+                                                            name = "Username length fail",
                                                             value = """
                                                                     {
-                                                                        "message": "Username must be less than 20 characters",
+                                                                        "message": "Username must be between 4 and 20 characters",
                                                                         "status": "400 BAD_REQUEST",
                                                                         "instant": "2024-07-18T01:43:06.792938867Z"
                                                                     }
                                                                     """,
-                                                            description = "I tried to create a user with a username longer than 20 characters",
-                                                            summary = "Username too long"
+                                                            description = "I tried to create a user with a username.length < 4 Or username.length > 20",
+                                                            summary = "Username length fail"
                                                     ),
                                                     @ExampleObject(
-                                                            name = "Username is blank",
+                                                            name = "Password length fail",
                                                             value = """
                                                                     {
-                                                                        "message": "Username mustn't be blank",
+                                                                        "message": "Password must be between 8 and 50 characters",
                                                                         "status": "400 BAD_REQUEST",
                                                                         "instant": "2024-07-18T01:45:09.883892238Z"
                                                                     }
                                                                     """,
-                                                            description = "I tried to create a user with a blank username",
-                                                            summary = "Username is blank"
-                                                    ),
+                                                            description = "I tried to create a user with a password.length < 8 Or password.length > 50",
+                                                            summary = "Password length fail"
+                                                    )
                                             }
                                     )
                             }
                     ),
                     @ApiResponse(
                             responseCode = "403",
-                            description = "Any unexpected error occurred while processing the request"
+                            description = "Any unexpected error occurred while processing the request ( request body wasn't passed, was bad formatted, database error, etc. )",
+                            content = @Content
                     )
             },
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(

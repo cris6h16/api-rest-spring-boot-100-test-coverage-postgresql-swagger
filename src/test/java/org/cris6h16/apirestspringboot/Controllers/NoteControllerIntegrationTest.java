@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Controllers;
 
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.CustomPageImpl;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
@@ -16,6 +17,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -26,6 +30,7 @@ import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Controller.Path.NOTE_PATH;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -127,14 +132,26 @@ class NoteControllerIntegrationTest {
                 .queryParam("sort", "id,desc")
                 .build().toUri();
 
-        ResponseEntity<PublicNoteDTO[]> response = this.restTemplate
+        ParameterizedTypeReference<CustomPageImpl<PublicNoteDTO>> type = new ParameterizedTypeReference<CustomPageImpl<PublicNoteDTO>>() {
+        };
+
+        ResponseEntity<CustomPageImpl<PublicNoteDTO>> response = this.restTemplate
                 .withBasicAuth(userEntity.getUsername(), noEncryptedPassword)
-                .getForEntity(uri, PublicNoteDTO[].class);
+                .exchange(uri, HttpMethod.GET, null, type);
+
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).hasSize(24);
 
-        List<PublicNoteDTO> publicNoteDTOList = Arrays.stream(response.getBody()).toList();
+        Page<PublicNoteDTO> pageRes = response.getBody();
+        assertEquals(1, pageRes.getTotalPages());
+        assertEquals(24, pageRes.getTotalElements());
+        assertEquals(24, pageRes.getNumberOfElements());
+        assertEquals(pageRes.getPageable().getPageNumber(), 0);
+        assertEquals(pageRes.getPageable().getPageSize(), 25);
+
+
+        List<PublicNoteDTO> publicNoteDTOList = pageRes.getContent();
         assertThat(publicNoteDTOList).isSortedAccordingTo(Comparator.comparing(PublicNoteDTO::getId).reversed());
 
         for (int i = 0; i < createNoteDTOList.size(); i++) {

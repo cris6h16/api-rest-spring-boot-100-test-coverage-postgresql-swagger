@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.cris6h16.apirestspringboot.Constants.Cons.Note.Validations.MAX_TITLE_LENGTH;
 
@@ -48,7 +47,7 @@ public class NoteServiceImpl implements NoteService {
     public Long create(CreateNoteDTO dto, Long userId) {
         prepareAndVerifyDTOAndIds(dto, userId);
 
-        UserEntity user = getUserById(userId);
+        UserEntity user = getUserById(userId); // not found never reached ( is stateless and isn't multi-session)
 
         NoteEntity noteEntity = NoteEntity.builder()
                 .title(dto.getTitle())
@@ -102,17 +101,19 @@ public class NoteServiceImpl implements NoteService {
 
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
-    public List<PublicNoteDTO> getPage(Pageable pageable, Long userId) {
+    public Page<PublicNoteDTO> getPage(Pageable pageable, Long userId) {
         if (pageable == null) throw new IllegalArgumentException("Pageable can't be null");
         verifyId(userId);
         if (!userRepository.existsById(userId)) throw new UserNotFoundException();
 
-        Page<NoteEntity> page = noteRepository.findByUserId(userId,
-                PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort()));
+        Pageable pageRequest = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                pageable.getSort()
+        );
 
-        return page.stream()
-                .map(this::createPublicNoteDTO)
-                .collect(Collectors.toList());
+        return noteRepository.findByUserId(userId, pageRequest)
+                .map(this::createPublicNoteDTO);
     }
 
     @Override
@@ -137,8 +138,8 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private void prepareAndVerifyDTOAndIds(CreateNoteDTO dto, Long... ids) {
-        verifyId(ids);
-        _dtoNotNull(dto);
+        verifyId(ids); // always correct if come from the controller (principal.id injected)
+        _dtoNotNull(dto); // always not-null if come from the controller (required = true)
         _prepareAttributes(dto);
 
         _verifyTitle(dto.getTitle());

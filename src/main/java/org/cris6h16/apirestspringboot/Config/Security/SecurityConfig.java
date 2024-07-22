@@ -1,5 +1,6 @@
 package org.cris6h16.apirestspringboot.Config.Security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Config.Security.UserDetailsService.UserDetailsServiceImpl;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -34,6 +36,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
  * @since 1.0
  */
 @Configuration
+@Slf4j
 //@EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfig {
@@ -52,7 +55,7 @@ public class SecurityConfig {
                 .cors(withDefaults()) // use a bean known as corsConfigurationSource
                 .httpBasic(withDefaults())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(HttpMethod.GET, USER_PATH).hasRole("ADMIN")                   // page of users
+                        .requestMatchers(HttpMethod.GET, USER_PATH).hasRole("ADMIN")// page of users
                         .requestMatchers(HttpMethod.POST, USER_PATH).permitAll()                       // create a user
                         .requestMatchers(NOTE_PATH + "/**").hasAnyRole("ADMIN", "USER")       // all note endpoints
                         .requestMatchers(getAllUserPathsThatCanOperateJustTheOwners()).access((authentication, request) -> {
@@ -61,7 +64,8 @@ public class SecurityConfig {
                             return new AuthorizationDecision(granted);
                         })
                         .requestMatchers("/docs/**").permitAll()
-                        .anyRequest().denyAll())
+                        .anyRequest().access(new WebExpressionAuthorizationManager("hasRole('ADMIN')"))
+                )
 //                .sessionManagement(
 //                        sm -> sm
 //                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

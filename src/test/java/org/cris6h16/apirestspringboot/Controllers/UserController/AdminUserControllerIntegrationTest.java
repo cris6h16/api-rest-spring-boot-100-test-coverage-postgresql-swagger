@@ -1,10 +1,13 @@
 package org.cris6h16.apirestspringboot.Controllers.UserController;
 
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.CustomPageImpl;
 import org.cris6h16.apirestspringboot.DTOs.Creation.CreateUserDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Services.UserServiceImpl;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -17,7 +20,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Comparator;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCollection;
@@ -50,7 +52,7 @@ class AdminUserControllerIntegrationTest {
 
     @Test
     void getPage_successful_Then200_Ok() throws Exception {
-        ParameterizedTypeReference<List<PublicUserDTO>> type = new ParameterizedTypeReference<>() {
+        ParameterizedTypeReference<CustomPageImpl<PublicUserDTO>> type = new ParameterizedTypeReference<>() {
         };
 
         URI uri = UriComponentsBuilder.fromPath(USER_PATH)
@@ -59,13 +61,13 @@ class AdminUserControllerIntegrationTest {
                 .queryParam("sort", "email,desc")
                 .build().toUri();
 
-        ResponseEntity<List<PublicUserDTO>> list = this.restTemplate
+        ResponseEntity<CustomPageImpl<PublicUserDTO>> list = this.restTemplate
                 .withBasicAuth("cris6h16", "12345678")
                 .exchange(uri, HttpMethod.GET, null, type);
 
         assertThat(list.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThatCollection(list.getBody()).hasSize(24);
-        assertThat(list.getBody()).isSortedAccordingTo(Comparator.comparing(PublicUserDTO::getEmail).reversed());
+        assertThatCollection(list.getBody().getContent()).hasSize(24);
+        assertThat(list.getBody().getContent()).isSortedAccordingTo(Comparator.comparing(PublicUserDTO::getEmail).reversed());
     }
 
     private void createUsersAndAdmin() {

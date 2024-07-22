@@ -2,7 +2,8 @@ package org.cris6h16.apirestspringboot.Controllers.UserController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.CustomPageImpl;
+import org.cris6h16.apirestspringboot.Controllers.CustomClasses.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicRoleDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicUserDTO;
 import org.cris6h16.apirestspringboot.Entities.ERole;
@@ -15,8 +16,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -25,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCollection;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -67,19 +67,35 @@ class AdminUserControllerTest {
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     @Order(1)
     void getPage_successful_Then200_Ok() throws Exception {
-        List<PublicUserDTO> mockedUsersList = createPublicUserDTOs(20);
-        when(userService.getPage(any(Pageable.class)))
-                .thenReturn(mockedUsersList);
 
-        String body = this.mvc.perform(get(path))
+        List<PublicUserDTO> mockedUsersList = createPublicUserDTOs(1);
+        PageRequest pageable = PageRequest.of(0, 10, Sort.by("id"));
+        Page<PublicUserDTO> page = new PageImpl<>(mockedUsersList, pageable, mockedUsersList.size());
+
+        when(userService.getPage(any(Pageable.class))).thenReturn(page);
+
+        String pageStr = this.mvc.perform(get(path))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
-        List<PublicUserDTO> retrievedFromController = Arrays.asList(
-                objectMapper.readValue(body, PublicUserDTO[].class)
+
+        CustomPageImpl<PublicUserDTO> pageRes = objectMapper.readValue(
+                pageStr,
+                objectMapper.getTypeFactory().constructParametricType(
+                        CustomPageImpl.class,
+                        PublicUserDTO.class
+                )
         );
 
-        assertThatCollection(retrievedFromController).containsExactlyElementsOf(mockedUsersList);
+        assertThat(pageRes).isNotNull();
+        assertEquals(pageRes.getContent(), page.getContent());
+        assertEquals(pageRes.getNumber(), page.getNumber());
+//        assertEquals(pageRes.getSort(), page.getSort()); // response: "sort":{"empty":false,"sorted":true,"unsorted":false}
+        assertEquals(pageRes.getNumberOfElements(), page.getNumberOfElements());
+        assertEquals(pageRes.getTotalElements(), page.getTotalElements());
+        assertEquals(pageRes.getSize(), page.getSize());
+        assertEquals(pageRes.getTotalPages(), page.getTotalPages());
+
         verify(userService).getPage(any(Pageable.class));
     }
 
@@ -106,7 +122,7 @@ class AdminUserControllerTest {
     @Test
     @WithMockUser(username = "cris6h16", roles = {"ADMIN"})
     void getPage_PageableDefaultParamsWork() throws Exception {
-        when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
+        when(userService.getPage(any(Pageable.class))).thenReturn(mock(CustomPageImpl.class));
 
         this.mvc.perform(get(path)).andExpect(status().isOk());
 
@@ -120,7 +136,7 @@ class AdminUserControllerTest {
     @Test
     @WithMockUser(username = "admin", roles = {"ADMIN"})
     void getPage_PageableCustomParamsWork() throws Exception {
-        when(userService.getPage(any(Pageable.class))).thenReturn(List.of());
+        when(userService.getPage(any(Pageable.class))).thenReturn(mock(CustomPageImpl.class));
 
         this.mvc.perform(get(path + "?page=7&size=21&sort=cris6h16,desc"))
                 .andExpect(status().isOk());

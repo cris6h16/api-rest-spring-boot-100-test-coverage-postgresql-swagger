@@ -5,7 +5,6 @@ import jakarta.validation.ConstraintViolationException;
 import org.assertj.core.api.Assertions;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
-import org.cris6h16.apirestspringboot.Controllers.CustomMockUser.WithMockUserWithId;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;

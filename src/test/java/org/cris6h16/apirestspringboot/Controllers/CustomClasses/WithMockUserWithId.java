@@ -1,4 +1,4 @@
-package org.cris6h16.apirestspringboot.Controllers.CustomMockUser;
+package org.cris6h16.apirestspringboot.Controllers.CustomClasses;
 
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

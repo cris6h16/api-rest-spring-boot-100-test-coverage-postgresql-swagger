@@ -17,6 +17,7 @@ import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.UserService.
 import org.cris6h16.apirestspringboot.Repositories.RoleRepository;
 import org.cris6h16.apirestspringboot.Repositories.UserRepository;
 import org.cris6h16.apirestspringboot.Services.Interfaces.UserService;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,7 +51,6 @@ public class UserServiceImpl implements UserService {
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
 
     @Override
     @Transactional(
@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
             isolation = Isolation.READ_COMMITTED,
             rollbackFor = Exception.class
     )
-    public List<PublicUserDTO> getPage(Pageable pageable) {
+    public Page<PublicUserDTO> getPage(Pageable pageable) {
         if (pageable == null) throw new IllegalArgumentException("Pageable can't be null");
 
         // all elements are verified in the creation of the PageRequest then it is not necessary to verify them again ( IllegalArgumentException )
@@ -132,9 +132,8 @@ public class UserServiceImpl implements UserService {
                 pageable.getSort()
         );
 
-        return userRepository.findAll(pag).stream()
-                .map(this::createPublicUserDTO)
-                .collect(Collectors.toList());
+        return userRepository.findAll(pag)
+                .map(this::createPublicUserDTO);
     }
 
     @Override
@@ -144,7 +143,7 @@ public class UserServiceImpl implements UserService {
     )
     public void patchUsernameById(Long id, PatchUsernameUserDTO dto) { // @Valid doesn't work here
         verifyId(id); // never reached coming from controller
-        dtoNotNull(dto); // never reached coming from controller
+        dtoNotNull(dto); // never reached coming from controller (required = true)
         prepareAttributes(dto);
 
         validateUsername(dto.getUsername());
@@ -165,13 +164,14 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchEmailById(Long id, PatchEmailUserDTO dto) {
-        verifyId(id);
-        dtoNotNull(dto);
+        verifyId(id); // never reached coming from controller
+        dtoNotNull(dto); // never reached coming from controller
         prepareAttributes(dto);
 
         validateEmail(dto.getEmail());
 
-        if (!userRepository.existsById(id)) throw new UserNotFoundException();
+        if (!userRepository.existsById(id))
+            throw new UserNotFoundException(); // never reached if is stateless and single-session
         if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
         userRepository.updateEmailById(dto.getEmail(), id);
     }
@@ -182,13 +182,14 @@ public class UserServiceImpl implements UserService {
             rollbackFor = Exception.class
     )
     public void patchPasswordById(Long id, PatchPasswordUserDTO dto) {
-        verifyId(id);
-        dtoNotNull(dto);
+        verifyId(id); // never reached coming from controller
+        dtoNotNull(dto); // never reached coming from controller
         prepareAttributes(dto);
 
         validatePassword(dto.getPassword());
 
-        if (!userRepository.existsById(id)) throw new UserNotFoundException();
+        if (!userRepository.existsById(id))
+            throw new UserNotFoundException(); // never reached if is stateless and single-session
         userRepository.updatePasswordById(passwordEncoder.encode(dto.getPassword()), id);
     }
 
