@@ -63,7 +63,7 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public PublicNoteDTO getByIdAndUserId(Long noteId, Long userId) {
-        verifyId(userId, noteId);
+        verifyId(userId, noteId); // never reached if it comes from the controller ( userId injected  ||  noteId parsed by spring(else MethodArgumentTypeMismatchException which lead to 403 status) also is required = true  )
 
         NoteEntity noteEntity = noteRepository.findByIdAndUserId(noteId, userId)
                 .orElseThrow(NoteNotFoundException::new);
@@ -92,8 +92,8 @@ public class NoteServiceImpl implements NoteService {
     @Override
     @Transactional(isolation = Isolation.READ_COMMITTED, rollbackFor = Exception.class)
     public void deleteByIdAndUserId(Long noteId, Long userId) {
-        verifyId(userId, noteId);
-        if (!userRepository.existsById(userId)) throw new UserNotFoundException();
+        verifyId(userId, noteId); // never reached if it comes from the controller ( userId injected  ||  noteId parsed by spring(else MethodArgumentTypeMismatchException which lead to 403 status) also is required = true  )
+        if (!userRepository.existsById(userId)) throw new UserNotFoundException(); // reached if our app is stateful and is multi-session ( is not the case )
         if (!noteRepository.existsByIdAndUserId(noteId, userId)) throw new NoteNotFoundException();
 
         noteRepository.deleteByIdAndUserId(noteId, userId);

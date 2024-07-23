@@ -54,10 +54,12 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /docs/swagger-ui.html
+    default-models-expand-depth: -1
   api-docs:
     enabled: true
     path: /docs/api-docs
   packages-to-scan: org.cris6h16
+
 
 
 

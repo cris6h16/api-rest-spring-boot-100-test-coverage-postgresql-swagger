@@ -139,6 +139,11 @@ public class AdminUserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "Any unexpected error occurred while processing the request ( is not ADMIN, database error, etc. )",
                             content = @Content

@@ -51,6 +51,11 @@ public class AuthenticatedUserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "Any unexpected error occurred while processing the request ( user not found, trying retrieve other user's data, database error, etc. )",
                             content = @Content
@@ -139,6 +144,11 @@ public class AuthenticatedUserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "Any unexpected error occurred while processing the request ( trying retrieve other user's data, database error, etc. )",
                             content = @Content
@@ -225,6 +235,11 @@ public class AuthenticatedUserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "Any unexpected error occurred while processing the request ( trying patch other user's data, database error, etc. )",
                             content = @Content
@@ -287,6 +302,11 @@ public class AuthenticatedUserController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
                             description = "Any unexpected error occurred while processing the request ( trying patch other user's data, database error, etc. )",
                             content = @Content
@@ -313,6 +333,11 @@ public class AuthenticatedUserController {
                     @ApiResponse(
                             responseCode = "204",
                             description = "User deleted successfully",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
                             content = @Content
                     ),
                     @ApiResponse(

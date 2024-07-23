@@ -1,26 +1,16 @@
 package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
 import org.cris6h16.apirestspringboot.Entities.ERole;
 import org.cris6h16.apirestspringboot.Exceptions.WithStatus.service.ProperExceptionForTheUser;
 import org.cris6h16.apirestspringboot.Utils.FilesUtils;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,8 +19,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import static org.cris6h16.apirestspringboot.Constants.Cons.User.Constrains.*;
 
 /**
  * Handling of exception in the controllers
@@ -55,53 +43,6 @@ public class ExceptionHandlerControllers {
     }
 
     /**
-     * Pass the message to the client if happened some {@link  ConstraintViolationException}
-     * like {@link NotNull}, {@link  NotBlank}, {@link  Email}, etc
-     *
-     * @param e the {@link  ConstraintViolationException}
-     * @return the response with the {@code validationFail.message} and status {@code BAD_REQUEST}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<String> handleConstraintViolationException(ConstraintViolationException e) {
-        logHandledDebug(e);
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
-        if (!violations.isEmpty()) forClient = violations.iterator().next().getMessage();
-
-        return buildAFailResponse(status, forClient);
-    }
-
-
-    /**
-     * Handles when a {@link DataIntegrityViolationException} is thrown
-     * due to some constraint violation like unique constraints, the customs
-     * responses are based on the name of the constraints
-     *
-     * @param e the mentioned Exception
-     * @return the response with the proper message && status {@code 409 Conflict}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<String> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        logHandledDebug(e);
-        HttpStatus status = HttpStatus.CONFLICT;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        // for the UserEntity
-        boolean inUsername = thisContains(e.getMessage(), USERNAME_UNIQUE_NAME);
-        boolean inEmail = thisContains(e.getMessage(), EMAIL_UNIQUE_NAME);
-        boolean isHandledUniqueViolation = inUsername || inEmail;
-        if (isHandledUniqueViolation) forClient = inUsername ? USERNAME_UNIQUE_MSG : EMAIL_UNIQUE_MSG;
-
-        return buildAFailResponse(status, forClient);
-    }
-
-    /**
      * Handles the exceptions that was designed to be passed directly to the user
      *
      * @param e the exception
@@ -115,26 +56,6 @@ public class ExceptionHandlerControllers {
         return buildAFailResponse(e.getStatus(), e.getReason());
     }
 
-    /**
-     * Exception produced by {@code @Valid} annotation in the
-     * method parameters
-     *
-     * @param e the exception
-     * @return a proper response containing a message and status {@code BAD_REQUEST}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        logHandledDebug(e);
-        HttpStatus status = HttpStatus.BAD_REQUEST;
-        String forClient = Cons.Response.ForClient.GENERIC_ERROR;
-
-        List<ObjectError> msgs = e.getAllErrors();
-        if (!msgs.isEmpty()) forClient = msgs.getFirst().getDefaultMessage();
-
-        return buildAFailResponse(status, forClient);
-    }
 
     /**
      * Handling of generic exceptions
@@ -298,30 +219,7 @@ public class ExceptionHandlerControllers {
 
 
     /**
-     * Verify if the {@code msg.toLowerCase().trim()} contains all the
-     * {@code strings[].trimEach().toLowerCase()}
-     *
-     * @param msg     that contains the {@code strings}
-     * @param strings to verify if are in the {@code msg}
-     * @return true if all the {@code strings} are in the {@code msg}
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
-    public boolean thisContains(String msg, String... strings) {
-        if (msg == null || strings == null || strings.length == 0) return false;
-
-        msg = msg.toLowerCase().trim();
-        boolean contains = true;
-        for (String s : strings) {
-            s = s.toLowerCase().trim();
-            contains = contains && msg.contains(s);
-        }
-        return contains;
-    }
-
-
-    /**
-     * Save the unhandled exception in the file: {@link Cons.Logs#HiddenExceptionsOfUsers}
+     * Save the unhandled exception in the file: {@link Cons.Logs#HIDEN_EXCEPTION_OF_USERS}
      *
      * @param e the exception to save in the file
      * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
@@ -356,7 +254,7 @@ public class ExceptionHandlerControllers {
             lastSavedToFile = System.currentTimeMillis();
 
             filesSyncUtils.appendToFile(
-                    Path.of(Cons.Logs.HiddenExceptionsOfUsers),
+                    Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS),
                     content.toString()
             );
         }

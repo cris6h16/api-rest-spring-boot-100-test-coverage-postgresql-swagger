@@ -132,7 +132,7 @@ public class Cons {
      * @since 1.0
      */
     public static class Logs {
-        public static final String HiddenExceptionsOfUsers = "logs/exceptions/unhandled.log";
+        public static final String HIDEN_EXCEPTION_OF_USERS = "logs/exceptions/hidden_for_users.log";
         public static final String SUCCESS_AUTHENTICATION_FILE = "logs/auth/success.log";
         public static final String FAIL_AUTHENTICATION_FILE = "logs/auth/failures.log";
     }

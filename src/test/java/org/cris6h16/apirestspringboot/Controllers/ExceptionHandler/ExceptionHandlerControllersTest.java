@@ -1,7 +1,5 @@
 package org.cris6h16.apirestspringboot.Controllers.ExceptionHandler;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import org.assertj.core.api.Assertions;
 import org.cris6h16.apirestspringboot.Config.Security.CustomUser.UserWithId;
 import org.cris6h16.apirestspringboot.Constants.Cons;
@@ -15,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,18 +23,14 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /**
  * Unit tests for {@link ExceptionHandlerControllers}
@@ -65,88 +58,6 @@ class ExceptionHandlerControllersTest {
         ExceptionHandlerControllers.hiddenExceptionsLines.clear();
     }
 
-
-    @Test
-    void handleConstraintViolationException_withViolations_Then400_BAD_REQUEST_andCustomMsg() throws Exception {
-        ConstraintViolation<?> violation = mock(ConstraintViolation.class);
-        when(violation.getMessage()).thenReturn("My custom message in the validation");
-        ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", Set.of(violation));
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleConstraintViolationException(exception);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).contains("\"message\":\"My custom message in the validation\"");
-    }
-
-    @Test
-    void handleConstraintViolationException_withoutViolations_Then400_BAD_REQUEST_andGenericMsg() throws Exception {
-        ConstraintViolationException exception = new ConstraintViolationException("Constraint violation", new HashSet<>());
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleConstraintViolationException(exception);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
-    }
-
-    @Test
-    void handleDataIntegrityViolationException_withUsernameUniqueConstraint_Then409_CONFLICT_andCustomMsg() throws Exception {
-        DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
-        when(e.getMessage()).thenReturn("any string here" + Cons.User.Constrains.USERNAME_UNIQUE_NAME + "also here");
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.User.Constrains.USERNAME_UNIQUE_MSG));
-    }
-
-    @Test
-    void handleDataIntegrityViolationException_withEmailUniqueConstraint_Then409_CONFLICT_andCustomMsg() throws Exception {
-        DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
-        when(e.getMessage()).thenReturn("any string here" + Cons.User.Constrains.EMAIL_UNIQUE_NAME + "also here");
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.User.Constrains.EMAIL_UNIQUE_MSG));
-    }
-
-    @Test
-    void handleDataIntegrityViolationException_withUnhandledUniqueConstraint_Then409_CONFLICT_andGenericMsg() throws Exception {
-        DataIntegrityViolationException e = mock(DataIntegrityViolationException.class);
-        when(e.getMessage()).thenReturn("any string here" + "dni_unique" + "also here");
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleDataIntegrityViolationException(e);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
-    }
-
-    @Test
-    void handleMethodArgumentNotValidException_WithViolations_Then400_BAD_REQUEST_andValidationMsg() throws Exception {
-        ObjectError error = mock(ObjectError.class);
-        when(error.getDefaultMessage()).thenReturn("My custom message in the validation");
-        MethodArgumentNotValidException e = mock(MethodArgumentNotValidException.class);
-        when(e.getAllErrors()).thenReturn(List.of(error));
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleMethodArgumentNotValidException(e);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).contains("\"message\":\"My custom message in the validation\"");
-    }
-
-
-    // for reach 100% coverage
-    @Test
-    void handleMethodArgumentNotValidException_WithNoViolations_Then400_BAD_REQUEST_andGenericMsg() throws Exception {
-        MethodArgumentNotValidException e = mock(MethodArgumentNotValidException.class);
-        when(e.getAllErrors()).thenReturn(List.of());
-
-        ResponseEntity<String> res = this.exceptionHandlerControllers.handleMethodArgumentNotValidException(e);
-
-        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(res.getBody()).contains("\"message\":\"?m\"".replace("?m", Cons.Response.ForClient.GENERIC_ERROR));
-    }
-
     @Test
     void handleProperExceptionForTheUser_ThenStatusAndMsgFromTheException() throws Exception {
         ProperExceptionForTheUser e = mock(ProperExceptionForTheUser.class);
@@ -171,7 +82,7 @@ class ExceptionHandlerControllersTest {
         assertThat(res.getBody()).isNull();
         verify(this.filesSyncUtils, times(1))
                 .appendToFile(
-                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)), // use the correct file
+                        eq(Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS)), // use the correct file
                         argThat(line ->
                                 line.contains(e.toString()) && // contains the exception
                                         line.split("::").length == 3 && // the line has 3 parts
@@ -221,7 +132,7 @@ class ExceptionHandlerControllersTest {
         assertThat(res.getBody()).isNull();
         verify(this.filesSyncUtils, times(1))
                 .appendToFile(
-                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        eq(Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS)),
                         argThat(line ->
                                 line.contains(e.toString()) &&
                                         line.split("::").length == 3 &&
@@ -240,7 +151,7 @@ class ExceptionHandlerControllersTest {
         assertThat(res.getBody()).isNull();
         verify(this.filesSyncUtils, times(1))
                 .appendToFile(
-                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        eq(Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS)),
                         argThat(line ->
                                 line.contains(e.toString()) &&
                                         line.split("::").length == 3 &&
@@ -260,7 +171,7 @@ class ExceptionHandlerControllersTest {
         assertThat(res.getBody()).isNull();
         verify(this.filesSyncUtils, times(1))
                 .appendToFile(
-                        eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                        eq(Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS)),
                         argThat(line ->
                                 line.contains(e.toString()) &&
                                         line.split("::").length == 3 &&
@@ -332,7 +243,7 @@ class ExceptionHandlerControllersTest {
         assertThat(ExceptionHandlerControllers.hiddenExceptionsLines.size()).isEqualTo(0);
         final int finalRemaining1 = remaining;
         verify(this.filesSyncUtils, times(1)).appendToFile(
-                eq(Path.of(Cons.Logs.HiddenExceptionsOfUsers)),
+                eq(Path.of(Cons.Logs.HIDEN_EXCEPTION_OF_USERS)),
                 argThat(content -> content.split("\n").length == finalRemaining1)
         );
     }

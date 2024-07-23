@@ -14,6 +14,7 @@ import org.cris6h16.apirestspringboot.DTOs.Creation.CreateNoteDTO;
 import org.cris6h16.apirestspringboot.DTOs.Public.PublicNoteDTO;
 import org.cris6h16.apirestspringboot.Entities.NoteEntity;
 import org.cris6h16.apirestspringboot.Services.NoteServiceImpl;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -41,34 +42,6 @@ public class NoteController {
     }
 
 
-    /*
-     /*
-     @Operation(
-            tags = {"Authenticated User Endpoints"},
-            operationId = "getById",
-            summary = "get user by id",
-            description = "Get a user by its id",
-            method = "GET",
-            responses = {
-                    @ApiResponse(
-                            responseCode = "200",
-                            description = "User found, then returned",
-                            content = @io.swagger.v3.oas.annotations.media.Content(
-                                    schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = PublicUserDTO.class),
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE
-                            )
-                    ),
-                    @ApiResponse(
-                            responseCode = "403",
-                            description = "Any unexpected error occurred while processing the request ( user not found, trying retrieve other user's data, database error, etc. )",
-                            content = @Content
-                    )
-            },
-            security = {
-                    @SecurityRequirement(name = "basicAuth")
-            }
-    )
-     */
     @Operation(
             tags = {"Note Endpoints"},
             operationId = "createANote",
@@ -110,8 +83,13 @@ public class NoteController {
                             )
                     ),
                     @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
                             responseCode = "403",
-                            description = "Any unexpected error occurred while processing the request ( user isn't authenticated, database error, etc. )",
+                            description = "Any unexpected error occurred while processing the request ( request body is not a JSON, database error, etc. )",
                             content = @Content
                     )
             },
@@ -129,34 +107,88 @@ public class NoteController {
 
         return ResponseEntity.created(uri).build();
     }
-//
-//
-//    @Operation(
-//            tags = {"Note Endpoints"},
-//            operationId = "getNotesPage",
-//            summary = "get notes",
-//            description = "Get a page of notes",
-//            method = "GET",
-//            responses = {
-//                    @ApiResponse(
-//                            responseCode = "200",
-//                            description = "Page of notes found, then returned",
-//                            content = @Content(
-//                                    array = @ArraySchema(schema = @Schema(implementation = PublicNoteDTO.class)),
-//                                    mediaType = MediaType.APPLICATION_JSON_VALUE
-//                            ),
-//
-//                    ),
-//                    @ApiResponse(
-//                            responseCode = "403",
-//                            description = "Any unexpected error occurred while processing the request ( user isn't authenticated, database error, etc. )",
-//                            content = @Content
-//                    )
-//            },
-//            security = {
-//                    @SecurityRequirement(name = "basicAuth")
-//            }
-//    )
+
+
+    @Operation(
+            tags = {"Note Endpoints"},
+            operationId = "getNotesPage",
+            summary = "get notes page",
+            description = "Get a page of notes",
+            method = "GET",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Page of notes found, then returned",
+                            content = @Content(
+                                    schema = @Schema(implementation = Page.class),
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "Page of notes",
+                                                    value = """
+                                                            {
+                                                                "content": [
+                                                                    {
+                                                                        "id": 1,
+                                                                        "title": "Mi primera nota",
+                                                                        "content": "Contenido de mi primera nota",
+                                                                        "updatedAt": "2024-07-22"
+                                                                    },
+                                                                    {
+                                                                        "id": 2,
+                                                                        "title": "Mi primera segunda",
+                                                                        "content": "Contenido de mi segunda nota",
+                                                                        "updatedAt": "2024-07-22"
+                                                                    }
+                                                                ],
+                                                                "pageable": {
+                                                                    "pageNumber": 0,
+                                                                    "pageSize": 10,
+                                                                    "sort": {
+                                                                        "sorted": true,
+                                                                        "unsorted": false,
+                                                                        "empty": false
+                                                                    },
+                                                                    "offset": 0,
+                                                                    "paged": true,
+                                                                    "unpaged": false
+                                                                },
+                                                                "totalPages": 1,
+                                                                "totalElements": 2,
+                                                                "last": true,
+                                                                "first": true,
+                                                                "size": 10,
+                                                                "number": 0,
+                                                                "sort": {
+                                                                    "sorted": true,
+                                                                    "unsorted": false,
+                                                                    "empty": false
+                                                                },
+                                                                "numberOfElements": 2,
+                                                                "empty": false
+                                                            }
+                                                            """,
+                                                    summary = "Page of notes",
+                                                    description = "Page of notes found, then returned"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Any unexpected error occurred while processing the request ( tried sort by a non-existent field, database error, etc. )",
+                            content = @Content
+                    )
+            },
+            security = {
+                    @SecurityRequirement(name = "basicAuth")
+            }
+    )
     @GetMapping(
             produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -166,67 +198,198 @@ public class NoteController {
                     page = Cons.Note.Page.DEFAULT_PAGE,
                     sort = Cons.Note.Page.DEFAULT_SORT,
                     direction = Sort.Direction.ASC
-            ) Pageable pageable,
-            @MyId Long principalId) {
+            ) @ParameterObject  Pageable pageable,
+            @MyId @Parameter(hidden = true) Long principalId) {
         Page<PublicNoteDTO> list = noteService.getPage(pageable, principalId);
         return ResponseEntity.ok(list);
     }
 
-    /**
-     * Get a {@link NoteEntity} by id<br>
-     * Uses: {@link NoteServiceImpl#getByIdAndUserId(Long, Long)}
-     *
-     * @param noteId      of the note to getById
-     * @param principalId injected, the id of the principal; the user that is getting the note
-     * @return {@link ResponseEntity} with the note data
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
+    @Operation(
+            tags = {"Note Endpoints"},
+            operationId = "getNoteById",
+            summary = "get note",
+            description = "Get a note by its id",
+            method = "GET",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Note found, then returned",
+                            content = @Content(
+                                    schema = @Schema(implementation = PublicNoteDTO.class),
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = {
+                                            @ExampleObject(
+                                                    name = "Note",
+                                                    value = """
+                                                            {
+                                                                 "id": 1,
+                                                                 "title": "Mi primera segunda",
+                                                                 "content": "Contenido de mi segunda nota",
+                                                                 "updatedAt": "2024-07-22"
+                                                             }
+                                                            """,
+                                                    summary = "Note found",
+                                                    description = "Note found, then returned"
+                                            )
+                                    }
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Note not found",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponse.class),
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(
+                                            name = "Note not found",
+                                            summary = "Note not found",
+                                            description = "The note with the id 10 was not found",
+                                            value = """
+                                                    {
+                                                        "message": "Note not found",
+                                                        "status": "404 NOT_FOUND",
+                                                        "instant": "2024-07-22T22:58:51.351548210Z"
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Any unexpected error occurred while processing the request ( /{noteId} passed is not a number, database error, etc. )",
+                            content = @Content
+                    )
+            },
+            security = {
+                    @SecurityRequirement(name = "basicAuth")
+            }
+    )
     @GetMapping(
             value = "/{noteId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<PublicNoteDTO> getByIdAndUserId(@PathVariable(required = true) Long noteId,
-                                                          @MyId Long principalId) {
+                                                          @MyId @Parameter(hidden = true) Long principalId) {
         PublicNoteDTO en = noteService.getByIdAndUserId(noteId, principalId);
         return ResponseEntity.ok(en);
     }
 
-    /**
-     * Update a {@link NoteEntity}<br>
-     * Uses: {@link NoteServiceImpl#putByIdAndUserId(Long, Long, CreateNoteDTO)}
-     *
-     * @param noteId      of the note to update
-     * @param note        to be PUT
-     * @param principalId injected, the id of the principal; the user that is updating the note
-     * @return {@link ResponseEntity#noContent()} if successful
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
+    @Operation(
+            tags = {"Note Endpoints"},
+            operationId = "putNoteById",
+            summary = "Put note",
+            description = "Update a note by its id",
+            method = "PUT",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Note was Put",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Any bad request ( only title too long at the moment. )",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponse.class),
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(
+                                            name = "Title too long",
+                                            summary = "Title too long",
+                                            description = "The title is too long, the maximum length is " + Cons.Note.Validations.MAX_TITLE_LENGTH,
+                                            value = """
+                                                    {
+                                                        "message": "Title must be less than 255 characters",
+                                                        "status": "400 BAD_REQUEST",
+                                                        "instant": "2024-07-21T22:32:54.466134778Z"
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Any unexpected error occurred while processing the request ( /{noteId} passed is not a number, database error, etc. )",
+                            content = @Content
+                    )
+            },
+            security = {
+                    @SecurityRequirement(name = "basicAuth")
+            }
+    )
     @PutMapping(
             value = "/{noteId}",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<Void> putByIdAndUserId(@PathVariable(required = true) Long noteId,
-                                                 @MyId Long principalId,
+                                                 @MyId @Parameter(hidden = true) Long principalId,
                                                  @RequestBody(required = true) CreateNoteDTO note) {
         noteService.putByIdAndUserId(noteId, principalId, note);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Delete a {@link NoteEntity}<br>
-     * Uses: {@link NoteServiceImpl#deleteByIdAndUserId(Long, Long)}
-     *
-     * @param noteId      of the note to deleteById
-     * @param principalId injected, the id of the principal; the user that is deleting the note
-     * @return {@link ResponseEntity#noContent()} if successful
-     * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
-     * @since 1.0
-     */
+
+    @Operation(
+            tags = {"Note Endpoints"},
+            operationId = "deleteNoteById",
+            summary = "delete note",
+            description = "Delete a note by its id",
+            method = "DELETE",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Note deleted",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Note not found",
+                            content = @Content(
+                                    schema = @Schema(implementation = ErrorResponse.class),
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    examples = @ExampleObject(
+                                            name = "Note not found",
+                                            summary = "Note not found",
+                                            description = "The note with the id 10 was not found",
+                                            value = """
+                                                    {
+                                                        "message": "Note not found",
+                                                        "status": "404 NOT_FOUND",
+                                                        "instant": "2024-07-22T23:17:00.480561850Z"
+                                                    }
+                                                    """
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "User not authenticated",
+                            content = @Content
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Any unexpected error occurred while processing the request ( /{noteId} passed is not a number, database error, etc. )",
+                            content = @Content
+                    )
+            },
+            security = {
+                    @SecurityRequirement(name = "basicAuth")
+            }
+    )
     @DeleteMapping(value = "/{noteId}")
     public ResponseEntity<Void> deleteByIdAndUserId(@PathVariable(required = true) Long noteId,
-                                                    @MyId Long principalId) {
+                                                    @MyId @Parameter(hidden = true) Long principalId) {
         noteService.deleteByIdAndUserId(noteId, principalId);
         return ResponseEntity.noContent().build();
     }
