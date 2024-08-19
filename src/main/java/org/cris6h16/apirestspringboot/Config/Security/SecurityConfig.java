@@ -66,10 +66,10 @@ public class SecurityConfig {
                         .requestMatchers("/docs/**").permitAll()
                         .anyRequest().access(new WebExpressionAuthorizationManager("hasRole('ADMIN')"))
                 )
-//                .sessionManagement(
-//                        sm -> sm
-//                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )
+                .sessionManagement(
+                        sm -> sm
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
         ;
         return http.build();
     }

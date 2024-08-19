@@ -312,6 +312,39 @@ public class UserServiceImplTest {
         verify(userRepository, never()).saveAndFlush(any());
     }
 
+    @Test
+    @Tag("create")
+    void create_usernameAlreadyExists_ThenUsernameAlreadyExistException(){
+        // Arrange
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        when(userRepository.existsByUsername(dtoToCreate.getUsername())).thenReturn(true);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(UsernameAlreadyExistsException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Constrains.USERNAME_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
+        verify(userRepository).existsByUsername(dtoToCreate.getUsername());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    @Tag("create")
+    void create_emailAlreadyExists_ThenEmailAlreadyExistException(){
+        // Arrange
+        CreateUserDTO dtoToCreate = createValidDTO();
+
+        when(userRepository.existsByEmail(dtoToCreate.getEmail())).thenReturn(true);
+
+        // Act & Assert
+        assertThatThrownBy(() -> userService.create(dtoToCreate, ERole.ROLE_USER))
+                .isInstanceOf(EmailAlreadyExistsException.class)
+                .hasFieldOrPropertyWithValue("reason", Cons.User.Constrains.EMAIL_UNIQUE_MSG)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
+        verify(userRepository).existsByEmail(dtoToCreate.getEmail());
+        verify(userRepository, never()).saveAndFlush(any());
+    }
 
 
     private UserEntity createUserEntityWithIdAndRolesWithId() {
@@ -797,7 +830,7 @@ public class UserServiceImplTest {
 
         // Act & Assert
         assertThatThrownBy(() -> userService.patchEmailById(id, dto))
-                .isInstanceOf(EmailAlreadyExistException.class)
+                .isInstanceOf(EmailAlreadyExistsException.class)
                 .hasFieldOrPropertyWithValue("reason", Cons.User.Constrains.EMAIL_UNIQUE_MSG)
                 .hasFieldOrPropertyWithValue("status", HttpStatus.CONFLICT);
         verify(userRepository, never()).updateEmailById(any(), any());

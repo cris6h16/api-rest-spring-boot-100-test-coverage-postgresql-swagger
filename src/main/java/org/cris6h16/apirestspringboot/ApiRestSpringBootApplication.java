@@ -18,7 +18,7 @@ public class ApiRestSpringBootApplication {
 
     //    @Profile("prod") @Profile("!test") // does not work
     @Bean
-    CommandLineRunner init(@Nullable UserServiceImpl userService) { // I made it @Nullable and add null verification due to the fails of bean not fount in the Repository testing
+    CommandLineRunner init(@org.springframework.lang.Nullable UserServiceImpl userService) { // I made it @Nullable and add null verification due to the fails of bean not fount in the Repository testing
         return args -> {
             if (userService == null) return;
 

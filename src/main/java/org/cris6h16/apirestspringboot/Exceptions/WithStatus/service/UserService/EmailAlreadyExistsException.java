@@ -10,8 +10,8 @@ import org.springframework.http.HttpStatus;
  * @author <a href="https://www.github.com/cris6h16" target="_blank">Cristian Herrera</a>
  * @since 1.0
  */
-public class EmailAlreadyExistException extends ProperExceptionForTheUser {
-    public EmailAlreadyExistException() {
+public class EmailAlreadyExistsException extends ProperExceptionForTheUser {
+    public EmailAlreadyExistsException() {
         super(HttpStatus.CONFLICT, Cons.User.Constrains.EMAIL_UNIQUE_MSG);
     }
 }

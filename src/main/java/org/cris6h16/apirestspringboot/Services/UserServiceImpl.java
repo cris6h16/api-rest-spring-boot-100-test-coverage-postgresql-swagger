@@ -68,6 +68,9 @@ public class UserServiceImpl implements UserService {
         validateEmail(dto.getEmail());
         validatePassword(dto.getPassword());
 
+        if (userRepository.existsByUsername(dto.getUsername())) throw new UsernameAlreadyExistsException();
+        if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistsException();
+
         UserEntity user;
         Set<RoleEntity> rolesEntities = new HashSet<>(roles.length);
 
@@ -172,7 +175,7 @@ public class UserServiceImpl implements UserService {
 
         if (!userRepository.existsById(id))
             throw new UserNotFoundException(); // never reached if is stateless and single-session
-        if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistException();
+        if (userRepository.existsByEmail(dto.getEmail())) throw new EmailAlreadyExistsException();
         userRepository.updateEmailById(dto.getEmail(), id);
     }
 
