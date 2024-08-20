@@ -1,31 +1,41 @@
-git # api-rest-spring-boot-100%-test-coverage-postgresql 
+# api-rest-spring-boot-100%-test-coverage-postgresql 
 
-DOCS STILL NOT ADDED, BUT IT'S A TO DO
+This repository shows you how I was putting in practice my knowledge about Spring Boot...   
+I propose myself write a REST API with Spring Boot, and reach the 100% of test coverage.
+Here I wrote from 0 a Secure Notes APP API & 100% Tested, this also save all exceptions 
+in a log file, also the authentication failures & the successful...   
+Due to the fact that I implemented this with basic authentication, I won't document widely the API...
+
+# DOCS
+
+The unique documentation that I implemented is with SpringDoc OpenAPI, you can see the API documentation in the following URL:
+- `http://localhost:8080/docs/swagger-ui.html`   
+You need run the API to see the documentation...
 
 # TEST THIS API
 
 1. Create a local DB in PostgresSQL:
     - `port`: `5432`
     - `database`: `api-rest-spring-boot`
-    - `schema`: `test`
+    - `schema`: 
+      - `tests`: used for the tests
+      - `public`: used for the app in production mode
 
-2. Environment variables:
-    - `PSQL_PASS`: password of the user which has the grants for the created database
-    - `PSQL_USER`: username of the user which has the grants for the created database
+2. Add the Environment variables:
+    - `PSQL_PASS`: password of the user which has the grants for the `api-rest-spring-boot` database
+    - `PSQL_USER`: username of the user which has the grants for the `api-rest-spring-boot` database
 
 3. Verify the above:
     - `echo $PSQL_USER && echo $PSQL_PASS`: if you see the credentials, then you can continue
     - `psql -h localhost -p 5432 -U $PSQL_USER -d api-rest-spring-boot -c "SELECT schema_name FROM information_schema.schemata;"`:
-      if you can see the schema `test`, then you can continue.
+      if you can see the schema `tests` && `public`, then you can continue.
 
 4. JDK:
     - `21`
 
 
-- You can see the used dependencies in the `pom.xml` file    
-
-
-#
+# PD: 
+Dockerize this API is in my TODO list...
 
 [//]: # (todo: improve docs, add some diagrams, etc; but this as final step)
 
